@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.net.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<fx:root type="javafx.scene.layout.HBox" prefHeight="40"  xmlns:fx="http://javafx.com/fxml" >
+    <Label fx:id="txtDate" prefWidth="100" />
+    <Label fx:id="txtBalance" prefWidth="100" />
+    <TextField fx:id="tfCash" prefWidth="100"/>
+    <Button fx:id="btnSavings" prefWidth="150"  />
+    <HBox fx:id="corrections" spacing="10">
+        <HBox.margin>
+            <javafx.geometry.Insets left="20" /> 
+        </HBox.margin>
+        <children>
+        </children>
+    </HBox>
+    <stylesheets>
+        <URL value="@/styles/dailybalancecontrol.css"/>
+    </stylesheets>
+</fx:root>

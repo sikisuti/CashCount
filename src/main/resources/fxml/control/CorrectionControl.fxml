@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.net.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<fx:root type="javafx.scene.layout.GridPane" styleClass="mainFxmlClass" xmlns:fx="http://javafx.com/fxml">
+    
+    <Text fx:id="txtType" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+    <Text fx:id="txtAmount" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+    <Button fx:id="btnRemove" GridPane.columnIndex="1" GridPane.rowIndex="0" GridPane.rowSpan="2" text="X" onAction="#doRemove"  />   
+    
+    <stylesheets>
+        <URL value="@/styles/correctioncontrol.css"/>
+    </stylesheets>
+</fx:root>

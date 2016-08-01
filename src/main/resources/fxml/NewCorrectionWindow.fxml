@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox id="root" prefHeight="150" prefWidth="350" xmlns:fx="http://javafx.com/fxml" fx:controller="com.siki.cashcount.NewCorrectionWindowController">
+    <children>
+        <GridPane >
+            <columnConstraints>
+                <ColumnConstraints />
+                <ColumnConstraints />
+            </columnConstraints>
+            <rowConstraints>
+                <RowConstraints />
+                <RowConstraints />
+                <RowConstraints />
+                <RowConstraints />
+            </rowConstraints>
+            <children>
+                <Label text="Típus" GridPane.columnIndex="0" GridPane.rowIndex="0" />   
+                <ComboBox fx:id="cbType" editable="true"  GridPane.columnIndex="1" GridPane.rowIndex="0" />  
+                <Label text="Összeg" GridPane.columnIndex="0" GridPane.rowIndex="1" /> 
+                <TextField fx:id="tfAmount" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                <Label  text="Megjegyzés" GridPane.columnIndex="0" GridPane.rowIndex="2" />   
+                <TextField  fx:id="tfComment" GridPane.columnIndex="1" GridPane.rowIndex="2" />  
+            </children>
+        </GridPane> 
+        <ButtonBar >
+            <buttons>
+                <Button fx:id="btnSave" text="Mentés" onAction="#doSave" defaultButton="true"  /> 
+                <Button fx:id="btnCancel" text="Mégsem" onAction="#doCancel" cancelButton="true"  /> 
+            </buttons>
+        </ButtonBar>  
+    </children>
+</VBox>
