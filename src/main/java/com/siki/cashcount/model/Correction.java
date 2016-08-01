@@ -5,6 +5,10 @@
  */
 package com.siki.cashcount.model;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -14,7 +18,7 @@ import javafx.beans.property.StringProperty;
  *
  * @author tamas.siklosi
  */
-public class Correction {    
+public class Correction implements Externalizable {    
     private final IntegerProperty amount;
     public Integer getAmount() { return amount.get(); }
     public void setAmount(Integer amount) { this.amount.set(amount); }
@@ -48,6 +52,20 @@ public class Correction {
         this.type.set(builder.type);
         this.amount.set(builder.amount);
         this.comment.set(builder.comment);
+    }
+
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+        out.writeObject(getType());
+        out.writeInt(getAmount());
+        out.writeObject(getComment());
+    }
+
+    @Override
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+        setType((String)in.readObject());
+        setAmount(in.readInt());
+        setComment((String)in.readObject());
     }
     
     public static class Builder {

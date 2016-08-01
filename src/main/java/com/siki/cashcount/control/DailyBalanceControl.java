@@ -23,6 +23,7 @@ import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -30,6 +31,10 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
+import javafx.scene.layout.Background;
 import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -57,6 +62,51 @@ public class DailyBalanceControl extends HBox {
     public DailyBalanceControl(DailyBalance dailyBalance) { 
         this.dailyBalance = dailyBalance;
         
+        this.setOnDragOver((DragEvent event) -> {
+            /* data is dragged over the target */
+            /* accept it only if it is not dragged from the same node 
+             * and if it has a string data */
+            if (event.getGestureSource() != this &&
+                    event.getDragboard().hasContent(CorrectionControl.CorrectionDataFormat)) {
+                /* allow for moving */
+                event.acceptTransferModes(TransferMode.MOVE);
+            }
+
+            event.consume();
+        });
+        this.setOnDragEntered((DragEvent event) -> {
+            /* the drag-and-drop gesture entered the target */
+            /* show to the user that it is an actual gesture target */
+             if (event.getGestureSource() != this &&
+                     event.getDragboard().hasContent(CorrectionControl.CorrectionDataFormat)) {
+                 this.setStyle("-fx-background-color: yellow;");
+             }
+
+             event.consume();
+        });
+        this.setOnDragExited((DragEvent event) -> {
+            /* mouse moved away, remove the graphical cues */
+            setBackground();
+
+            event.consume();
+        });
+        this.setOnDragDropped((DragEvent event) -> {
+            /* data dropped */
+            /* if there is a string data on dragboard, read it and use it */
+            Dragboard db = event.getDragboard();
+            boolean success = false;
+            if (db.hasContent(CorrectionControl.CorrectionDataFormat)) {
+                Correction data = (Correction)(db.getContent(CorrectionControl.CorrectionDataFormat));
+                System.out.println(data.getType());
+                success = true;
+            }
+            /* let the source know whether the string was successfully 
+             * transferred and used */
+            event.setDropCompleted(success);
+
+            event.consume();
+        });
+        
         loadUI();
 
         tfCash.disableProperty().bind(dailyBalance.predictedProperty());
@@ -81,9 +131,15 @@ public class DailyBalanceControl extends HBox {
         setSavings(NumberFormat.getCurrencyInstance().format(dailyBalance.getTotalSavings()));
         loadCorrections();
         
+        setBackground();
+    }    
+    
+    private void setBackground() {
         if (dailyBalance.getDate().getDayOfWeek() == DayOfWeek.SATURDAY || dailyBalance.getDate().getDayOfWeek() == DayOfWeek.SUNDAY) 
             this.setStyle("-fx-background-color: lightgrey;");
-    }    
+        else
+            this.setStyle("-fx-background-color: none;");
+    }
     
     private void loadCorrections() {
         corrections.getChildren().clear();
