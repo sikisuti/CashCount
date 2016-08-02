@@ -92,4 +92,16 @@ public class Correction implements Externalizable {
             return new Correction(this);
         }
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        Correction other = (Correction)obj;
+        
+        return 
+                this.getType().equals(other.getType()) &&
+                this.getAmount().equals(other.getAmount()) &&
+                this.getComment().equals(other.getComment());
+    }
+    
+    
 }

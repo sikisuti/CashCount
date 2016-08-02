@@ -8,7 +8,7 @@ package com.siki.cashcount.model;
 import java.time.*;
 import javafx.beans.property.*;
 
-public class AccountTransaction {
+public final class AccountTransaction {
     private final StringProperty transactionType;    
     public String getTransactionType() { return transactionType.get(); }
     public void setTransactionType(String transactionType) { this.transactionType.set(transactionType); }
@@ -126,4 +126,21 @@ public class AccountTransaction {
             return new AccountTransaction(this);
         }
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        AccountTransaction other = (AccountTransaction)obj;
+        
+        return 
+                this.getTransactionType().equals(other.getTransactionType()) &&
+//                this.getDate().equals(other.getDate()) &&
+                this.getAmount().equals(other.getAmount()) &&
+                this.getBalance().equals(other.getBalance()) &&
+                this.getAccountNumber().equals(other.getAccountNumber()) &&
+                this.getOwner().equals(other.getOwner()) &&
+                this.getComment().equals(other.getComment()) &&
+                this.getCounter().equals(other.getCounter());
+    }
+    
+    
 }

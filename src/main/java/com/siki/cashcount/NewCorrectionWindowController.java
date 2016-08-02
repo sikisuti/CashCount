@@ -6,19 +6,24 @@
 package com.siki.cashcount;
 
 import com.siki.cashcount.data.DataManager;
+import com.siki.cashcount.model.AccountTransaction;
 import com.siki.cashcount.model.Correction;
-import com.siki.cashcount.model.DailyBalance;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
 import javafx.util.converter.NumberStringConverter;
 
@@ -36,6 +41,7 @@ public class NewCorrectionWindowController implements Initializable {
     @FXML ComboBox<String> cbType;
     @FXML TextField tfAmount;
     @FXML TextField tfComment;
+    @FXML TableView tblTransactions;
 
     /**
      * Initializes the controller class.
@@ -53,12 +59,19 @@ public class NewCorrectionWindowController implements Initializable {
         }
     }    
     
-    public void setContext(Correction correction) {
+    public void setContext(Correction correction, ObservableList<AccountTransaction> transactions) {
         cbType.setValue(correction.getType());
         tfAmount.setText(correction.getAmount().toString());
         tfComment.setText(correction.getComment());
         
         this.correction = correction;
+        
+        prepareTable();
+        try {
+            tblTransactions.setItems(transactions);
+        } catch (Exception ex) {
+            Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     
     public void setDialogStage(Stage dialogStage) {
@@ -68,6 +81,37 @@ public class NewCorrectionWindowController implements Initializable {
     public boolean isOkClicked() {
         return okClicked;
     }
+    
+    private void prepareTable() {     
+        tblTransactions.setRowFactory( tv -> {
+            TableRow<AccountTransaction> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && (! row.isEmpty()) ) {
+                    AccountTransaction rowData = row.getItem();
+                    tfAmount.setText(rowData.getAmount().toString());
+                }
+            });
+            return row ;
+        });
+        
+        TableColumn<AccountTransaction, String> transactionTypeCol = new TableColumn<>("Forgalom típusa");
+        transactionTypeCol.setCellValueFactory(new PropertyValueFactory<>("transactionType"));
+//        TableColumn<AccountTransaction, LocalDate> dateCol = new TableColumn<>("Könyvelési dátum");
+//        dateCol.setCellValueFactory(new PropertyValueFactory<>("date"));
+        TableColumn<AccountTransaction, Integer> amountCol = new TableColumn<>("Összeg");
+        amountCol.setCellValueFactory(new PropertyValueFactory<>("amount"));
+//        TableColumn<AccountTransaction, Integer> balanceCol = new TableColumn<>("Új könyvelt egyenleg");
+//        balanceCol.setCellValueFactory(new PropertyValueFactory<>("balance"));
+//        TableColumn<AccountTransaction, String> accountNumberCol = new TableColumn<>("Ellenoldali számlaszám");
+//        accountNumberCol.setCellValueFactory(new PropertyValueFactory<>("accountNumber"));
+        TableColumn<AccountTransaction, String> ownerCol = new TableColumn<>("Ellenoldali név");
+        ownerCol.setCellValueFactory(new PropertyValueFactory<>("owner"));
+        TableColumn<AccountTransaction, String> commentCol = new TableColumn<>("Közlemény");
+        commentCol.setCellValueFactory(new PropertyValueFactory<>("comment"));
+//        TableColumn<AccountTransaction, String> counterCol = new TableColumn<>("?");
+//        counterCol.setCellValueFactory(new PropertyValueFactory<>("counter"));    
+        tblTransactions.getColumns().setAll(transactionTypeCol, amountCol, ownerCol, commentCol);    
+    }    
     
     @FXML
     protected void doSave(ActionEvent event) {

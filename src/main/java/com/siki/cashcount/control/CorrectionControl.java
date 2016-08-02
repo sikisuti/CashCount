@@ -6,24 +6,18 @@
 package com.siki.cashcount.control;
 
 import com.siki.cashcount.NewCorrectionWindowController;
-import com.siki.cashcount.converter.IntegerToTextConverter;
 import com.siki.cashcount.data.DataManager;
 import com.siki.cashcount.exception.NotEnoughPastDataException;
 import com.siki.cashcount.model.Correction;
 import java.io.IOException;
-import java.text.NumberFormat;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.StringProperty;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.TextFormatter;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.DragEvent;
@@ -35,7 +29,6 @@ import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import javafx.util.converter.NumberStringConverter;
 
 /**
  *
@@ -51,10 +44,10 @@ public class CorrectionControl extends GridPane {
             "-fx-border-style: round;" +
             "-fx-border-radius: 5px;";
     
-    private Correction correction;
+    private final Correction correction;
     private final DailyBalanceControl parent;
     
-    public static final DataFormat CorrectionDataFormat = new DataFormat("com.siki.cashcount.model.Correction");
+    public static final DataFormat CORRECTION_DATA_FORMAT = new DataFormat("com.siki.cashcount.model.Correction");
 
     public CorrectionControl(Correction correction, DailyBalanceControl parent) {
         this.correction = correction;
@@ -87,7 +80,7 @@ public class CorrectionControl extends GridPane {
 
             /* Put a string on a dragboard */
             ClipboardContent content = new ClipboardContent();
-            content.put(CorrectionDataFormat, this.correction);
+            content.put(CORRECTION_DATA_FORMAT, this.correction);
             db.setContent(content);
 
             event.consume();
@@ -118,9 +111,9 @@ public class CorrectionControl extends GridPane {
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.initStyle(StageStyle.UTILITY);
-            stage.setTitle(parent.getDate().toString());
+            stage.setTitle(parent.getDate());
             stage.setScene(new Scene(root1));
-            controller.setContext(correction);
+            controller.setContext(correction, parent.getDailyBalance().getTransactions());
             controller.setDialogStage(stage);
             stage.showAndWait();
             

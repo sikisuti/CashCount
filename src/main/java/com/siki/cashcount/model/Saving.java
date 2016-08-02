@@ -29,4 +29,15 @@ public class Saving {
         this.amount = new SimpleIntegerProperty();
         this.comment = new SimpleStringProperty();
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        Saving other = (Saving)obj;
+        
+        return 
+                this.getAmount().equals(other.getAmount()) &&
+                this.getComment().equals(other.getComment());
+    }
+    
+    
 }

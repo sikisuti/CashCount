@@ -55,31 +55,6 @@ public class MainWindowController implements Initializable {
 //        stop = System.currentTimeMillis();
 //        System.out.println("prepareDailyBalances: " + (stop - start) / 1000d);
     }
-
-//    private void prepareTable() {        
-//        TableColumn<AccountTransaction, String> transactionTypeCol = new TableColumn<>("Forgalom típusa");
-//        transactionTypeCol.setCellValueFactory(new PropertyValueFactory<AccountTransaction, String>("transactionType"));
-//        TableColumn<AccountTransaction, LocalDate> dateCol = new TableColumn<>("Könyvelési dátum");
-//        dateCol.setCellValueFactory(new PropertyValueFactory<AccountTransaction, LocalDate>("date"));
-//        TableColumn<AccountTransaction, Integer> amountCol = new TableColumn<>("Összeg");
-//        amountCol.setCellValueFactory(new PropertyValueFactory<AccountTransaction, Integer>("amount"));
-//        TableColumn<AccountTransaction, Integer> balanceCol = new TableColumn<>("Új könyvelt egyenleg");
-//        balanceCol.setCellValueFactory(new PropertyValueFactory<AccountTransaction, Integer>("balance"));
-//        TableColumn<AccountTransaction, String> accountNumberCol = new TableColumn<>("Ellenoldali számlaszám");
-//        accountNumberCol.setCellValueFactory(new PropertyValueFactory<AccountTransaction, String>("accountNumber"));
-//        TableColumn<AccountTransaction, String> ownerCol = new TableColumn<>("Ellenoldali név");
-//        ownerCol.setCellValueFactory(new PropertyValueFactory<AccountTransaction, String>("owner"));
-//        TableColumn<AccountTransaction, String> commentCol = new TableColumn<>("Közlemény");
-//        commentCol.setCellValueFactory(new PropertyValueFactory<AccountTransaction, String>("comment"));
-//        TableColumn<AccountTransaction, String> counterCol = new TableColumn<>("?");
-//        counterCol.setCellValueFactory(new PropertyValueFactory<AccountTransaction, String>("counter"));
-//        try {
-//            SourceTable.setItems(DataManager.getInstance().getAllTransactions());
-//        } catch (Exception ex) {
-//            Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//        SourceTable.getColumns().setAll(transactionTypeCol, dateCol, amountCol, balanceCol, accountNumberCol, ownerCol, commentCol, counterCol);
-//    }
     
     private void prepareChart() {
         FlowChart.setTitle("Cash Flow");

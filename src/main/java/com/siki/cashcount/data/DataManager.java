@@ -56,30 +56,33 @@ public class DataManager {
     
     public ObservableList<DailyBalance> getAllDailyBalances() throws IOException, JsonDeserializeException {
         if (dailyBalanceCache == null) {
-            dailyBalanceCache = FXCollections.observableArrayList();
-            final GsonBuilder gsonBuilder = new GsonBuilder();
-            gsonBuilder.registerTypeAdapter(DailyBalance.class, new DailyBalanceDeserializer());
-            gsonBuilder.registerTypeAdapter(AccountTransaction.class, new TransactionDeserializer());
-            gsonBuilder.registerTypeAdapter(Saving.class, new SavingDeserializer());
-            gsonBuilder.registerTypeAdapter(Correction.class, new CorrectionDeserializer());
-            final Gson gson = gsonBuilder.create();
-                int lineCnt = 0;
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("./data.jsn"), "UTF-8"))) {
-                String line;
-                while ((line = br.readLine()) != null) {
-                    lineCnt++;
-                    dailyBalanceCache.add(gson.fromJson(line, DailyBalance.class));
-                }
-            } catch (IOException e) {
-                dailyBalanceCache = null;
-                throw e;
-            } catch (Exception e) {
-                dailyBalanceCache = null;
-                throw new JsonDeserializeException(lineCnt, e);
-            }
+            dailyBalanceCache = loadDailyBalances();
         }
         
         return dailyBalanceCache;
+    }
+    private ObservableList<DailyBalance> loadDailyBalances() throws IOException, JsonDeserializeException {        
+        ObservableList<DailyBalance> rtnList = FXCollections.observableArrayList();
+        final GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.registerTypeAdapter(DailyBalance.class, new DailyBalanceDeserializer());
+        gsonBuilder.registerTypeAdapter(AccountTransaction.class, new TransactionDeserializer());
+        gsonBuilder.registerTypeAdapter(Saving.class, new SavingDeserializer());
+        gsonBuilder.registerTypeAdapter(Correction.class, new CorrectionDeserializer());
+        final Gson gson = gsonBuilder.create();
+            int lineCnt = 0;
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("./data.jsn"), "UTF-8"))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                lineCnt++;
+                rtnList.add(gson.fromJson(line, DailyBalance.class));
+            }
+        } catch (IOException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new JsonDeserializeException(lineCnt, e);
+        }
+        
+        return rtnList;
     }
     private DailyBalance getLastDailyBalance() throws IOException, JsonDeserializeException {
         return getAllDailyBalances().get(getAllDailyBalances().size() - 1);
@@ -282,5 +285,17 @@ public class DataManager {
         } catch (IOException e) {
             throw e;
         }
+    }
+    
+    public boolean needSave() throws IOException, JsonDeserializeException {
+        ObservableList<DailyBalance> original = loadDailyBalances();
+        
+        if (original.size() != dailyBalanceCache.size()) return true;
+        
+        for (int i = 0; i < original.size(); i++) {
+            if (!original.get(i).equals(dailyBalanceCache.get(i))) return true;
+        }
+        
+        return false;
     }
 }

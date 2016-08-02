@@ -45,14 +45,8 @@ public final class DailyBalance {
     public Boolean isPredicted() { return predicted.get(); }
     public void setPredicted(Boolean predicted) { 
         this.predicted.set(predicted); 
-//        if (!predicted) predictedBalance.set(0);
     }
     public BooleanProperty predictedProperty() { return predicted; }
-    
-//    private final IntegerProperty predictedBalance;
-//    public Integer getPredictedBalance() { return predictedBalance.get(); }
-//    public void setPredictedBalance(Integer predictedBalance) { this.predictedBalance.set(predictedBalance); }
-//    public IntegerProperty predictedBalanceProperty() { return predictedBalance; }
     
     private final IntegerProperty totalMoney;
     public Integer getTotalMoney() { return totalMoney.get(); }
@@ -67,7 +61,6 @@ public final class DailyBalance {
         this.balance = new SimpleIntegerProperty();
         this.cash = new SimpleIntegerProperty();
         this.predicted = new SimpleBooleanProperty();
-//        this.predictedBalance = new SimpleIntegerProperty();
         this.totalMoney = new SimpleIntegerProperty();
         savings = FXCollections.observableArrayList();
         corrections = FXCollections.observableArrayList();
@@ -87,7 +80,6 @@ public final class DailyBalance {
         setBalance(builder.balance);
         setCash(builder.cash);
         setPredicted(builder.predicted);
-//        setPredictedBalance(builder.predictedBalance);
     }
     
     public void addSaving(Saving saving) {
@@ -148,15 +140,51 @@ public final class DailyBalance {
         public Builder setPredicted(Boolean predicted) {
             this.predicted = predicted;
             return this;
-        }
-
-//        public Builder setPredictedBalance(Integer predictedBalance) {
-//            this.predictedBalance = predictedBalance;
-//            return this;
-//        }      
+        }    
         
         public DailyBalance build() {
             return new DailyBalance(this);
         }
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        DailyBalance other = (DailyBalance)obj;
+        boolean rtn = 
+                this.getDate().equals(other.getDate()) &&
+                this.getBalance().equals(other.getBalance()) &&
+                this.getCash().equals(other.getCash()) &&
+                this.isPredicted().equals(other.isPredicted());
+        
+        if (!rtn) return false;
+        
+        if (this.getSavings().size() != other.getSavings().size()) return false;
+        if (this.getCorrections().size() != other.getCorrections().size()) return false;
+        if (this.getTransactions().size() != other.getTransactions().size()) return false;
+        
+        int i = 0;
+        while (i < this.getSavings().size()) {
+            rtn = this.getSavings().get(i).equals(other.getSavings().get(i));
+            if (!rtn) return false;
+            i++;
+        }
+        
+        i = 0;
+        while (i < this.getCorrections().size()) {
+            rtn = this.getCorrections().get(i).equals(other.getCorrections().get(i));
+            if (!rtn) return false;
+            i++;
+        }
+        
+        i = 0;
+        while (i < this.getTransactions().size()) {
+            rtn = this.getTransactions().get(i).equals(other.getTransactions().get(i));
+            if (!rtn) return false;
+            i++;
+        }
+        
+        return true;
+    }
+    
+    
 }

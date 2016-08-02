@@ -15,15 +15,11 @@ import java.io.IOException;
 import java.text.NumberFormat;
 import java.time.DayOfWeek;
 import java.time.format.DateTimeFormatter;
-import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javafx.beans.binding.Bindings;
 import javafx.beans.property.StringProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -35,27 +31,29 @@ import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
-import javafx.scene.layout.Background;
 import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import javafx.util.converter.NumberStringConverter;
 
 /**
  * FXML Controller class
  *
  * @author tamas.siklosi
  */
-public class DailyBalanceControl extends HBox {
+public final class DailyBalanceControl extends HBox {
     @FXML private Label txtDate;
     @FXML private Label txtBalance;
     @FXML private TextField tfCash;
     @FXML private Button btnSavings;
     @FXML private HBox corrections;
-    private Button btnAdd;
+    private final Button btnAdd;
     
     private final DailyBalance dailyBalance;
+    
+    public DailyBalance getDailyBalance() {
+        return dailyBalance;
+    }
 
     /**
      * Initializes the controller class.
@@ -103,7 +101,7 @@ public class DailyBalanceControl extends HBox {
             /* accept it only if it is not dragged from the same node 
              * and if it has a string data */
             if (((CorrectionControl)event.getGestureSource()).getParent() != corrections &&
-                    event.getDragboard().hasContent(CorrectionControl.CorrectionDataFormat)) {
+                    event.getDragboard().hasContent(CorrectionControl.CORRECTION_DATA_FORMAT)) {
                 /* allow for moving */
                 event.acceptTransferModes(TransferMode.MOVE);
             }
@@ -114,7 +112,7 @@ public class DailyBalanceControl extends HBox {
             /* the drag-and-drop gesture entered the target */
             /* show to the user that it is an actual gesture target */
              if (((CorrectionControl)event.getGestureSource()).getParent() != corrections &&
-                     event.getDragboard().hasContent(CorrectionControl.CorrectionDataFormat)) {
+                     event.getDragboard().hasContent(CorrectionControl.CORRECTION_DATA_FORMAT)) {
                  this.setStyle("-fx-background-color: yellow;");
              }
 
@@ -131,8 +129,8 @@ public class DailyBalanceControl extends HBox {
             /* if there is a string data on dragboard, read it and use it */
             Dragboard db = event.getDragboard();
             boolean success = false;
-            if (db.hasContent(CorrectionControl.CorrectionDataFormat)) {
-                Correction data = (Correction)db.getContent(CorrectionControl.CorrectionDataFormat);
+            if (db.hasContent(CorrectionControl.CORRECTION_DATA_FORMAT)) {
+                Correction data = (Correction)db.getContent(CorrectionControl.CORRECTION_DATA_FORMAT);
                 dailyBalance.getCorrections().add(data);                
                 loadCorrections();
                 success = true;
@@ -206,7 +204,7 @@ public class DailyBalanceControl extends HBox {
             stage.initStyle(StageStyle.UTILITY);
             stage.setTitle(dailyBalance.getDate().toString());
             stage.setScene(new Scene(root1));
-            controller.setContext(newCorrection);
+            controller.setContext(newCorrection, dailyBalance.getTransactions());
             controller.setDialogStage(stage);
             stage.showAndWait();
             
