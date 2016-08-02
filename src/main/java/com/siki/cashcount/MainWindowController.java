@@ -1,5 +1,6 @@
 package com.siki.cashcount;
 
+import com.siki.cashcount.config.ConfigManager;
 import com.siki.cashcount.control.DailyBalanceControl;
 import com.siki.cashcount.data.DataManager;
 import com.siki.cashcount.exception.JsonDeserializeException;
@@ -52,6 +53,11 @@ public class MainWindowController implements Initializable {
 //        System.out.println("prepareChart: " + (stop - start) / 1000d);
 //        start = System.currentTimeMillis(); 
         prepareDailyBalances();
+        try {
+            DailyBalancesSP.setVvalue(Double.parseDouble(ConfigManager.getInstance().getProperty("DailyBalanceViewScroll")));
+        } catch (IOException ex) {
+            Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
+        }
 //        stop = System.currentTimeMillis();
 //        System.out.println("prepareDailyBalances: " + (stop - start) / 1000d);
     }
@@ -112,6 +118,10 @@ public class MainWindowController implements Initializable {
         } 
         
         System.out.println("new daily balance control: " + elapsed / 1000d + " counter: " + cnt);
+    }
+    
+    public double getDailyBalanceViewScroll() {
+        return DailyBalancesSP.getVvalue();
     }
     
     @FXML

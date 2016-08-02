@@ -1,5 +1,6 @@
 package com.siki.cashcount;
 
+import com.siki.cashcount.config.ConfigManager;
 import com.siki.cashcount.data.DataManager;
 import com.siki.cashcount.exception.JsonDeserializeException;
 import java.io.IOException;
@@ -23,8 +24,9 @@ public class MainApp extends Application {
     
     @Override
     public void start(Stage stage) throws Exception {
-        Parent root = FXMLLoader.load(getClass().getResource("/fxml/MainWindow.fxml"));
-        
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/MainWindow.fxml"));
+        Parent root = fxmlLoader.load();
+        MainWindowController controller = fxmlLoader.getController();
         Scene scene = new Scene(root);
         scene.getStylesheets().add("/styles/Styles.css");
         
@@ -49,6 +51,7 @@ public class MainApp extends Application {
                         event.consume();
                     }
                 }
+                ConfigManager.getInstance().setProperty("DailyBalanceViewScroll", String.valueOf(controller.getDailyBalanceViewScroll()));
             } catch (IOException | JsonDeserializeException ex) {
                 Logger.getLogger(MainApp.class.getName()).log(Level.SEVERE, null, ex);
             }
