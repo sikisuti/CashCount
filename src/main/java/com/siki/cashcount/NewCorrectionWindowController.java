@@ -28,7 +28,7 @@ import javafx.util.converter.NumberStringConverter;
  * @author tamas.siklosi
  */
 public class NewCorrectionWindowController implements Initializable {
-    DailyBalance dailyBalance;
+    Correction correction;
     
     private Stage dialogStage;
     private boolean okClicked = false;
@@ -53,8 +53,12 @@ public class NewCorrectionWindowController implements Initializable {
         }
     }    
     
-    public void setContext(DailyBalance db) {
-        dailyBalance = db;
+    public void setContext(Correction correction) {
+        cbType.setValue(correction.getType());
+        tfAmount.setText(correction.getAmount().toString());
+        tfComment.setText(correction.getComment());
+        
+        this.correction = correction;
     }
     
     public void setDialogStage(Stage dialogStage) {
@@ -67,11 +71,9 @@ public class NewCorrectionWindowController implements Initializable {
     
     @FXML
     protected void doSave(ActionEvent event) {
-        dailyBalance.getCorrections().add(new Correction.Builder()
-                .setAmount(Integer.parseInt(tfAmount.getText().replace(",", "")))
-                .setType(cbType.getValue())
-                .setComment(tfComment.getText())
-                .build());
+        correction.setAmount(Integer.parseInt(tfAmount.getText().replace(",", "")));
+        correction.setType(cbType.getValue());
+        correction.setComment(tfComment.getText());
         
         okClicked = true;
         

@@ -33,6 +33,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.HBox;
@@ -52,6 +53,7 @@ public class DailyBalanceControl extends HBox {
     @FXML private TextField tfCash;
     @FXML private Button btnSavings;
     @FXML private HBox corrections;
+    private Button btnAdd;
     
     private final DailyBalance dailyBalance;
 
@@ -62,52 +64,13 @@ public class DailyBalanceControl extends HBox {
     public DailyBalanceControl(DailyBalance dailyBalance) { 
         this.dailyBalance = dailyBalance;
         
-        this.setOnDragOver((DragEvent event) -> {
-            /* data is dragged over the target */
-            /* accept it only if it is not dragged from the same node 
-             * and if it has a string data */
-            if (event.getGestureSource() != this &&
-                    event.getDragboard().hasContent(CorrectionControl.CorrectionDataFormat)) {
-                /* allow for moving */
-                event.acceptTransferModes(TransferMode.MOVE);
-            }
-
-            event.consume();
-        });
-        this.setOnDragEntered((DragEvent event) -> {
-            /* the drag-and-drop gesture entered the target */
-            /* show to the user that it is an actual gesture target */
-             if (event.getGestureSource() != this &&
-                     event.getDragboard().hasContent(CorrectionControl.CorrectionDataFormat)) {
-                 this.setStyle("-fx-background-color: yellow;");
-             }
-
-             event.consume();
-        });
-        this.setOnDragExited((DragEvent event) -> {
-            /* mouse moved away, remove the graphical cues */
-            setBackground();
-
-            event.consume();
-        });
-        this.setOnDragDropped((DragEvent event) -> {
-            /* data dropped */
-            /* if there is a string data on dragboard, read it and use it */
-            Dragboard db = event.getDragboard();
-            boolean success = false;
-            if (db.hasContent(CorrectionControl.CorrectionDataFormat)) {
-                Correction data = (Correction)(db.getContent(CorrectionControl.CorrectionDataFormat));
-                System.out.println(data.getType());
-                success = true;
-            }
-            /* let the source know whether the string was successfully 
-             * transferred and used */
-            event.setDropCompleted(success);
-
-            event.consume();
-        });
+        setDragAndDrop();
         
         loadUI();
+        
+        btnAdd = new Button("+");
+        btnAdd.onActionProperty().set(this::addCorrection);
+        btnAdd.setVisible(false);
 
         tfCash.disableProperty().bind(dailyBalance.predictedProperty());
         txtBalance.disableProperty().bind(dailyBalance.predictedProperty());
@@ -134,6 +97,54 @@ public class DailyBalanceControl extends HBox {
         setBackground();
     }    
     
+    private void setDragAndDrop() {
+        this.setOnDragOver((DragEvent event) -> {
+            /* data is dragged over the target */
+            /* accept it only if it is not dragged from the same node 
+             * and if it has a string data */
+            if (((CorrectionControl)event.getGestureSource()).getParent() != corrections &&
+                    event.getDragboard().hasContent(CorrectionControl.CorrectionDataFormat)) {
+                /* allow for moving */
+                event.acceptTransferModes(TransferMode.MOVE);
+            }
+
+            event.consume();
+        });
+        this.setOnDragEntered((DragEvent event) -> {
+            /* the drag-and-drop gesture entered the target */
+            /* show to the user that it is an actual gesture target */
+             if (((CorrectionControl)event.getGestureSource()).getParent() != corrections &&
+                     event.getDragboard().hasContent(CorrectionControl.CorrectionDataFormat)) {
+                 this.setStyle("-fx-background-color: yellow;");
+             }
+
+             event.consume();
+        });
+        this.setOnDragExited((DragEvent event) -> {
+            /* mouse moved away, remove the graphical cues */
+            setBackground();
+
+            event.consume();
+        });
+        this.setOnDragDropped((DragEvent event) -> {
+            /* data dropped */
+            /* if there is a string data on dragboard, read it and use it */
+            Dragboard db = event.getDragboard();
+            boolean success = false;
+            if (db.hasContent(CorrectionControl.CorrectionDataFormat)) {
+                Correction data = (Correction)db.getContent(CorrectionControl.CorrectionDataFormat);
+                dailyBalance.getCorrections().add(data);                
+                loadCorrections();
+                success = true;
+            }
+            /* let the source know whether the string was successfully 
+             * transferred and used */
+            event.setDropCompleted(success);
+
+            event.consume();
+        });
+    }
+    
     private void setBackground() {
         if (dailyBalance.getDate().getDayOfWeek() == DayOfWeek.SATURDAY || dailyBalance.getDate().getDayOfWeek() == DayOfWeek.SUNDAY) 
             this.setStyle("-fx-background-color: lightgrey;");
@@ -141,10 +152,8 @@ public class DailyBalanceControl extends HBox {
             this.setStyle("-fx-background-color: none;");
     }
     
-    private void loadCorrections() {
+    public void loadCorrections() {
         corrections.getChildren().clear();
-        Button btnAdd = new Button("+");
-        btnAdd.onActionProperty().set(this::addCorrection);
         corrections.getChildren().add(btnAdd);
         dailyBalance.getCorrections().stream().forEach((correction) -> {
             corrections.getChildren().add(new CorrectionControl(correction, this));
@@ -186,6 +195,8 @@ public class DailyBalanceControl extends HBox {
     
     @FXML
     protected void addCorrection(ActionEvent event) {
+            Correction newCorrection = new Correction();
+            
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/NewCorrectionWindow.fxml"));
             Parent root1 = (Parent) fxmlLoader.load();
@@ -195,11 +206,12 @@ public class DailyBalanceControl extends HBox {
             stage.initStyle(StageStyle.UTILITY);
             stage.setTitle(dailyBalance.getDate().toString());
             stage.setScene(new Scene(root1));
-            controller.setContext(dailyBalance);
+            controller.setContext(newCorrection);
             controller.setDialogStage(stage);
             stage.showAndWait();
             
             if (controller.isOkClicked()) {
+                dailyBalance.getCorrections().add(newCorrection);
                 loadCorrections();           
                 DataManager.getInstance().calculatePredictions();
             }
@@ -216,5 +228,15 @@ public class DailyBalanceControl extends HBox {
         } catch (NotEnoughPastDataException ex) {
             Logger.getLogger(DailyBalanceControl.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+    
+    @FXML
+    private void mouseEntered(MouseEvent event) {
+        btnAdd.setVisible(true);
+    }
+    
+    @FXML
+    private void mouseExited(MouseEvent event) {
+        btnAdd.setVisible(false);
     }
 }

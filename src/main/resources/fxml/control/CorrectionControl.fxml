@@ -8,7 +8,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<fx:root type="javafx.scene.layout.GridPane" onMouseEntered="#mouseEntered" onMouseExited="#mouseExited" styleClass="mainFxmlClass" xmlns:fx="http://javafx.com/fxml">
+<fx:root fx:id="root" type="javafx.scene.layout.GridPane" onMouseClicked="#doModify"  styleClass="mainFxmlClass" xmlns:fx="http://javafx.com/fxml">
     <columnConstraints>
         <ColumnConstraints prefWidth="100" />
         <ColumnConstraints /> 
@@ -19,8 +19,7 @@
     </rowConstraints>
     
     <Text fx:id="txtType" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-    <Text fx:id="txtAmount" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-    <Button fx:id="btnRemove" GridPane.columnIndex="1" GridPane.rowIndex="0" GridPane.rowSpan="2" text="X" onAction="#doRemove" visible="false"  />   
+    <Text fx:id="txtAmount" GridPane.columnIndex="0" GridPane.rowIndex="1" /> 
     
     <stylesheets>
         <URL value="@/styles/correctioncontrol.css"/>
