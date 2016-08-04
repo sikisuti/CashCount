@@ -14,19 +14,16 @@ import com.siki.cashcount.exception.TransactionGapException;
 import com.siki.cashcount.model.AccountTransaction;
 import com.siki.cashcount.model.Correction;
 import com.siki.cashcount.model.DailyBalance;
-import com.siki.cashcount.model.Saving;
 import com.siki.cashcount.model.SavingStore;
 import com.siki.cashcount.serial.CorrectionDeserializer;
 import com.siki.cashcount.serial.CorrectionSerializer;
 import com.siki.cashcount.serial.DailyBalanceDeserializer;
 import com.siki.cashcount.serial.DailyBalanceSerialiser;
 import com.siki.cashcount.serial.SavingStoreDeserializer;
-import com.siki.cashcount.serial.SavingStoreSerializer;
 import com.siki.cashcount.serial.TransactionDeserializer;
 import com.siki.cashcount.serial.TransactionSerializer;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -35,7 +32,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.time.LocalDate;
@@ -76,10 +72,9 @@ public class DataManager {
         final GsonBuilder gsonBuilder = new GsonBuilder();
         gsonBuilder.registerTypeAdapter(DailyBalance.class, new DailyBalanceDeserializer());
         gsonBuilder.registerTypeAdapter(AccountTransaction.class, new TransactionDeserializer());
-//        gsonBuilder.registerTypeAdapter(Saving.class, new SavingDeserializer());
         gsonBuilder.registerTypeAdapter(Correction.class, new CorrectionDeserializer());
         final Gson gson = gsonBuilder.create();
-        String dataPath = ConfigManager.getInstance().getProperty("DataPath");
+        String dataPath = ConfigManager.getStringProperty("DataPath");
         int lineCnt = 0;
         try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(dataPath), "UTF-8"))) {
             String line;
@@ -87,9 +82,9 @@ public class DataManager {
                 lineCnt++;
                 DailyBalance db = gson.fromJson(line, DailyBalance.class);
                 getSavings(db.getDate()).stream().forEach(s -> db.addSaving(s));
-                for (Correction c : db.getCorrections()) {
+                db.getCorrections().stream().forEach((c) -> {
                     c.setDailyBalance(db);
-                }
+                });
                 rtnList.add(db);
             }
         } catch (IOException e) {
@@ -123,11 +118,11 @@ public class DataManager {
         return newDb;
     }
     public void saveDailyBalances() throws IOException {                
-        String dataPath = ConfigManager.getInstance().getProperty("DataPath");
+        String dataPath = ConfigManager.getStringProperty("DataPath");
         FileTime lastModifiedTime = Files.getLastModifiedTime(Paths.get(dataPath));
         LocalDate lastModifiedDate = LocalDateTime.ofInstant(lastModifiedTime.toInstant(), ZoneId.systemDefault()).toLocalDate();
         if (!lastModifiedDate.equals(LocalDate.now())) {
-            String backupPath = ConfigManager.getInstance().getProperty("BackupPath");
+            String backupPath = ConfigManager.getStringProperty("BackupPath");
             if (Files.notExists(Paths.get(backupPath))) Files.createDirectory(Paths.get(backupPath));
             Files.copy(Paths.get(dataPath), Paths.get(backupPath + "/data_" + lastModifiedDate + ".jsn"));
         }
@@ -202,14 +197,14 @@ public class DataManager {
     
     @SuppressWarnings("empty-statement")
     private Integer getDayAverage(LocalDate date) throws NotEnoughPastDataException, IOException {
-        Boolean exportDataForDebug = Boolean.parseBoolean(ConfigManager.getInstance().getProperty("ExportDataForDebug"));
+        Boolean exportDataForDebug = ConfigManager.getBooleanProperty("ExportDataForDebug");
         
         if (weeklyAverages == null) weeklyAverages = new HashMap<>();
         
         BufferedWriter bw = null;
         if (exportDataForDebug) {
             try {
-                String exportDataPath = ConfigManager.getInstance().getProperty("ExportDataPath");
+                String exportDataPath = ConfigManager.getStringProperty("ExportDataPath");
                 bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(exportDataPath, true), "UTF-8"));
             } catch (UnsupportedEncodingException | FileNotFoundException ex) {
                 Logger.getLogger(DataManager.class.getName()).log(Level.SEVERE, null, ex);
@@ -265,10 +260,10 @@ public class DataManager {
     }
     
     public void calculatePredictions() throws NotEnoughPastDataException, IOException {
-        Boolean exportDataForDebug = Boolean.parseBoolean(ConfigManager.getInstance().getProperty("ExportDataForDebug"));
+        Boolean exportDataForDebug = ConfigManager.getBooleanProperty("ExportDataForDebug");
         String exportDataPath ="";
         if (exportDataForDebug) {
-            exportDataPath = ConfigManager.getInstance().getProperty("ExportDataPath");
+            exportDataPath = ConfigManager.getStringProperty("ExportDataPath");
             try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(exportDataPath), "UTF-8"))) {
 
             } catch (IOException ex) {
@@ -296,7 +291,7 @@ public class DataManager {
     public List<String> getAllCorrectionType() throws IOException {
         if (correctionTypeCache == null) {
             correctionTypeCache = new ArrayList<>();
-            String correctionTypesPath = ConfigManager.getInstance().getProperty("CorrectionTypesPath");
+            String correctionTypesPath = ConfigManager.getStringProperty("CorrectionTypesPath");
             try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(correctionTypesPath), "UTF-8"))) {
                 final GsonBuilder gsonBuilder = new GsonBuilder();
                 final Gson gson = gsonBuilder.create();
@@ -314,7 +309,7 @@ public class DataManager {
     }
     
     public void saveCorrectionTypes() throws IOException {
-        String correctionTypesPath = ConfigManager.getInstance().getProperty("CorrectionTypesPath");
+        String correctionTypesPath = ConfigManager.getStringProperty("CorrectionTypesPath");
         try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(correctionTypesPath), "UTF-8"))) {
             final GsonBuilder gsonBuilder = new GsonBuilder();
             //gsonBuilder.setPrettyPrinting();
@@ -346,7 +341,7 @@ public class DataManager {
         final GsonBuilder gsonBuilder = new GsonBuilder();
         gsonBuilder.registerTypeAdapter(SavingStore.class, new SavingStoreDeserializer());
         final Gson gson = gsonBuilder.create();
-        String filePath = ConfigManager.getInstance().getProperty("SavingStorePath");
+        String filePath = ConfigManager.getStringProperty("SavingStorePath");
         int lineCnt = 0;
         try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filePath), "UTF-8"))) {
             String line;

@@ -6,6 +6,7 @@ import com.siki.cashcount.data.DataManager;
 import com.siki.cashcount.exception.JsonDeserializeException;
 import com.siki.cashcount.exception.NotEnoughPastDataException;
 import com.siki.cashcount.exception.TransactionGapException;
+import com.siki.cashcount.helper.StopWatch;
 import com.siki.cashcount.model.*;
 import java.io.*;
 import java.net.URL;
@@ -29,7 +30,6 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
@@ -45,27 +45,15 @@ public class MainWindowController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        
-//        long start = System.currentTimeMillis();        
+            
 //        prepareTable();        
-//        long stop = System.currentTimeMillis();
-//        System.out.println("prepareTable: " + (stop - start) / 1000d);
-//        start = System.currentTimeMillis(); 
         prepareChart();
-//        stop = System.currentTimeMillis();
-//        System.out.println("prepareChart: " + (stop - start) / 1000d);
-//        start = System.currentTimeMillis(); 
         prepareDailyBalances();
-        try {
-            DailyBalancesSP.setVvalue(Double.parseDouble(ConfigManager.getInstance().getProperty("DailyBalanceViewScroll")));
-        } catch (IOException ex) {
-            Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
-        }
-//        stop = System.currentTimeMillis();
-//        System.out.println("prepareDailyBalances: " + (stop - start) / 1000d);
+        DailyBalancesSP.setVvalue(ConfigManager.getDoubleProperty("DailyBalanceViewScroll"));
     }
     
     private void prepareChart() {
+        if (ConfigManager.getBooleanProperty("LogPerformance")) StopWatch.start("prepareChart");
         FlowChart.setTitle("Cash Flow");
         yAxis.setTickUnit(100000);
         
@@ -101,26 +89,30 @@ public class MainWindowController implements Initializable {
         } catch (IOException | JsonDeserializeException ex) {
             Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
         }
+        if (ConfigManager.getBooleanProperty("LogPerformance")) StopWatch.stop("prepareChart");
     }
     
     private void prepareDailyBalances() {
-        long elapsed = 0; long cnt = 0;
+        if (ConfigManager.getBooleanProperty("LogPerformance")) StopWatch.start("prepareDailyBalances");
         try {
-            Month month = null;
+            LocalDate date = DataManager.getInstance().getAllDailyBalances().get(0).getDate();
+            VBox vbox = new VBox();
             for (DailyBalance db : DataManager.getInstance().getAllDailyBalances()) {
-                cnt++;
-                long start1 = System.currentTimeMillis();
-                if (!db.getDate().getMonth().equals(month)) {
-                    VBox vbox = new VBox();
-                    Label monthLabel = new Label(db.getDate().format(DateTimeFormatter.ofPattern("uuuu. MMMM")));
-                    monthLabel.setStyle("-fx-font-size: 20; -fx-font-weight: bold;");
-                    vbox.getChildren().addAll(monthLabel, new Separator());
-                    DailyBalancesPH.getChildren().add(vbox);
+                if (!db.getDate().getMonth().equals(date.getMonth())) {
+                    TitledPane tp = new TitledPane(date.format(DateTimeFormatter.ofPattern("uuuu. MMMM")), vbox);
+                    if (!isAroundToday(date)) tp.setExpanded(false);
+                    else tp.setExpanded(true);
+                    DailyBalancesPH.getChildren().add(tp);                    
+                    date = db.getDate();
+                    vbox = new VBox();
+//                    VBox vbox = new VBox();
+//                    Label monthLabel = new Label(db.getDate().format(DateTimeFormatter.ofPattern("uuuu. MMMM")));
+//                    monthLabel.setStyle("-fx-font-size: 20; -fx-font-weight: bold;");
+//                    vbox.getChildren().addAll(monthLabel, new Separator());
+//                    DailyBalancesPH.getChildren().add(vbox);
                 }
-                month = db.getDate().getMonth();
-                DailyBalancesPH.getChildren().add(new DailyBalanceControl(db));
-                long stop1 = System.currentTimeMillis();
-                elapsed += stop1 - start1;
+                if (isAroundToday(db.getDate()))
+                    vbox.getChildren().add(new DailyBalanceControl(db));
             }
         } catch (JsonDeserializeException ex) {
             System.out.println("Error in line: " + ex.getErrorLineNum());
@@ -128,8 +120,12 @@ public class MainWindowController implements Initializable {
         }catch (IOException ex) {
             Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
         } 
-        
-        System.out.println("new daily balance control: " + elapsed / 1000d + " counter: " + cnt);
+        if (ConfigManager.getBooleanProperty("LogPerformance")) StopWatch.stop("prepareDailyBalances");
+    }
+    
+    private boolean isAroundToday(LocalDate date) {
+        return date.isAfter(LocalDate.now().minusMonths(2).withDayOfMonth(LocalDate.now().minusMonths(2).lengthOfMonth())) &&
+                date.isBefore(LocalDate.now().plusMonths(2).withDayOfMonth(1));
     }
     
     public double getDailyBalanceViewScroll() {

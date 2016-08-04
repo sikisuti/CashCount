@@ -3,6 +3,7 @@ package com.siki.cashcount;
 import com.siki.cashcount.config.ConfigManager;
 import com.siki.cashcount.data.DataManager;
 import com.siki.cashcount.exception.JsonDeserializeException;
+import com.siki.cashcount.helper.StopWatch;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -21,6 +22,7 @@ public class MainApp extends Application {
     
     @Override
     public void start(Stage stage) throws Exception {
+        if (ConfigManager.getBooleanProperty("LogPerformance")) StopWatch.start("App start");
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/MainWindow.fxml"));
         Parent root = fxmlLoader.load();
         MainWindowController controller = fxmlLoader.getController();
@@ -48,12 +50,16 @@ public class MainApp extends Application {
                         event.consume();
                     }
                 }
-                ConfigManager.getInstance().setProperty("DailyBalanceViewScroll", String.valueOf(controller.getDailyBalanceViewScroll()));
+                ConfigManager.setProperty("DailyBalanceViewScroll", String.valueOf(controller.getDailyBalanceViewScroll()));
             } catch (IOException | JsonDeserializeException ex) {
                 Logger.getLogger(MainApp.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
+        if (ConfigManager.getBooleanProperty("LogPerformance")) StopWatch.start("App show");
         stage.show();
+        if (ConfigManager.getBooleanProperty("LogPerformance")) StopWatch.stop("App show");
+        
+        if (ConfigManager.getBooleanProperty("LogPerformance")) StopWatch.stop("App start");
     }
 
     /**

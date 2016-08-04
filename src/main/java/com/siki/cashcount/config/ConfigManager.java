@@ -5,61 +5,72 @@
  */
 package com.siki.cashcount.config;
 
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author tamas.siklosi
  */
 public final class ConfigManager {
-    private final static ConfigManager INSTANCE = new ConfigManager();
-    public final static ConfigManager getInstance() {
-        return INSTANCE;
-    }
+//    private final static ConfigManager INSTANCE = new ConfigManager();
+//    public final static ConfigManager getInstance() {
+//        return INSTANCE;
+//    }
     private ConfigManager() {
     }
     
-    private Properties properties;
+    private static final Properties properties;
     
-    private void loadProperties() throws IOException {
+    static {
         properties = new Properties();
-        
-        try (InputStream inputStream = new FileInputStream("./config.properties")) {            
-            
-            if (inputStream != null) {
-                    properties.load(inputStream);
-            } else {
-                    throw new FileNotFoundException("property file 'config/config.properties' not found in the classpath");
-            }            
+        try (InputStream inputStream = new FileInputStream("./config.properties")) {
+            properties.load(inputStream);
+        } catch (IOException ex) {
+            Logger.getLogger(ConfigManager.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
-    private void saveProperties() throws IOException {
-        try (OutputStream outputStream = new FileOutputStream("./config.properties")) {            
-            
-            if (outputStream != null) {
-                    properties.store(outputStream, "CashCount property file");
-            } else {
-                    throw new FileNotFoundException("property file 'config/config.properties' not found in the classpath");
-            }            
+//    private void loadProperties() throws IOException {
+//        properties = new Properties();
+//        
+//        try (InputStream inputStream = new FileInputStream("./config.properties")) {            
+//            
+//            if (inputStream != null) {
+//                    properties.load(inputStream);
+//            } else {
+//                    throw new FileNotFoundException("property file 'config/config.properties' not found in the classpath");
+//            }            
+//        }
+//    }
+    
+    private static void saveProperties() {
+        try (OutputStream outputStream = new FileOutputStream("./config.properties")) {   
+            properties.store(outputStream, "CashCount property file");
+        } catch (IOException ex) {
+            Logger.getLogger(ConfigManager.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
-    public String getProperty(String propertyName) throws IOException {
-        if (properties == null) {
-            loadProperties();
-        }
+    public static String getStringProperty(String propertyName) {
         return properties.getProperty(propertyName);
     }
     
-    public void setProperty(String propertyName, String propertyValue) throws IOException {
+    public static boolean getBooleanProperty(String propertyName) {
+        return Boolean.parseBoolean(getStringProperty(propertyName));
+    }
+    
+    public static double getDoubleProperty(String propertyName) {
+        return Double.parseDouble(getStringProperty(propertyName));
+    }
+    
+    public static void setProperty(String propertyName, String propertyValue) throws IOException {
         properties.setProperty(propertyName, propertyValue);
         saveProperties();
     }
