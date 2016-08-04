@@ -7,18 +7,35 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<fx:root type="javafx.scene.layout.HBox" prefHeight="40" onMouseEntered="#mouseEntered" onMouseExited="#mouseExited" xmlns:fx="http://javafx.com/fxml" >
-    <Label fx:id="txtDate" prefWidth="100" />
-    <Label fx:id="txtBalance" prefWidth="100" />
-    <TextField fx:id="tfCash" prefWidth="100"/>
-    <Button fx:id="btnSavings" prefWidth="150"  />
-    <HBox fx:id="corrections" spacing="10">
-        <HBox.margin>
-            <javafx.geometry.Insets left="20" /> 
-        </HBox.margin>
-        <children>
-        </children>
-    </HBox>
+<fx:root type="javafx.scene.layout.BorderPane" prefHeight="40" onMouseEntered="#mouseEntered" onMouseExited="#mouseExited" xmlns:fx="http://javafx.com/fxml" >
+    <center>
+        <HBox fx:id="hbLine">
+            <Label fx:id="txtDate" prefWidth="100" />
+            <Label fx:id="txtBalance" prefWidth="100" />
+            <TextField fx:id="tfCash" prefWidth="100"/>
+            <Button fx:id="btnAdd" text="+"   />
+            <HBox fx:id="corrections" spacing="10" >
+                <HBox.margin>
+                    <javafx.geometry.Insets left="20" /> 
+                </HBox.margin>
+                <children>
+                    <!--
+                    <HBox fx:id="hbSalaryPH" minWidth="100" maxWidth="100"  HBox.hgrow="NEVER"  />
+                    <HBox fx:id="hbLoanPH" minWidth="100" maxWidth="100" HBox.hgrow="NEVER"  />
+                    <HBox fx:id="hbDozsaPH" minWidth="100" maxWidth="100" HBox.hgrow="NEVER"  />
+                    <HBox fx:id="hbWeinerPH" minWidth="100" maxWidth="100" HBox.hgrow="NEVER"  />
+                    <HBox fx:id="hbFuelPH" minWidth="100" maxWidth="100" HBox.hgrow="NEVER"  />
+                    <HBox fx:id="hbCarExpensePH" minWidth="100" maxWidth="100" HBox.hgrow="NEVER"  />
+                    <HBox fx:id="hbBusTravelPH" minWidth="100" maxWidth="100" HBox.hgrow="NEVER"  />
+                    <HBox fx:id="hbOtherPH" minWidth="100" maxWidth="100" HBox.hgrow="NEVER"  />
+                    -->
+                </children>
+            </HBox>
+        </HBox>
+    </center>
+    <right>
+        <CheckBox fx:id="chkReviewed" />
+    </right>
     <stylesheets>
         <URL value="@/styles/dailybalancecontrol.css"/>
     </stylesheets>

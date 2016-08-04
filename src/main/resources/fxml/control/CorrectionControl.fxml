@@ -8,7 +8,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<fx:root fx:id="root" type="javafx.scene.layout.GridPane" onMouseClicked="#doModify"  styleClass="mainFxmlClass" xmlns:fx="http://javafx.com/fxml">
+<fx:root fx:id="root" type="javafx.scene.layout.GridPane" minWidth="100" maxWidth="100" GridPane.hgrow="NEVER" onMouseClicked="#doModify" styleClass="mainFxmlClass" xmlns:fx="http://javafx.com/fxml">
     <columnConstraints>
         <ColumnConstraints prefWidth="100" />
         <ColumnConstraints /> 
@@ -18,7 +18,7 @@
         <RowConstraints />
     </rowConstraints>
     
-    <Text fx:id="txtType" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+    <Label fx:id="txtType" GridPane.columnIndex="0" GridPane.rowIndex="0" maxWidth="100"  />
     <Text fx:id="txtAmount" GridPane.columnIndex="0" GridPane.rowIndex="1" /> 
     
     <stylesheets>

@@ -33,6 +33,7 @@
         <ButtonBar >
             <buttons>
                 <Button fx:id="btnSave" text="Mentés" onAction="#doSave" defaultButton="true"  /> 
+                <Button fx:id="btnRemove" text="Törlés" onAction="#doRemove"  /> 
                 <Button fx:id="btnCancel" text="Mégsem" onAction="#doCancel" cancelButton="true"  /> 
             </buttons>
         </ButtonBar>  

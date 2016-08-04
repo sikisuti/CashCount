@@ -28,6 +28,8 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
@@ -35,6 +37,7 @@ import javafx.stage.FileChooser.ExtensionFilter;
 public class MainWindowController implements Initializable {
 
 //    @FXML TableView SourceTable;
+    @FXML BorderPane PageFrame;
     @FXML LineChart FlowChart;
     @FXML VBox DailyBalancesPH;
     @FXML NumberAxis yAxis;
@@ -103,9 +106,18 @@ public class MainWindowController implements Initializable {
     private void prepareDailyBalances() {
         long elapsed = 0; long cnt = 0;
         try {
+            Month month = null;
             for (DailyBalance db : DataManager.getInstance().getAllDailyBalances()) {
                 cnt++;
                 long start1 = System.currentTimeMillis();
+                if (!db.getDate().getMonth().equals(month)) {
+                    VBox vbox = new VBox();
+                    Label monthLabel = new Label(db.getDate().format(DateTimeFormatter.ofPattern("uuuu. MMMM")));
+                    monthLabel.setStyle("-fx-font-size: 20; -fx-font-weight: bold;");
+                    vbox.getChildren().addAll(monthLabel, new Separator());
+                    DailyBalancesPH.getChildren().add(vbox);
+                }
+                month = db.getDate().getMonth();
                 DailyBalancesPH.getChildren().add(new DailyBalanceControl(db));
                 long stop1 = System.currentTimeMillis();
                 elapsed += stop1 - start1;
@@ -129,7 +141,7 @@ public class MainWindowController implements Initializable {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Válaszd ki a fájlt");
         fileChooser.getExtensionFilters().addAll(new ExtensionFilter("csv files", "*.csv"), new ExtensionFilter("Minden fájl", "*.*"));
-        File selectedFile = fileChooser.showOpenDialog(((Button)event.getSource()).getScene().getWindow());
+        File selectedFile = fileChooser.showOpenDialog(PageFrame.getScene().getWindow());
         if (selectedFile != null) {
             try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(selectedFile), "UTF-8"))) {
                 String line;
@@ -188,7 +200,7 @@ public class MainWindowController implements Initializable {
     }
     
     @FXML
-    private void refreshDailyBalances(ActionEvent event) {
+    private void refreshDailyBalances(ActionEvent event) throws IOException {
         try {
             DataManager.getInstance().calculatePredictions();
         } catch (NotEnoughPastDataException ex) {

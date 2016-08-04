@@ -32,10 +32,14 @@ public class DailyBalanceDeserializer implements JsonDeserializer<DailyBalance> 
         final Integer balance = jsonObject.get("balance").getAsInt();
         final Integer cash = jsonObject.get("cash").getAsInt();
         final Boolean predicted = jsonObject.get("predicted").getAsBoolean();
-//        final Integer predictedBalance = jsonObject.get("predictedBalance").getAsInt();
+        Boolean reviewed;
+        if (jsonObject.get("reviewed") != null)
+            reviewed = jsonObject.get("reviewed").getAsBoolean();
+        else
+            reviewed = Boolean.FALSE;
         
         AccountTransaction[] transactionArray = jdc.deserialize(jsonObject.get("transactions"), AccountTransaction[].class);
-        Saving[] savingArray = jdc.deserialize(jsonObject.get("savings"), Saving[].class);
+//        Saving[] savingArray = jdc.deserialize(jsonObject.get("savings"), Saving[].class);
         Correction[] correctionArray = jdc.deserialize(jsonObject.get("corrections"), Correction[].class);
         
         final DailyBalance db = new DailyBalance();
@@ -43,14 +47,14 @@ public class DailyBalanceDeserializer implements JsonDeserializer<DailyBalance> 
         db.setBalance(balance);
         db.setCash(cash);
         db.setPredicted(predicted);
-//        db.setPredictedBalance(predictedBalance);
+        db.setReviewed(reviewed);
         
         for (AccountTransaction tr : transactionArray) {
             db.addTransaction(tr);
         }
-        for (Saving s : savingArray) {
-            db.addSaving(s);
-        }
+//        for (Saving s : savingArray) {
+//            db.addSaving(s);
+//        }
         for (Correction c : correctionArray) {
             db.addCorrection(c);
         }

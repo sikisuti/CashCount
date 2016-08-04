@@ -27,12 +27,13 @@ public class DailyBalanceSerialiser implements JsonSerializer<DailyBalance> {
         jsonObject.addProperty("balance", db.getBalance());
         jsonObject.addProperty("cash", db.getCash());
         jsonObject.addProperty("predicted", db.isPredicted());
+        jsonObject.addProperty("reviewed", db.isReviewed());
 //        jsonObject.addProperty("predictedBalance", db.getPredictedBalance());
         
         final JsonElement jsonTransactions = jsc.serialize(db.getTransactions());
         jsonObject.add("transactions", jsonTransactions);
-        final JsonElement jsonSavings = jsc.serialize(db.getSavings());
-        jsonObject.add("savings", jsonSavings);
+//        final JsonElement jsonSavings = jsc.serialize(db.getSavings());
+//        jsonObject.add("savings", jsonSavings);
         final JsonElement jsonCorrections = jsc.serialize(db.getCorrections());
         jsonObject.add("corrections", jsonCorrections);
         

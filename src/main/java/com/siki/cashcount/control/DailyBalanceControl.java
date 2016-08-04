@@ -18,19 +18,23 @@ import java.time.format.DateTimeFormatter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -41,13 +45,25 @@ import javafx.stage.StageStyle;
  *
  * @author tamas.siklosi
  */
-public final class DailyBalanceControl extends HBox {
+public final class DailyBalanceControl extends BorderPane {
     @FXML private Label txtDate;
     @FXML private Label txtBalance;
     @FXML private TextField tfCash;
-    @FXML private Button btnSavings;
+//    @FXML private Button btnSavings;
+    @FXML private CheckBox chkReviewed;
     @FXML private HBox corrections;
-    private final Button btnAdd;
+    @FXML private HBox hbLine;
+        
+//    @FXML private HBox hbSalaryPH;
+//    @FXML private HBox hbLoanPH;
+//    @FXML private HBox hbDozsaPH;
+//    @FXML private HBox hbWeinerPH;
+//    @FXML private HBox hbFuelPH;
+//    @FXML private HBox hbCarExpensePH;
+//    @FXML private HBox hbBusTravelPH;
+//    @FXML private HBox hbOtherPH;
+    
+    @FXML private Button btnAdd;
     
     private final DailyBalance dailyBalance;
     
@@ -66,9 +82,10 @@ public final class DailyBalanceControl extends HBox {
         
         loadUI();
         
-        btnAdd = new Button("+");
         btnAdd.onActionProperty().set(this::addCorrection);
         btnAdd.setVisible(false);
+        chkReviewed.visibleProperty().bind(dailyBalance.predictedProperty().not());
+        tfCash.visibleProperty().bind(dailyBalance.predictedProperty().not());
 
         tfCash.disableProperty().bind(dailyBalance.predictedProperty());
         txtBalance.disableProperty().bind(dailyBalance.predictedProperty());
@@ -83,13 +100,21 @@ public final class DailyBalanceControl extends HBox {
                 try {
                     dailyBalance.setCash(Integer.parseInt(tfCash.getText()));
                     setCash(NumberFormat.getCurrencyInstance().format(dailyBalance.getCash()));
-                    DataManager.getInstance().calculatePredictions();
+                    try {
+                        DataManager.getInstance().calculatePredictions();
+                    } catch (IOException ex) {
+                        Logger.getLogger(DailyBalanceControl.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 } catch (NotEnoughPastDataException ex) {
                     Logger.getLogger(DailyBalanceControl.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         });
-        setSavings(NumberFormat.getCurrencyInstance().format(dailyBalance.getTotalSavings()));
+        chkReviewed.selectedProperty().bindBidirectional(dailyBalance.reviewedProperty());
+        hbLine.disableProperty().bind(chkReviewed.selectedProperty());
+        chkReviewed.selectedProperty().addListener((ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) -> {
+            setBackground();
+        });
         loadCorrections();
         
         setBackground();
@@ -101,6 +126,7 @@ public final class DailyBalanceControl extends HBox {
             /* accept it only if it is not dragged from the same node 
              * and if it has a string data */
             if (((CorrectionControl)event.getGestureSource()).getParent() != corrections &&
+                    !chkReviewed.isSelected() &&
                     event.getDragboard().hasContent(CorrectionControl.CORRECTION_DATA_FORMAT)) {
                 /* allow for moving */
                 event.acceptTransferModes(TransferMode.MOVE);
@@ -112,6 +138,7 @@ public final class DailyBalanceControl extends HBox {
             /* the drag-and-drop gesture entered the target */
             /* show to the user that it is an actual gesture target */
              if (((CorrectionControl)event.getGestureSource()).getParent() != corrections &&
+                    !chkReviewed.isSelected() &&
                      event.getDragboard().hasContent(CorrectionControl.CORRECTION_DATA_FORMAT)) {
                  this.setStyle("-fx-background-color: yellow;");
              }
@@ -145,14 +172,22 @@ public final class DailyBalanceControl extends HBox {
     
     private void setBackground() {
         if (dailyBalance.getDate().getDayOfWeek() == DayOfWeek.SATURDAY || dailyBalance.getDate().getDayOfWeek() == DayOfWeek.SUNDAY) 
-            this.setStyle("-fx-background-color: lightgrey;");
+            if (chkReviewed.isSelected())
+                this.setStyle("-fx-background-color: green;");
+            else
+                this.setStyle("-fx-background-color: lightgrey;");
         else
-            this.setStyle("-fx-background-color: none;");
+            if (chkReviewed.isSelected())
+                this.setStyle("-fx-background-color: lightgreen;");
+            else
+                this.setStyle("-fx-background-color: none;");
     }
     
     public void loadCorrections() {
+//        for (Node node : corrections.getChildren()) {
+//            ((HBox)node).getChildren().clear();
+//        }
         corrections.getChildren().clear();
-        corrections.getChildren().add(btnAdd);
         dailyBalance.getCorrections().stream().forEach((correction) -> {
             corrections.getChildren().add(new CorrectionControl(correction, this));
         });        
@@ -182,10 +217,6 @@ public final class DailyBalanceControl extends HBox {
     public final void setCash(String value) { cashProperty().set(value); }
     public StringProperty cashProperty() { return tfCash.textProperty(); }
 
-    public String getSavings() { return savingsProperty().get(); }
-    public final void setSavings(String value) { savingsProperty().set(value); }
-    public StringProperty savingsProperty() { return btnSavings.textProperty(); }
-
     @FXML
     protected void doSomething() {
         System.out.println("The button was clicked!");
@@ -204,7 +235,7 @@ public final class DailyBalanceControl extends HBox {
             stage.initStyle(StageStyle.UTILITY);
             stage.setTitle(dailyBalance.getDate().toString());
             stage.setScene(new Scene(root1));
-            controller.setContext(newCorrection, dailyBalance.getTransactions());
+            controller.setContext(newCorrection, this);
             controller.setDialogStage(stage);
             stage.showAndWait();
             
@@ -225,8 +256,32 @@ public final class DailyBalanceControl extends HBox {
             DataManager.getInstance().calculatePredictions();
         } catch (NotEnoughPastDataException ex) {
             Logger.getLogger(DailyBalanceControl.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(DailyBalanceControl.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    
+//    private HBox getNode(Correction correction) {
+//        switch (correction.getType()) {
+//            case "Bér":
+//                return hbSalaryPH;                
+//            case "Hitel":
+//                return hbLoanPH;                
+//            case "Dózsa rezsi":
+//                return hbDozsaPH;                
+//            case "Weiner rezsi":
+//                return hbWeinerPH;                
+//            case "Üzemanyag":
+//                return hbFuelPH;
+//            case "Autó költség":
+//                return hbCarExpensePH;
+//            case "Busz költség":
+//                return hbBusTravelPH;
+//                
+//            default:
+//                return hbOtherPH;
+//        }
+//    }
     
     @FXML
     private void mouseEntered(MouseEvent event) {

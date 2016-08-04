@@ -5,6 +5,7 @@
  */
 package com.siki.cashcount;
 
+import com.siki.cashcount.control.DailyBalanceControl;
 import com.siki.cashcount.data.DataManager;
 import com.siki.cashcount.model.AccountTransaction;
 import com.siki.cashcount.model.Correction;
@@ -34,6 +35,7 @@ import javafx.util.converter.NumberStringConverter;
  */
 public class NewCorrectionWindowController implements Initializable {
     Correction correction;
+    DailyBalanceControl dailyBalanceControl;
     
     private Stage dialogStage;
     private boolean okClicked = false;
@@ -59,16 +61,17 @@ public class NewCorrectionWindowController implements Initializable {
         }
     }    
     
-    public void setContext(Correction correction, ObservableList<AccountTransaction> transactions) {
+    public void setContext(Correction correction, DailyBalanceControl dbControl) {
         cbType.setValue(correction.getType());
         tfAmount.setText(correction.getAmount().toString());
         tfComment.setText(correction.getComment());
         
         this.correction = correction;
+        this.dailyBalanceControl = dbControl;
         
         prepareTable();
         try {
-            tblTransactions.setItems(transactions);
+            tblTransactions.setItems(dbControl.getDailyBalance().getTransactions());
         } catch (Exception ex) {
             Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -135,6 +138,12 @@ public class NewCorrectionWindowController implements Initializable {
     
     @FXML
     protected void doCancel(ActionEvent event) {
+        dialogStage.close();
+    }
+    
+    @FXML
+    protected void doRemove(ActionEvent event) {
+        dailyBalanceControl.removeCorrection(correction);
         dialogStage.close();
     }
 }

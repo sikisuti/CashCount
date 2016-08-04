@@ -10,23 +10,32 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import com.siki.cashcount.model.Saving;
+import com.siki.cashcount.model.SavingStore;
 import java.lang.reflect.Type;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 /**
  *
  * @author tamas.siklosi
  */
-public class SavingDeserializer implements JsonDeserializer<Saving> {
+public class SavingStoreDeserializer implements JsonDeserializer<SavingStore> {
 
     @Override
-    public Saving deserialize(JsonElement je, Type type, JsonDeserializationContext jdc) throws JsonParseException {
+    public SavingStore deserialize(JsonElement je, Type type, JsonDeserializationContext jdc) throws JsonParseException {
         final JsonObject jsonObject = je.getAsJsonObject();
         
+        final LocalDate from = LocalDate.parse(jsonObject.get("from").getAsString(), DateTimeFormatter.ISO_DATE);
+        String stringTo = jsonObject.get("to").getAsString();
+        LocalDate to = null;
+        if (!stringTo.isEmpty())
+            to = LocalDate.parse(stringTo, DateTimeFormatter.ISO_DATE);
         final Integer amount = jsonObject.get("amount").getAsInt();
         final String comment = jsonObject.get("comment").getAsString();
         
-        Saving s = new Saving();
+        SavingStore s = new SavingStore();
+        s.setFrom(from);
+        s.setTo(to);
         s.setAmount(amount);
         s.setComment(comment);
         

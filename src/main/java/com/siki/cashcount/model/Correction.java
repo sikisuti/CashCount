@@ -33,6 +33,10 @@ public class Correction implements Externalizable {
     public String getType() { return type.get(); }
     public void setType(String type) { this.type.set(type); }
     public StringProperty typeProperty() { return type; }
+    
+    private DailyBalance dailyBalance;
+    public DailyBalance getDailyBalance() { return dailyBalance; }
+    public void setDailyBalance(DailyBalance dailyBalance) { this.dailyBalance = dailyBalance; }
 
     public Correction() {
         this.amount = new SimpleIntegerProperty();
@@ -52,6 +56,7 @@ public class Correction implements Externalizable {
         this.type.set(builder.type);
         this.amount.set(builder.amount);
         this.comment.set(builder.comment);
+        this.dailyBalance = builder.dailyBalance;
     }
 
     @Override
@@ -72,6 +77,7 @@ public class Correction implements Externalizable {
         Integer amount;
         String comment;
         String type;
+        DailyBalance dailyBalance;
         
         public Builder setAmount(Integer amount) {
             this.amount = amount;
@@ -85,6 +91,11 @@ public class Correction implements Externalizable {
         
         public Builder setType(String type) {
             this.type = type;
+            return this;
+        }
+        
+        public Builder setDailyBalance(DailyBalance dailyBalance) {
+            this.dailyBalance = dailyBalance;
             return this;
         }
         

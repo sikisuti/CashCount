@@ -4,12 +4,7 @@
 
 #root {
     -fx-background-radius: 10px;
-}
-
-#root:hover {
-    -fx-background-color: linear-gradient(from 0% 0% to 0% 100%, transparent, white 40%, lightgray);    
-}
-
-#root:pressed {
-    -fx-background-color: linear-gradient(from 0% 0% to 0% 100%, transparent, lightgray 40%, transparent);   
+    -fx-border-size: 2px;
+    -fx-border-color: lightgray;
+    -fx-border-radius: 10px;
 }

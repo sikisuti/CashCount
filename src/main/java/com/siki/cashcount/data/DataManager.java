@@ -7,6 +7,7 @@ package com.siki.cashcount.data;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.siki.cashcount.config.ConfigManager;
 import com.siki.cashcount.exception.JsonDeserializeException;
 import com.siki.cashcount.exception.NotEnoughPastDataException;
 import com.siki.cashcount.exception.TransactionGapException;
@@ -14,16 +15,18 @@ import com.siki.cashcount.model.AccountTransaction;
 import com.siki.cashcount.model.Correction;
 import com.siki.cashcount.model.DailyBalance;
 import com.siki.cashcount.model.Saving;
+import com.siki.cashcount.model.SavingStore;
 import com.siki.cashcount.serial.CorrectionDeserializer;
 import com.siki.cashcount.serial.CorrectionSerializer;
 import com.siki.cashcount.serial.DailyBalanceDeserializer;
 import com.siki.cashcount.serial.DailyBalanceSerialiser;
-import com.siki.cashcount.serial.SavingDeserializer;
-import com.siki.cashcount.serial.SavingSerializer;
+import com.siki.cashcount.serial.SavingStoreDeserializer;
+import com.siki.cashcount.serial.SavingStoreSerializer;
 import com.siki.cashcount.serial.TransactionDeserializer;
 import com.siki.cashcount.serial.TransactionSerializer;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -31,7 +34,13 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Paths;
+import java.nio.file.attribute.FileTime;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -53,6 +62,7 @@ public class DataManager {
     private ObservableList<DailyBalance> dailyBalanceCache;
     private HashMap<LocalDate, Integer> weeklyAverages;
     private List<String> correctionTypeCache;
+    private List<SavingStore> savingCache;
     
     public ObservableList<DailyBalance> getAllDailyBalances() throws IOException, JsonDeserializeException {
         if (dailyBalanceCache == null) {
@@ -66,15 +76,21 @@ public class DataManager {
         final GsonBuilder gsonBuilder = new GsonBuilder();
         gsonBuilder.registerTypeAdapter(DailyBalance.class, new DailyBalanceDeserializer());
         gsonBuilder.registerTypeAdapter(AccountTransaction.class, new TransactionDeserializer());
-        gsonBuilder.registerTypeAdapter(Saving.class, new SavingDeserializer());
+//        gsonBuilder.registerTypeAdapter(Saving.class, new SavingDeserializer());
         gsonBuilder.registerTypeAdapter(Correction.class, new CorrectionDeserializer());
         final Gson gson = gsonBuilder.create();
-            int lineCnt = 0;
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("./data.jsn"), "UTF-8"))) {
+        String dataPath = ConfigManager.getInstance().getProperty("DataPath");
+        int lineCnt = 0;
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(dataPath), "UTF-8"))) {
             String line;
             while ((line = br.readLine()) != null) {
                 lineCnt++;
-                rtnList.add(gson.fromJson(line, DailyBalance.class));
+                DailyBalance db = gson.fromJson(line, DailyBalance.class);
+                getSavings(db.getDate()).stream().forEach(s -> db.addSaving(s));
+                for (Correction c : db.getCorrections()) {
+                    c.setDailyBalance(db);
+                }
+                rtnList.add(db);
             }
         } catch (IOException e) {
             throw e;
@@ -106,12 +122,20 @@ public class DataManager {
             
         return newDb;
     }
-    public void saveDailyBalances() throws IOException {        
-        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("./data.jsn"), "UTF-8"))) {
+    public void saveDailyBalances() throws IOException {                
+        String dataPath = ConfigManager.getInstance().getProperty("DataPath");
+        FileTime lastModifiedTime = Files.getLastModifiedTime(Paths.get(dataPath));
+        LocalDate lastModifiedDate = LocalDateTime.ofInstant(lastModifiedTime.toInstant(), ZoneId.systemDefault()).toLocalDate();
+        if (!lastModifiedDate.equals(LocalDate.now())) {
+            String backupPath = ConfigManager.getInstance().getProperty("BackupPath");
+            if (Files.notExists(Paths.get(backupPath))) Files.createDirectory(Paths.get(backupPath));
+            Files.copy(Paths.get(dataPath), Paths.get(backupPath + "/data_" + lastModifiedDate + ".jsn"));
+        }
+        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(dataPath), "UTF-8"))) {
             final GsonBuilder gsonBuilder = new GsonBuilder();
             gsonBuilder.registerTypeAdapter(DailyBalance.class, new DailyBalanceSerialiser());
             gsonBuilder.registerTypeAdapter(AccountTransaction.class, new TransactionSerializer());
-            gsonBuilder.registerTypeAdapter(Saving.class, new SavingSerializer());
+//            gsonBuilder.registerTypeAdapter(Saving.class, new SavingSerializer());
             gsonBuilder.registerTypeAdapter(Correction.class, new CorrectionSerializer());
             //gsonBuilder.setPrettyPrinting();
             final Gson gson = gsonBuilder.create();
@@ -177,14 +201,19 @@ public class DataManager {
     }
     
     @SuppressWarnings("empty-statement")
-    private Integer getDayAverage(LocalDate date) throws NotEnoughPastDataException {
+    private Integer getDayAverage(LocalDate date) throws NotEnoughPastDataException, IOException {
+        Boolean exportDataForDebug = Boolean.parseBoolean(ConfigManager.getInstance().getProperty("ExportDataForDebug"));
+        
         if (weeklyAverages == null) weeklyAverages = new HashMap<>();
         
         BufferedWriter bw = null;
-        try {
-            bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("./averages.csv", true), "UTF-8"));
-        } catch (UnsupportedEncodingException | FileNotFoundException ex) {
-            Logger.getLogger(DataManager.class.getName()).log(Level.SEVERE, null, ex);
+        if (exportDataForDebug) {
+            try {
+                String exportDataPath = ConfigManager.getInstance().getProperty("ExportDataPath");
+                bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(exportDataPath, true), "UTF-8"));
+            } catch (UnsupportedEncodingException | FileNotFoundException ex) {
+                Logger.getLogger(DataManager.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
         String line = "";
         
@@ -216,27 +245,35 @@ public class DataManager {
                 else throw new NotEnoughPastDataException();
             }
             averageSum += weeklyAverage;
-            line = weeklyAverage.toString().concat(";" + line);
+            if (exportDataForDebug) line = weeklyAverage.toString().concat(";" + line);
         }
         Integer average = Math.round(averageSum / 6f);
-        line = line + ";" + average;
-        
-        if (bw != null) 
-            try {
-                bw.write(line);
-                bw.close();
-            } catch (IOException ex) {
-                Logger.getLogger(DataManager.class.getName()).log(Level.SEVERE, null, ex);
+        if (exportDataForDebug) {
+            line = line + ";" + average;
+            
+            if (bw != null) {
+                try {
+                    bw.write(line);
+                    bw.close();
+                } catch (IOException ex) {
+                    Logger.getLogger(DataManager.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
+        }        
         
         return average;
     }
     
-    public void calculatePredictions() throws NotEnoughPastDataException {
-        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("./averages.csv"), "UTF-8"))) {
-            
-        } catch (IOException ex) {
-            Logger.getLogger(DataManager.class.getName()).log(Level.SEVERE, null, ex);
+    public void calculatePredictions() throws NotEnoughPastDataException, IOException {
+        Boolean exportDataForDebug = Boolean.parseBoolean(ConfigManager.getInstance().getProperty("ExportDataForDebug"));
+        String exportDataPath ="";
+        if (exportDataForDebug) {
+            exportDataPath = ConfigManager.getInstance().getProperty("ExportDataPath");
+            try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(exportDataPath), "UTF-8"))) {
+
+            } catch (IOException ex) {
+                Logger.getLogger(DataManager.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
         
         weeklyAverages = new HashMap<>();
@@ -246,10 +283,12 @@ public class DataManager {
         dbList.addAll(dailyBalanceCache.stream().filter(d -> d.isPredicted()).collect(Collectors.toList()));
         for (int i = 1; i < dbList.size(); i++) {
             dbList.get(i).setBalance(dbList.get(i - 1).getTotalMoney() + getDayAverage(dbList.get(i).getDate()) + dbList.get(i).getTotalCorrections());
-            try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("./averages.csv", true), "UTF-8"))) {
-                bw.write(";;" + dbList.get(i).getBalance().toString() + "\n");
-            } catch (IOException ex) {
-                Logger.getLogger(DataManager.class.getName()).log(Level.SEVERE, null, ex);
+            if (exportDataForDebug) {
+                try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(exportDataPath, true), "UTF-8"))) {
+                    bw.write(";;" + dbList.get(i).getBalance().toString() + "\n");
+                } catch (IOException ex) {
+                    Logger.getLogger(DataManager.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         }
     }
@@ -257,7 +296,8 @@ public class DataManager {
     public List<String> getAllCorrectionType() throws IOException {
         if (correctionTypeCache == null) {
             correctionTypeCache = new ArrayList<>();
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("./correctionType.jsn"), "UTF-8"))) {
+            String correctionTypesPath = ConfigManager.getInstance().getProperty("CorrectionTypesPath");
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(correctionTypesPath), "UTF-8"))) {
                 final GsonBuilder gsonBuilder = new GsonBuilder();
                 final Gson gson = gsonBuilder.create();
                 String line;
@@ -274,7 +314,8 @@ public class DataManager {
     }
     
     public void saveCorrectionTypes() throws IOException {
-        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("./correctionType.jsn"), "UTF-8"))) {
+        String correctionTypesPath = ConfigManager.getInstance().getProperty("CorrectionTypesPath");
+        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(correctionTypesPath), "UTF-8"))) {
             final GsonBuilder gsonBuilder = new GsonBuilder();
             //gsonBuilder.setPrettyPrinting();
             final Gson gson = gsonBuilder.create();
@@ -297,5 +338,34 @@ public class DataManager {
         }
         
         return false;
+    }
+    
+    private void loadSavings() throws IOException, JsonDeserializeException {
+        savingCache = new ArrayList<>();
+        
+        final GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.registerTypeAdapter(SavingStore.class, new SavingStoreDeserializer());
+        final Gson gson = gsonBuilder.create();
+        String filePath = ConfigManager.getInstance().getProperty("SavingStorePath");
+        int lineCnt = 0;
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filePath), "UTF-8"))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                lineCnt++;
+                savingCache.add(gson.fromJson(line, SavingStore.class));
+            }
+        } catch (IOException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new JsonDeserializeException(lineCnt, e);
+        }
+    }
+    public List<SavingStore> getSavings(LocalDate date) throws IOException, JsonDeserializeException {
+        if (savingCache == null) loadSavings();
+        
+        return savingCache.stream().filter(s ->                 
+                (s.getFrom().isEqual(date) || s.getFrom().isBefore(date)) && 
+                (s.getTo() == null || s.getTo().isAfter(date)))
+                .collect(Collectors.toList());
     }
 }

@@ -52,6 +52,11 @@ public final class DailyBalance {
     public Integer getTotalMoney() { return totalMoney.get(); }
     public IntegerProperty totalMoneyProperty() { return totalMoney; }
     
+    private final BooleanProperty reviewed;
+    public Boolean isReviewed() { return reviewed.get(); }
+    public void setReviewed(Boolean reviewed) { this.reviewed.set(reviewed); }
+    public BooleanProperty reviewedProperty() { return reviewed; }
+    
     ObservableList<Saving> savings;
     ObservableList<Correction> corrections;
     ObservableList<AccountTransaction> transactions;
@@ -62,6 +67,7 @@ public final class DailyBalance {
         this.cash = new SimpleIntegerProperty();
         this.predicted = new SimpleBooleanProperty();
         this.totalMoney = new SimpleIntegerProperty();
+        this.reviewed = new SimpleBooleanProperty();
         savings = FXCollections.observableArrayList();
         corrections = FXCollections.observableArrayList();
         transactions = FXCollections.observableArrayList();
@@ -80,6 +86,7 @@ public final class DailyBalance {
         setBalance(builder.balance);
         setCash(builder.cash);
         setPredicted(builder.predicted);
+        setReviewed(builder.reviewed);
     }
     
     public void addSaving(Saving saving) {
@@ -120,6 +127,7 @@ public final class DailyBalance {
         Integer balance;
         Integer cash;
         Boolean predicted;
+        Boolean reviewed;
 //        Integer predictedBalance;
 
         public Builder setDate(LocalDate date) {
@@ -141,6 +149,11 @@ public final class DailyBalance {
             this.predicted = predicted;
             return this;
         }    
+
+        public Builder setReviewed(Boolean reviewed) {
+            this.reviewed = reviewed;
+            return this;
+        }  
         
         public DailyBalance build() {
             return new DailyBalance(this);
@@ -154,7 +167,8 @@ public final class DailyBalance {
                 this.getDate().equals(other.getDate()) &&
                 this.getBalance().equals(other.getBalance()) &&
                 this.getCash().equals(other.getCash()) &&
-                this.isPredicted().equals(other.isPredicted());
+                this.isPredicted().equals(other.isPredicted()) &&
+                this.isReviewed().equals(other.isReviewed());
         
         if (!rtn) return false;
         

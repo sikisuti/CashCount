@@ -8,23 +8,33 @@ package com.siki.cashcount.control;
 import com.siki.cashcount.NewCorrectionWindowController;
 import com.siki.cashcount.data.DataManager;
 import com.siki.cashcount.exception.NotEnoughPastDataException;
+import com.siki.cashcount.helper.CorrectionSelection;
 import com.siki.cashcount.model.Correction;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.GridPane;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -36,13 +46,8 @@ import javafx.stage.StageStyle;
  */
 public class CorrectionControl extends GridPane {
     
-    @FXML private Text txtType;
+    @FXML private Label txtType;
     @FXML private Text txtAmount;
-    
-    private final String baseStyle = 
-            "-fx-border-width: 5px;" + 
-            "-fx-border-style: round;" +
-            "-fx-border-radius: 5px;";
     
     private final Correction correction;
     private final DailyBalanceControl parent;
@@ -56,8 +61,19 @@ public class CorrectionControl extends GridPane {
         setDragAndDrop();        
         loadUI();
                 
-        txtType.textProperty().bind(correction.typeProperty());
+        txtType.setTooltip(new Tooltip("abc"));
+        txtType.textProperty().bind(correction.commentProperty());
         txtAmount.textProperty().bind(Bindings.convert(correction.amountProperty()));
+        
+        CorrectionSelection.getInstance().selectedCategoryProperty().addListener((ObservableValue<? extends String> observable, String oldValue, String newValue) -> {
+            if (newValue.equals(correction.getType())) {
+                this.setStyle("-fx-background-color: yellow;");
+                //this.setBackground(new Background(new BackgroundFill(Color.YELLOW, CornerRadii.EMPTY, Insets.EMPTY)));
+            } else {
+                this.setStyle("-fx-background-color: none;");
+                //this.setBackground(Background.EMPTY);
+            }
+        });
     }
     
     private void loadUI() {
@@ -104,24 +120,32 @@ public class CorrectionControl extends GridPane {
     public StringProperty amountProperty() { return txtAmount.textProperty(); }
     
     public void doModify(MouseEvent event) {
-        try {
-            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/NewCorrectionWindow.fxml"));
-            Parent root1 = (Parent) fxmlLoader.load();
-            NewCorrectionWindowController controller = fxmlLoader.getController();
-            Stage stage = new Stage();
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.initStyle(StageStyle.UTILITY);
-            stage.setTitle(parent.getDate());
-            stage.setScene(new Scene(root1));
-            controller.setContext(correction, parent.getDailyBalance().getTransactions());
-            controller.setDialogStage(stage);
-            stage.showAndWait();
-            
-            if (controller.isOkClicked()) {       
-                DataManager.getInstance().calculatePredictions();
+        if (event.getClickCount() == 1) {
+            if (CorrectionSelection.getInstance().getSelectedCategory().equals(this.correction.getType())) {
+                CorrectionSelection.getInstance().setSelectedCategory("");
+            } else {
+                CorrectionSelection.getInstance().setSelectedCategory(this.correction.getType());
             }
-        } catch (IOException | NotEnoughPastDataException ex) {
-            Logger.getLogger(DailyBalanceControl.class.getName()).log(Level.SEVERE, null, ex);
+        } else if (event.getClickCount() == 2) {
+            try {
+                FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/NewCorrectionWindow.fxml"));
+                Parent root1 = (Parent) fxmlLoader.load();
+                NewCorrectionWindowController controller = fxmlLoader.getController();
+                Stage stage = new Stage();
+                stage.initModality(Modality.APPLICATION_MODAL);
+                stage.initStyle(StageStyle.UTILITY);
+                stage.setTitle(parent.getDate());
+                stage.setScene(new Scene(root1));
+                controller.setContext(correction, parent);
+                controller.setDialogStage(stage);
+                stage.showAndWait();
+
+                if (controller.isOkClicked()) {       
+                    DataManager.getInstance().calculatePredictions();
+                }
+            } catch (IOException | NotEnoughPastDataException ex) {
+                Logger.getLogger(DailyBalanceControl.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
 }
