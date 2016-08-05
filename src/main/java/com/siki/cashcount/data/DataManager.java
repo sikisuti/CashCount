@@ -95,7 +95,7 @@ public class DataManager {
         
         return rtnList;
     }
-    private DailyBalance getLastDailyBalance() throws IOException, JsonDeserializeException {
+    public DailyBalance getLastDailyBalance() throws IOException, JsonDeserializeException {
         return getAllDailyBalances().get(getAllDailyBalances().size() - 1);
     }
     private DailyBalance getOrCreateDailyBalance(LocalDate date) throws IOException, NotEnoughPastDataException, JsonDeserializeException {
@@ -141,6 +141,27 @@ public class DataManager {
         } catch (IOException e) {
             throw e;
         }
+    }
+    public void addOneMonth() throws IOException, JsonDeserializeException, NotEnoughPastDataException {
+        LocalDate actDate = getLastDailyBalance().getDate().plusDays(1);
+        LocalDate endDate = getLastDailyBalance().getDate().plusMonths(2).withDayOfMonth(1);
+        
+        while (actDate.isBefore(endDate)) {
+            DailyBalance db = new DailyBalance.Builder()
+                                        .setDate(actDate)
+                                        .setPredicted(Boolean.TRUE)
+                                        .setReviewed(Boolean.FALSE)
+                                        .build();
+            
+            getSavings(actDate).stream().forEach(s -> db.addSaving(s));
+            final LocalDate ld = actDate;
+            getAllDailyBalances().stream().filter(d -> d.getDate()
+                    .isEqual(ld.minusMonths(1)))
+                    .findFirst().get().getCorrections().stream().forEach(c -> db.addCorrection(c));
+            dailyBalanceCache.add(db);
+            actDate = actDate.plusDays(1);
+        }
+        calculatePredictions();
     }
     
     public Integer saveTransactions(List<AccountTransaction> newTransactions, boolean force) throws IOException, TransactionGapException, NotEnoughPastDataException, JsonDeserializeException {

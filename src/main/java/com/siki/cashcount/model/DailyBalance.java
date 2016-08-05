@@ -83,8 +83,8 @@ public final class DailyBalance {
     private DailyBalance(Builder builder) {
         this();
         setDate(builder.date);
-        setBalance(builder.balance);
-        setCash(builder.cash);
+        setBalance(builder.balance == null ? 0 : builder.balance);
+        setCash(builder.cash == null ? 0 : builder.cash);
         setPredicted(builder.predicted);
         setReviewed(builder.reviewed);
     }

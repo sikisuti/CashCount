@@ -7,6 +7,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.chart.*?>
 <?import extfx.scene.chart.*?>
+<?import com.siki.cashcount.control.*?>
 
 <BorderPane fx:id="PageFrame" prefHeight="1000" prefWidth="1800" xmlns:fx="http://javafx.com/fxml" fx:controller="com.siki.cashcount.MainWindowController">
     <top>
@@ -56,7 +57,7 @@
                     </rowConstraints>
                     <children>
                         <ScrollPane fx:id="DailyBalancesSP"> 
-                            <VBox fx:id="DailyBalancesPH" />
+                            <VBox fx:id="DailyBalancesPH"  />
                         </ScrollPane>
                         <!--
                         <ButtonBar GridPane.columnIndex="0" GridPane.rowIndex="1" >
@@ -70,11 +71,13 @@
                     </children>
                 </GridPane>
             </Tab> 
-            <Tab text="Flow chart" closable="false" onSelectionChanged="#refreshChart" >
-                    <LineChart fx:id="FlowChart" createSymbols="false" prefHeight="650"  >
-                        <xAxis><DateAxis fx:id="xAxis" label="Dátum"/></xAxis>
+            <Tab fx:id="tabCashFlow" text="Flow chart" closable="false" onSelectionChanged="#refreshChart" >
+                <!--
+                    <CashFlowChart fx:id="FlowChart" createSymbols="false" prefHeight="650"  >
+                        <xAxis><DateAxis fx:id="xAxis" label="Dátum" autoRanging="false"/></xAxis>
                         <yAxis><NumberAxis fx:id="yAxis" label="Összeg" autoRanging="false" /></yAxis>
-                    </LineChart>
+                    </CashFlowChart>
+                -->
             </Tab> 
         </TabPane>
     </center>

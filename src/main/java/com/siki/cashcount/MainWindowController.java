@@ -1,16 +1,20 @@
 package com.siki.cashcount;
 
 import com.siki.cashcount.config.ConfigManager;
-import com.siki.cashcount.control.DailyBalanceControl;
+import com.siki.cashcount.control.CashFlowChart;
 import com.siki.cashcount.control.DailyBalancesTitledPane;
+import com.siki.cashcount.control.DateHelper;
 import com.siki.cashcount.data.DataManager;
 import com.siki.cashcount.exception.JsonDeserializeException;
 import com.siki.cashcount.exception.NotEnoughPastDataException;
 import com.siki.cashcount.exception.TransactionGapException;
 import com.siki.cashcount.helper.StopWatch;
 import com.siki.cashcount.model.*;
+import extfx.scene.chart.DateAxis;
 import java.io.*;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -20,9 +24,6 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
@@ -37,31 +38,33 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
+import javafx.util.StringConverter;
 
 public class MainWindowController implements Initializable {
 
 //    @FXML TableView SourceTable;
     @FXML BorderPane PageFrame;
-    @FXML LineChart FlowChart;
+    //@FXML LineChart FlowChart;
     @FXML VBox DailyBalancesPH;
-    @FXML NumberAxis yAxis;
+    //@FXML NumberAxis yAxis;
+    //@FXML DateAxis xAxis;
     @FXML ScrollPane DailyBalancesSP;
+    @FXML Tab tabCashFlow;
+    
+    CashFlowChart flowChart = new CashFlowChart();
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
             
 //        prepareTable();        
-        prepareChart();
+        tabCashFlow.setContent(flowChart);
+        refreshChart();
         prepareDailyBalances();
         DailyBalancesSP.setVvalue(ConfigManager.getDoubleProperty("DailyBalanceViewScroll"));
     }
     
-    private void prepareChart() {
-        if (ConfigManager.getBooleanProperty("LogPerformance")) StopWatch.start("prepareChart");
-        FlowChart.setTitle("Cash Flow");
-        yAxis.setTickUnit(100000);
-        
-        FlowChart.getData().clear();
+    public void refreshChart() {
+        flowChart.getData().clear();
                 
         try {
             ObservableList<DailyBalance> series = DataManager.getInstance().getAllDailyBalances();
@@ -73,7 +76,7 @@ public class MainWindowController implements Initializable {
             cashSeries.setName("Készpénz");
             accountSeries.setName("Számla");
             series.stream().forEach((db) -> {
-                Date date = Date.from(db.getDate().atStartOfDay(ZoneId.systemDefault()).toInstant());
+                Date date = DateHelper.toDate(db.getDate());
                 Integer yValue = db.getTotalSavings();
                 savingSeries.getData().add(new XYChart.Data(date, yValue));
                 yValue = yValue + db.getCash();
@@ -85,19 +88,22 @@ public class MainWindowController implements Initializable {
             int max = accountSeries.getData().stream().mapToInt(s -> s.getYValue()).max().getAsInt();
             int min = series.stream().filter(s -> s.isPredicted()).mapToInt(s -> s.getTotalSavings() + s.getTotalMoney()).min().getAsInt();
             
-            yAxis.setUpperBound(Math.ceil(max / 100000d) * 100000);
-            yAxis.setLowerBound(Math.floor((min - 350000) / 100000d) * 100000);
-            
-            FlowChart.getData().addAll(savingSeries, cashSeries, accountSeries);
+            flowChart.getYAxis().setUpperBound(Math.ceil(max / 100000d) * 100000);
+            flowChart.getYAxis().setLowerBound(Math.floor((min - 350000) / 100000d) * 100000);
+        
+            flowChart.getXAxis().setLowerBound(Date.from(DataManager.getInstance().getAllDailyBalances().get(0).getDate().atStartOfDay(ZoneId.systemDefault()).toInstant()));
+            flowChart.getXAxis().setUpperBound(Date.from(DataManager.getInstance().getLastDailyBalance().getDate().atStartOfDay(ZoneId.systemDefault()).toInstant()));
+        
+            flowChart.getData().addAll(savingSeries, cashSeries, accountSeries);
             
         } catch (IOException | JsonDeserializeException ex) {
             Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
         }
-        if (ConfigManager.getBooleanProperty("LogPerformance")) StopWatch.stop("prepareChart");
     }
     
     private void prepareDailyBalances() {
         if (ConfigManager.getBooleanProperty("LogPerformance")) StopWatch.start("prepareDailyBalances");
+        DailyBalancesPH.getChildren().clear();
         try {
             LocalDate date = null;
             DailyBalancesTitledPane tp = null;
@@ -111,6 +117,23 @@ public class MainWindowController implements Initializable {
                 if (isAroundToday(db.getDate()))
                     tp.addDailyBalance(db);
             }
+            Button btnNewMonth = new Button("+");
+            btnNewMonth.setStyle("-fx-alignment: center;");
+            btnNewMonth.setOnAction((ActionEvent event) -> {
+                Alert alert = new Alert(AlertType.CONFIRMATION);
+                alert.setHeaderText("Kibővíted a kalkulációt egy hónappal?");
+                Optional<ButtonType> result = alert.showAndWait();
+                
+                if (result.get() == ButtonType.OK) {
+                    try {
+                        DataManager.getInstance().addOneMonth();
+                        prepareDailyBalances();
+                    } catch (IOException | JsonDeserializeException | NotEnoughPastDataException ex) {
+                        Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            });
+            DailyBalancesPH.getChildren().add(btnNewMonth);
         } catch (JsonDeserializeException ex) {
             System.out.println("Error in line: " + ex.getErrorLineNum());
             Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
@@ -219,7 +242,7 @@ public class MainWindowController implements Initializable {
     @FXML
     private void refreshChart(Event event) {
         if (((Tab)(event.getSource())).isSelected()) {
-            prepareChart();
+            refreshChart();
         }
     }
 }
