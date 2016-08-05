@@ -2,6 +2,7 @@ package com.siki.cashcount;
 
 import com.siki.cashcount.config.ConfigManager;
 import com.siki.cashcount.control.DailyBalanceControl;
+import com.siki.cashcount.control.DailyBalancesTitledPane;
 import com.siki.cashcount.data.DataManager;
 import com.siki.cashcount.exception.JsonDeserializeException;
 import com.siki.cashcount.exception.NotEnoughPastDataException;
@@ -19,6 +20,9 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
@@ -95,24 +99,17 @@ public class MainWindowController implements Initializable {
     private void prepareDailyBalances() {
         if (ConfigManager.getBooleanProperty("LogPerformance")) StopWatch.start("prepareDailyBalances");
         try {
-            LocalDate date = DataManager.getInstance().getAllDailyBalances().get(0).getDate();
-            VBox vbox = new VBox();
+            LocalDate date = null;
+            DailyBalancesTitledPane tp = null;
             for (DailyBalance db : DataManager.getInstance().getAllDailyBalances()) {
-                if (!db.getDate().getMonth().equals(date.getMonth())) {
-                    TitledPane tp = new TitledPane(date.format(DateTimeFormatter.ofPattern("uuuu. MMMM")), vbox);
-                    if (!isAroundToday(date)) tp.setExpanded(false);
-                    else tp.setExpanded(true);
-                    DailyBalancesPH.getChildren().add(tp);                    
+                if (date == null || !db.getDate().getMonth().equals(date.getMonth())) {
                     date = db.getDate();
-                    vbox = new VBox();
-//                    VBox vbox = new VBox();
-//                    Label monthLabel = new Label(db.getDate().format(DateTimeFormatter.ofPattern("uuuu. MMMM")));
-//                    monthLabel.setStyle("-fx-font-size: 20; -fx-font-weight: bold;");
-//                    vbox.getChildren().addAll(monthLabel, new Separator());
-//                    DailyBalancesPH.getChildren().add(vbox);
+                    tp = new DailyBalancesTitledPane(date);
+                    tp.setExpanded(isAroundToday(date));
+                    DailyBalancesPH.getChildren().add(tp);  
                 }
                 if (isAroundToday(db.getDate()))
-                    vbox.getChildren().add(new DailyBalanceControl(db));
+                    tp.addDailyBalance(db);
             }
         } catch (JsonDeserializeException ex) {
             System.out.println("Error in line: " + ex.getErrorLineNum());
@@ -124,8 +121,8 @@ public class MainWindowController implements Initializable {
     }
     
     private boolean isAroundToday(LocalDate date) {
-        return date.isAfter(LocalDate.now().minusMonths(2).withDayOfMonth(LocalDate.now().minusMonths(2).lengthOfMonth())) &&
-                date.isBefore(LocalDate.now().plusMonths(2).withDayOfMonth(1));
+        return date.isAfter(LocalDate.now().minusMonths(1).withDayOfMonth(LocalDate.now().minusMonths(1).lengthOfMonth())) &&
+                date.isBefore(LocalDate.now().plusMonths(1).withDayOfMonth(1));
     }
     
     public double getDailyBalanceViewScroll() {

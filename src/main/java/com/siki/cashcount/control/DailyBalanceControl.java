@@ -18,12 +18,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.beans.property.StringProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -49,19 +47,9 @@ public final class DailyBalanceControl extends BorderPane {
     @FXML private Label txtDate;
     @FXML private Label txtBalance;
     @FXML private TextField tfCash;
-//    @FXML private Button btnSavings;
     @FXML private CheckBox chkReviewed;
     @FXML private HBox corrections;
     @FXML private HBox hbLine;
-        
-//    @FXML private HBox hbSalaryPH;
-//    @FXML private HBox hbLoanPH;
-//    @FXML private HBox hbDozsaPH;
-//    @FXML private HBox hbWeinerPH;
-//    @FXML private HBox hbFuelPH;
-//    @FXML private HBox hbCarExpensePH;
-//    @FXML private HBox hbBusTravelPH;
-//    @FXML private HBox hbOtherPH;
     
     @FXML private Button btnAdd;
     
@@ -184,9 +172,6 @@ public final class DailyBalanceControl extends BorderPane {
     }
     
     public void loadCorrections() {
-//        for (Node node : corrections.getChildren()) {
-//            ((HBox)node).getChildren().clear();
-//        }
         corrections.getChildren().clear();
         dailyBalance.getCorrections().stream().forEach((correction) -> {
             corrections.getChildren().add(new CorrectionControl(correction, this));
@@ -254,34 +239,10 @@ public final class DailyBalanceControl extends BorderPane {
             dailyBalance.getCorrections().remove(correction);
             loadCorrections();
             DataManager.getInstance().calculatePredictions();
-        } catch (NotEnoughPastDataException ex) {
-            Logger.getLogger(DailyBalanceControl.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
+        } catch (NotEnoughPastDataException | IOException ex) {
             Logger.getLogger(DailyBalanceControl.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
-//    private HBox getNode(Correction correction) {
-//        switch (correction.getType()) {
-//            case "Bér":
-//                return hbSalaryPH;                
-//            case "Hitel":
-//                return hbLoanPH;                
-//            case "Dózsa rezsi":
-//                return hbDozsaPH;                
-//            case "Weiner rezsi":
-//                return hbWeinerPH;                
-//            case "Üzemanyag":
-//                return hbFuelPH;
-//            case "Autó költség":
-//                return hbCarExpensePH;
-//            case "Busz költség":
-//                return hbBusTravelPH;
-//                
-//            default:
-//                return hbOtherPH;
-//        }
-//    }
     
     @FXML
     private void mouseEntered(MouseEvent event) {

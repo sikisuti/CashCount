@@ -6,20 +6,20 @@
 package com.siki.cashcount.control;
 
 import com.siki.cashcount.NewCorrectionWindowController;
+import com.siki.cashcount.converter.IntegerToTextConverter;
 import com.siki.cashcount.data.DataManager;
 import com.siki.cashcount.exception.NotEnoughPastDataException;
 import com.siki.cashcount.helper.CorrectionSelection;
 import com.siki.cashcount.model.Correction;
 import java.io.IOException;
+import java.text.NumberFormat;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.StringProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -30,11 +30,7 @@ import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
-import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.GridPane;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -63,15 +59,15 @@ public class CorrectionControl extends GridPane {
                 
         txtType.setTooltip(new Tooltip("abc"));
         txtType.textProperty().bind(correction.commentProperty());
-        txtAmount.textProperty().bind(Bindings.convert(correction.amountProperty()));
+        txtAmount.textProperty().set(NumberFormat.getCurrencyInstance().format(correction.getAmount()));
+        correction.amountProperty().addListener(new IntegerToTextConverter(txtAmount.textProperty()));
+        //txtAmount.textProperty().bind(Bindings.convert(correction.amountProperty()));
         
         CorrectionSelection.getInstance().selectedCategoryProperty().addListener((ObservableValue<? extends String> observable, String oldValue, String newValue) -> {
             if (newValue.equals(correction.getType())) {
                 this.setStyle("-fx-background-color: yellow;");
-                //this.setBackground(new Background(new BackgroundFill(Color.YELLOW, CornerRadii.EMPTY, Insets.EMPTY)));
             } else {
                 this.setStyle("-fx-background-color: none;");
-                //this.setBackground(Background.EMPTY);
             }
         });
     }
