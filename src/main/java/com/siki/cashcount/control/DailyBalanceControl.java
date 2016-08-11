@@ -246,7 +246,7 @@ public final class DailyBalanceControl extends BorderPane {
     
     @FXML
     private void mouseEntered(MouseEvent event) {
-        btnAdd.setVisible(true);
+        btnAdd.setVisible(!chkReviewed.isSelected());
     }
     
     @FXML

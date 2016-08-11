@@ -10,11 +10,8 @@ import com.siki.cashcount.exception.NotEnoughPastDataException;
 import com.siki.cashcount.exception.TransactionGapException;
 import com.siki.cashcount.helper.StopWatch;
 import com.siki.cashcount.model.*;
-import extfx.scene.chart.DateAxis;
 import java.io.*;
 import java.net.URL;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -29,52 +26,59 @@ import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
 import javafx.scene.chart.LineChart;
-import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
-import javafx.util.StringConverter;
 
 public class MainWindowController implements Initializable {
 
-//    @FXML TableView SourceTable;
     @FXML BorderPane PageFrame;
-    //@FXML LineChart FlowChart;
     @FXML VBox DailyBalancesPH;
-    //@FXML NumberAxis yAxis;
-    //@FXML DateAxis xAxis;
     @FXML ScrollPane DailyBalancesSP;
-    @FXML Tab tabCashFlow;
+    @FXML VBox vbCashFlow;
     
+    Slider slider = new Slider();
     CashFlowChart flowChart = new CashFlowChart();
+    Button btnGetPast = new Button("Időgép");
+        
+    LineChart.Series<Date, Integer> savingSeries = new LineChart.Series<>();
+    LineChart.Series<Date, Integer> cashSeries = new LineChart.Series<>();
+    LineChart.Series<Date, Integer> accountSeries = new LineChart.Series<>();
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
             
-//        prepareTable();        
-        tabCashFlow.setContent(flowChart);
-        refreshChart();
+//        prepareTable();   
+
+        // Chart layout
+        vbCashFlow.getChildren().add(flowChart);
+        btnGetPast.setOnAction((ActionEvent event) -> { getPast(); });
+        vbCashFlow.getChildren().add(btnGetPast);
+        savingSeries.setName("Lekötések");
+        cashSeries.setName("Készpénz");
+        accountSeries.setName("Számla");        
+        flowChart.getData().addAll(savingSeries, cashSeries, accountSeries);        
+        
         prepareDailyBalances();
         DailyBalancesSP.setVvalue(ConfigManager.getDoubleProperty("DailyBalanceViewScroll"));
     }
     
-    public void refreshChart() {
-        flowChart.getData().clear();
+    public void refreshChart(ObservableList<DailyBalance> series) {
+        savingSeries.getData().clear();
+        cashSeries.getData().clear();
+        accountSeries.getData().clear();
                 
         try {
-            ObservableList<DailyBalance> series = DataManager.getInstance().getAllDailyBalances();
-        
-            LineChart.Series<Date, Integer> savingSeries = new LineChart.Series<>();
-            LineChart.Series<Date, Integer> cashSeries = new LineChart.Series<>();
-            LineChart.Series<Date, Integer> accountSeries = new LineChart.Series<>();
-            savingSeries.setName("Lekötések");
-            cashSeries.setName("Készpénz");
-            accountSeries.setName("Számla");
+            
             series.stream().forEach((db) -> {
                 Date date = DateHelper.toDate(db.getDate());
                 Integer yValue = db.getTotalSavings();
@@ -82,7 +86,7 @@ public class MainWindowController implements Initializable {
                 yValue = yValue + db.getCash();
                 cashSeries.getData().add(new XYChart.Data(date, yValue));
                 yValue = yValue + db.getBalance();
-                accountSeries.getData().add(new XYChart.Data(date, yValue));
+                accountSeries.getData().add(new XYChart.Data(date, yValue));                        
             });
             
             int max = accountSeries.getData().stream().mapToInt(s -> s.getYValue()).max().getAsInt();
@@ -94,7 +98,6 @@ public class MainWindowController implements Initializable {
             flowChart.getXAxis().setLowerBound(Date.from(DataManager.getInstance().getAllDailyBalances().get(0).getDate().atStartOfDay(ZoneId.systemDefault()).toInstant()));
             flowChart.getXAxis().setUpperBound(Date.from(DataManager.getInstance().getLastDailyBalance().getDate().atStartOfDay(ZoneId.systemDefault()).toInstant()));
         
-            flowChart.getData().addAll(savingSeries, cashSeries, accountSeries);
             
         } catch (IOException | JsonDeserializeException ex) {
             Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
@@ -242,7 +245,33 @@ public class MainWindowController implements Initializable {
     @FXML
     private void refreshChart(Event event) {
         if (((Tab)(event.getSource())).isSelected()) {
-            refreshChart();
+            try {
+                ObservableList<DailyBalance> series = DataManager.getInstance().getAllDailyBalances();
+                refreshChart(series);
+            } catch (IOException | JsonDeserializeException ex) {
+                Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
+    }
+    
+    private void getPast() {
+        vbCashFlow.getChildren().remove(btnGetPast);
+        
+        try {
+            refreshChart(DataManager.getInstance().getAllDailyBalances(LocalDate.of(2016, 8, 3)));
+        } catch (IOException | JsonDeserializeException ex) {
+            Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        GridPane gp = new GridPane();
+        gp.setHgrow(slider, Priority.ALWAYS);
+        ColumnConstraints col1 = new ColumnConstraints();
+        col1.setPercentWidth(44);
+        ColumnConstraints col2 = new ColumnConstraints();
+        gp.getColumnConstraints().addAll(col1, col2);
+        slider.setPadding(new Insets(0, 0, 0, 110));
+        gp.setConstraints(slider, 0, 0);
+        gp.getChildren().add(slider);
+        vbCashFlow.getChildren().add(gp);
     }
 }

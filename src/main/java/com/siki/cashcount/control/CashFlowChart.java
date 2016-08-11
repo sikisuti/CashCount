@@ -28,6 +28,8 @@ public final class CashFlowChart extends LineChart {
         
         this.getXAxis().setLabel("Dátum");
         this.getXAxis().setAutoRanging(false);
+        this.getXAxis().setLowerBound(new Date());
+        this.getXAxis().setUpperBound(new Date());
         this.getXAxis().setTickLabelFormatter(new StringConverter<Date>() {
             @Override
             public String toString(Date object) {
@@ -42,6 +44,8 @@ public final class CashFlowChart extends LineChart {
         
         this.getYAxis().setLabel("Összeg");
         this.getYAxis().setAutoRanging(false);
+        this.getYAxis().setLowerBound(0);
+        this.getYAxis().setUpperBound(0);
         this.getYAxis().setTickUnit(100000);
         
         this.setTitle("Cash Flow");
@@ -52,6 +56,8 @@ public final class CashFlowChart extends LineChart {
         Line line = new Line();
         nowLine.setNode(line);
         getPlotChildren().add(line);
+        setMaxHeight(Double.MAX_VALUE);
+        setPrefHeight(900);
     }
 
     @Override

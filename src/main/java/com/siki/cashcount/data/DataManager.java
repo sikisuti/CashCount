@@ -20,6 +20,7 @@ import com.siki.cashcount.serial.CorrectionSerializer;
 import com.siki.cashcount.serial.DailyBalanceDeserializer;
 import com.siki.cashcount.serial.DailyBalanceSerialiser;
 import com.siki.cashcount.serial.SavingStoreDeserializer;
+import com.siki.cashcount.serial.SavingStoreSerializer;
 import com.siki.cashcount.serial.TransactionDeserializer;
 import com.siki.cashcount.serial.TransactionSerializer;
 import java.io.BufferedReader;
@@ -31,8 +32,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.nio.file.DirectoryIteratorException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -59,28 +64,56 @@ public class DataManager {
     private HashMap<LocalDate, Integer> weeklyAverages;
     private List<String> correctionTypeCache;
     private List<SavingStore> savingCache;
+    private TreeMap<LocalDate, ObservableList<DailyBalance>> pastSeries;
+    
+    Gson gsonDeserializer;
+    Gson gsonSerializer;
+
+    private DataManager() {        
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.registerTypeAdapter(DailyBalance.class, new DailyBalanceDeserializer());
+        gsonBuilder.registerTypeAdapter(AccountTransaction.class, new TransactionDeserializer());
+        gsonBuilder.registerTypeAdapter(Correction.class, new CorrectionDeserializer());
+        gsonBuilder.registerTypeAdapter(SavingStore.class, new SavingStoreDeserializer());
+        gsonDeserializer = gsonBuilder.create();
+        
+        gsonBuilder = new GsonBuilder();
+        gsonBuilder.registerTypeAdapter(DailyBalance.class, new DailyBalanceSerialiser());
+        gsonBuilder.registerTypeAdapter(AccountTransaction.class, new TransactionSerializer());
+        gsonBuilder.registerTypeAdapter(Correction.class, new CorrectionSerializer());
+        gsonBuilder.registerTypeAdapter(SavingStore.class, new SavingStoreSerializer());
+        gsonSerializer = gsonBuilder.create();
+        
+        try {
+            loadPastSeries();
+        } catch (IOException | JsonDeserializeException ex) {
+            Logger.getLogger(DataManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }  
     
     public ObservableList<DailyBalance> getAllDailyBalances() throws IOException, JsonDeserializeException {
         if (dailyBalanceCache == null) {
-            dailyBalanceCache = loadDailyBalances();
+            String dataPath = ConfigManager.getStringProperty("DataPath");
+            dailyBalanceCache = loadDailyBalances(dataPath);
         }
         
         return dailyBalanceCache;
     }
-    private ObservableList<DailyBalance> loadDailyBalances() throws IOException, JsonDeserializeException {        
+    public ObservableList<DailyBalance> getAllDailyBalances(LocalDate date) throws IOException, JsonDeserializeException {
+        if (pastSeries == null) {
+            loadPastSeries();
+        }
+        
+        return pastSeries.getOrDefault(date, FXCollections.observableArrayList());
+    }
+    private ObservableList<DailyBalance> loadDailyBalances(String dataPath) throws IOException, JsonDeserializeException {        
         ObservableList<DailyBalance> rtnList = FXCollections.observableArrayList();
-        final GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.registerTypeAdapter(DailyBalance.class, new DailyBalanceDeserializer());
-        gsonBuilder.registerTypeAdapter(AccountTransaction.class, new TransactionDeserializer());
-        gsonBuilder.registerTypeAdapter(Correction.class, new CorrectionDeserializer());
-        final Gson gson = gsonBuilder.create();
-        String dataPath = ConfigManager.getStringProperty("DataPath");
         int lineCnt = 0;
         try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(dataPath), "UTF-8"))) {
             String line;
             while ((line = br.readLine()) != null) {
                 lineCnt++;
-                DailyBalance db = gson.fromJson(line, DailyBalance.class);
+                DailyBalance db = gsonDeserializer.fromJson(line, DailyBalance.class);
                 getSavings(db.getDate()).stream().forEach(s -> db.addSaving(s));
                 db.getCorrections().stream().forEach((c) -> {
                     c.setDailyBalance(db);
@@ -127,15 +160,8 @@ public class DataManager {
             Files.copy(Paths.get(dataPath), Paths.get(backupPath + "/data_" + lastModifiedDate + ".jsn"));
         }
         try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(dataPath), "UTF-8"))) {
-            final GsonBuilder gsonBuilder = new GsonBuilder();
-            gsonBuilder.registerTypeAdapter(DailyBalance.class, new DailyBalanceSerialiser());
-            gsonBuilder.registerTypeAdapter(AccountTransaction.class, new TransactionSerializer());
-//            gsonBuilder.registerTypeAdapter(Saving.class, new SavingSerializer());
-            gsonBuilder.registerTypeAdapter(Correction.class, new CorrectionSerializer());
-            //gsonBuilder.setPrettyPrinting();
-            final Gson gson = gsonBuilder.create();
             for (int i = 0; i < dailyBalanceCache.size(); i++) {
-                bw.write(gson.toJson(dailyBalanceCache.get(i), DailyBalance.class));
+                bw.write(gsonSerializer.toJson(dailyBalanceCache.get(i), DailyBalance.class));
                 if (i < dailyBalanceCache.size() - 1) bw.write("\n");
             }
         } catch (IOException e) {
@@ -314,11 +340,9 @@ public class DataManager {
             correctionTypeCache = new ArrayList<>();
             String correctionTypesPath = ConfigManager.getStringProperty("CorrectionTypesPath");
             try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(correctionTypesPath), "UTF-8"))) {
-                final GsonBuilder gsonBuilder = new GsonBuilder();
-                final Gson gson = gsonBuilder.create();
                 String line;
                 while ((line = br.readLine()) != null) {
-                    correctionTypeCache.add(gson.fromJson(line, String.class));
+                    correctionTypeCache.add(gsonDeserializer.fromJson(line, String.class));
                 }
             } catch (IOException e) {
                 correctionTypeCache = null;
@@ -332,11 +356,8 @@ public class DataManager {
     public void saveCorrectionTypes() throws IOException {
         String correctionTypesPath = ConfigManager.getStringProperty("CorrectionTypesPath");
         try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(correctionTypesPath), "UTF-8"))) {
-            final GsonBuilder gsonBuilder = new GsonBuilder();
-            //gsonBuilder.setPrettyPrinting();
-            final Gson gson = gsonBuilder.create();
             for (int i = 0; i < correctionTypeCache.size(); i++) {
-                bw.write(gson.toJson(correctionTypeCache.get(i), String.class));
+                bw.write(gsonSerializer.toJson(correctionTypeCache.get(i), String.class));
                 if (i < correctionTypeCache.size() - 1) bw.write("\n");
             }
         } catch (IOException e) {
@@ -345,7 +366,8 @@ public class DataManager {
     }
     
     public boolean needSave() throws IOException, JsonDeserializeException {
-        ObservableList<DailyBalance> original = loadDailyBalances();
+        String dataPath = ConfigManager.getStringProperty("DataPath");
+        ObservableList<DailyBalance> original = loadDailyBalances(dataPath);
         
         if (original.size() != dailyBalanceCache.size()) return true;
         
@@ -359,16 +381,13 @@ public class DataManager {
     private void loadSavings() throws IOException, JsonDeserializeException {
         savingCache = new ArrayList<>();
         
-        final GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.registerTypeAdapter(SavingStore.class, new SavingStoreDeserializer());
-        final Gson gson = gsonBuilder.create();
         String filePath = ConfigManager.getStringProperty("SavingStorePath");
         int lineCnt = 0;
         try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filePath), "UTF-8"))) {
             String line;
             while ((line = br.readLine()) != null) {
                 lineCnt++;
-                savingCache.add(gson.fromJson(line, SavingStore.class));
+                savingCache.add(gsonDeserializer.fromJson(line, SavingStore.class));
             }
         } catch (IOException e) {
             throw e;
@@ -383,5 +402,19 @@ public class DataManager {
                 (s.getFrom().isEqual(date) || s.getFrom().isBefore(date)) && 
                 (s.getTo() == null || s.getTo().isAfter(date)))
                 .collect(Collectors.toList());
+    }
+    
+    private void loadPastSeries() throws IOException, JsonDeserializeException {
+        pastSeries = new TreeMap<>();
+        
+        String backupPath = ConfigManager.getStringProperty("BackupPath");
+        
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(backupPath), "*.{jsn}")) {
+            for (Path entry: stream) {
+                LocalDate date = LocalDateTime.ofInstant(Files.getLastModifiedTime(entry).toInstant(), ZoneId.systemDefault()).toLocalDate();
+                if (!pastSeries.containsKey(date))
+                    pastSeries.put(date, loadDailyBalances(entry.toString()));
+            }
+        } 
     }
 }

@@ -71,13 +71,10 @@
                     </children>
                 </GridPane>
             </Tab> 
-            <Tab fx:id="tabCashFlow" text="Flow chart" closable="false" onSelectionChanged="#refreshChart" >
-                <!--
-                    <CashFlowChart fx:id="FlowChart" createSymbols="false" prefHeight="650"  >
-                        <xAxis><DateAxis fx:id="xAxis" label="Dátum" autoRanging="false"/></xAxis>
-                        <yAxis><NumberAxis fx:id="yAxis" label="Összeg" autoRanging="false" /></yAxis>
-                    </CashFlowChart>
-                -->
+            <Tab fx:id="tabCashFlow" text="Flow chart" closable="false" onSelectionChanged="#refreshChart"  >
+                <VBox fx:id="vbCashFlow" >
+                     
+                </VBox>
             </Tab> 
         </TabPane>
     </center>
