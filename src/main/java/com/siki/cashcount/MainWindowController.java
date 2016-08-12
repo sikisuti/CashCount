@@ -1,6 +1,7 @@
 package com.siki.cashcount;
 
 import com.siki.cashcount.config.ConfigManager;
+import com.siki.cashcount.constant.CashFlowSeries;
 import com.siki.cashcount.control.CashFlowChart;
 import com.siki.cashcount.control.DailyBalancesTitledPane;
 import com.siki.cashcount.control.DateHelper;
@@ -14,13 +15,17 @@ import java.io.*;
 import java.net.URL;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
+import static java.time.temporal.ChronoUnit.DAYS;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
@@ -101,6 +106,18 @@ public class MainWindowController implements Initializable {
             
         } catch (IOException | JsonDeserializeException ex) {
             Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    private void refreshChart(HashMap<CashFlowSeries, ObservableList<XYChart.Data<Date, Integer>>> series) {
+        if (series != null) {        
+            savingSeries.getData().clear();
+            cashSeries.getData().clear();
+            accountSeries.getData().clear();
+
+            savingSeries.setData(series.get(CashFlowSeries.SAVING));
+            cashSeries.setData(series.get(CashFlowSeries.CASH));
+            accountSeries.setData(series.get(CashFlowSeries.ACCOUNT));
         }
     }
     
@@ -255,23 +272,33 @@ public class MainWindowController implements Initializable {
     }
     
     private void getPast() {
-        vbCashFlow.getChildren().remove(btnGetPast);
-        
         try {
-            refreshChart(DataManager.getInstance().getAllDailyBalances(LocalDate.of(2016, 8, 3)));
+            vbCashFlow.getChildren().remove(btnGetPast);
+            
+            GridPane gp = new GridPane();
+            gp.setHgrow(slider, Priority.ALWAYS);
+            ColumnConstraints col1 = new ColumnConstraints();
+            col1.setPercentWidth(44);
+            ColumnConstraints col2 = new ColumnConstraints();
+            gp.getColumnConstraints().addAll(col1, col2);
+            slider.setPadding(new Insets(0, 0, 0, 110));
+            
+            slider.setMin(DAYS.between(LocalDate.now(), DataManager.getInstance().getFirstDailyBalance().getDate()));
+            slider.setMax(0);
+            slider.setMajorTickUnit(1);
+            slider.setSnapToTicks(true);
+            slider.valueProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
+                try {
+                    refreshChart(DataManager.getInstance().getPastSeries(LocalDate.now().plusDays(newValue.longValue())));
+                } catch (IOException | JsonDeserializeException ex) {
+                    Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            });
+            gp.setConstraints(slider, 0, 0);
+            gp.getChildren().add(slider);
+            vbCashFlow.getChildren().add(gp);
         } catch (IOException | JsonDeserializeException ex) {
             Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
-        GridPane gp = new GridPane();
-        gp.setHgrow(slider, Priority.ALWAYS);
-        ColumnConstraints col1 = new ColumnConstraints();
-        col1.setPercentWidth(44);
-        ColumnConstraints col2 = new ColumnConstraints();
-        gp.getColumnConstraints().addAll(col1, col2);
-        slider.setPadding(new Insets(0, 0, 0, 110));
-        gp.setConstraints(slider, 0, 0);
-        gp.getChildren().add(slider);
-        vbCashFlow.getChildren().add(gp);
     }
 }

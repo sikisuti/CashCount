@@ -8,6 +8,8 @@ package com.siki.cashcount.data;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.siki.cashcount.config.ConfigManager;
+import com.siki.cashcount.constant.CashFlowSeries;
+import com.siki.cashcount.control.DateHelper;
 import com.siki.cashcount.exception.JsonDeserializeException;
 import com.siki.cashcount.exception.NotEnoughPastDataException;
 import com.siki.cashcount.exception.TransactionGapException;
@@ -43,6 +45,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.TreeMap;
@@ -51,6 +54,9 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.XYChart;
+import javafx.scene.chart.XYChart.Data;
 
 /**
  *
@@ -64,7 +70,7 @@ public class DataManager {
     private HashMap<LocalDate, Integer> weeklyAverages;
     private List<String> correctionTypeCache;
     private List<SavingStore> savingCache;
-    private TreeMap<LocalDate, ObservableList<DailyBalance>> pastSeries;
+    private TreeMap<LocalDate, HashMap<CashFlowSeries, ObservableList<Data<Date, Integer>>>> pastSeries;
     
     Gson gsonDeserializer;
     Gson gsonSerializer;
@@ -85,7 +91,7 @@ public class DataManager {
         gsonSerializer = gsonBuilder.create();
         
         try {
-            loadPastSeries();
+            loadAllPastSeries();
         } catch (IOException | JsonDeserializeException ex) {
             Logger.getLogger(DataManager.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -99,12 +105,15 @@ public class DataManager {
         
         return dailyBalanceCache;
     }
-    public ObservableList<DailyBalance> getAllDailyBalances(LocalDate date) throws IOException, JsonDeserializeException {
+    public HashMap<CashFlowSeries, ObservableList<Data<Date, Integer>>> getPastSeries(LocalDate date) throws IOException, JsonDeserializeException {
         if (pastSeries == null) {
-            loadPastSeries();
+            loadAllPastSeries();
         }
         
-        return pastSeries.getOrDefault(date, FXCollections.observableArrayList());
+        HashMap<CashFlowSeries, ObservableList<Data<Date, Integer>>> rtn = null;        
+        int decr = 0;
+        while ((rtn = pastSeries.getOrDefault(date.minusDays(decr), null)) == null && date.minusDays(decr).isAfter(pastSeries.firstKey())) { decr++; }
+        return rtn;
     }
     private ObservableList<DailyBalance> loadDailyBalances(String dataPath) throws IOException, JsonDeserializeException {        
         ObservableList<DailyBalance> rtnList = FXCollections.observableArrayList();
@@ -130,6 +139,9 @@ public class DataManager {
     }
     public DailyBalance getLastDailyBalance() throws IOException, JsonDeserializeException {
         return getAllDailyBalances().get(getAllDailyBalances().size() - 1);
+    }
+    public DailyBalance getFirstDailyBalance() throws IOException, JsonDeserializeException {
+        return getAllDailyBalances().get(0);
     }
     private DailyBalance getOrCreateDailyBalance(LocalDate date) throws IOException, NotEnoughPastDataException, JsonDeserializeException {
         if (dailyBalanceCache.stream().filter(d -> d.getDate().equals(date)).findFirst().isPresent())
@@ -404,17 +416,48 @@ public class DataManager {
                 .collect(Collectors.toList());
     }
     
-    private void loadPastSeries() throws IOException, JsonDeserializeException {
+    private void loadAllPastSeries() throws IOException, JsonDeserializeException {
         pastSeries = new TreeMap<>();
-        
+                
         String backupPath = ConfigManager.getStringProperty("BackupPath");
         
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(backupPath), "*.{jsn}")) {
             for (Path entry: stream) {
-                LocalDate date = LocalDateTime.ofInstant(Files.getLastModifiedTime(entry).toInstant(), ZoneId.systemDefault()).toLocalDate();
-                if (!pastSeries.containsKey(date))
-                    pastSeries.put(date, loadDailyBalances(entry.toString()));
-            }
+                loadPastSeries(entry);
+            }            
         } 
+        loadPastSeries(null);
+    }
+    
+    private void loadPastSeries(Path entry) throws IOException, JsonDeserializeException {
+        ObservableList<Data<Date, Integer>> savingSeries;
+        ObservableList<Data<Date, Integer>> cashSeries;
+        ObservableList<Data<Date, Integer>> accountSeries;
+        
+        LocalDate lDate;
+        if (entry != null) lDate = LocalDateTime.ofInstant(Files.getLastModifiedTime(entry).toInstant(), ZoneId.systemDefault()).toLocalDate();
+        else lDate = LocalDate.now();
+        if (!pastSeries.containsKey(lDate)) {
+            savingSeries = FXCollections.observableArrayList();
+            cashSeries = FXCollections.observableArrayList();
+            accountSeries = FXCollections.observableArrayList();   
+            ObservableList<DailyBalance> dbList;
+            if (entry != null) dbList = loadDailyBalances(entry.toString());
+            else dbList = getAllDailyBalances();
+            for (DailyBalance db : dbList) {
+                Date date = DateHelper.toDate(db.getDate());
+                Integer yValue = db.getTotalSavings();
+                savingSeries.add(new XYChart.Data(date, yValue));
+                yValue = yValue + db.getCash();
+                cashSeries.add(new XYChart.Data(date, yValue));
+                yValue = yValue + db.getBalance();
+                accountSeries.add(new XYChart.Data(date, yValue));                        
+            }
+            HashMap<CashFlowSeries, ObservableList<Data<Date, Integer>>> sr = new HashMap<>(3);
+            sr.put(CashFlowSeries.SAVING, savingSeries);
+            sr.put(CashFlowSeries.CASH, cashSeries);
+            sr.put(CashFlowSeries.ACCOUNT, accountSeries);
+            pastSeries.put(lDate, sr);
+        }        
     }
 }
