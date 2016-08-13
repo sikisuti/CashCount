@@ -22,6 +22,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.beans.value.ChangeListener;
@@ -110,14 +112,13 @@ public class MainWindowController implements Initializable {
     }
     
     private void refreshChart(HashMap<CashFlowSeries, ObservableList<XYChart.Data<Date, Integer>>> series) {
-        if (series != null) {        
-            savingSeries.getData().clear();
-            cashSeries.getData().clear();
-            accountSeries.getData().clear();
-
-            savingSeries.setData(series.get(CashFlowSeries.SAVING));
-            cashSeries.setData(series.get(CashFlowSeries.CASH));
-            accountSeries.setData(series.get(CashFlowSeries.ACCOUNT));
+        if (series != null ) {        
+            if (savingSeries.getData() != series.get(CashFlowSeries.SAVING))
+                savingSeries.setData(series.get(CashFlowSeries.SAVING));
+            if (cashSeries.getData() != series.get(CashFlowSeries.CASH))
+                cashSeries.setData(series.get(CashFlowSeries.CASH));
+            if (accountSeries.getData() != series.get(CashFlowSeries.ACCOUNT))
+                accountSeries.setData(series.get(CashFlowSeries.ACCOUNT));
         }
     }
     
@@ -271,6 +272,8 @@ public class MainWindowController implements Initializable {
         }
     }
     
+    private long cnt = 0;
+    
     private void getPast() {
         try {
             vbCashFlow.getChildren().remove(btnGetPast);
@@ -286,17 +289,22 @@ public class MainWindowController implements Initializable {
             slider.setMin(DAYS.between(LocalDate.now(), DataManager.getInstance().getFirstDailyBalance().getDate()));
             slider.setMax(0);
             slider.setMajorTickUnit(1);
+            //slider.setShowTickMarks(true);
             slider.setSnapToTicks(true);
+            
             slider.valueProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
                 try {
-                    refreshChart(DataManager.getInstance().getPastSeries(LocalDate.now().plusDays(newValue.longValue())));
+                    if (oldValue.longValue() - newValue.longValue() != 0) {
+                        HashMap<CashFlowSeries, ObservableList<XYChart.Data<Date, Integer>>> data = DataManager.getInstance().getPastSeries(LocalDate.now().plusDays(newValue.longValue()));
+                        refreshChart(data);
+                    }
                 } catch (IOException | JsonDeserializeException ex) {
                     Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
                 }
             });
             gp.setConstraints(slider, 0, 0);
             gp.getChildren().add(slider);
-            vbCashFlow.getChildren().add(gp);
+            vbCashFlow.getChildren().add(gp);            
         } catch (IOException | JsonDeserializeException ex) {
             Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
         }

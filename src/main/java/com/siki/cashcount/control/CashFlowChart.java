@@ -58,6 +58,7 @@ public final class CashFlowChart extends LineChart {
         getPlotChildren().add(line);
         setMaxHeight(Double.MAX_VALUE);
         setPrefHeight(900);
+        this.setAnimated(false);
     }
 
     @Override
