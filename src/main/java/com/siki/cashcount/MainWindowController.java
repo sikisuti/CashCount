@@ -281,7 +281,7 @@ public class MainWindowController implements Initializable {
             GridPane gp = new GridPane();
             gp.setHgrow(slider, Priority.ALWAYS);
             ColumnConstraints col1 = new ColumnConstraints();
-            col1.setPercentWidth(44);
+            col1.setPercentWidth(41);
             ColumnConstraints col2 = new ColumnConstraints();
             gp.getColumnConstraints().addAll(col1, col2);
             slider.setPadding(new Insets(0, 0, 0, 110));
@@ -296,6 +296,7 @@ public class MainWindowController implements Initializable {
                 try {
                     if (oldValue.longValue() - newValue.longValue() != 0) {
                         HashMap<CashFlowSeries, ObservableList<XYChart.Data<Date, Integer>>> data = DataManager.getInstance().getPastSeries(LocalDate.now().plusDays(newValue.longValue()));
+                        flowChart.getPastLine().setXValue(DateHelper.toDate(LocalDate.now().plusDays(newValue.longValue())));
                         refreshChart(data);
                     }
                 } catch (IOException | JsonDeserializeException ex) {

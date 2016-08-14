@@ -123,6 +123,8 @@ public class DataManager {
             while ((line = br.readLine()) != null) {
                 lineCnt++;
                 DailyBalance db = gsonDeserializer.fromJson(line, DailyBalance.class);
+                if (db.getDate().isBefore(LocalDate.now().minusMonths(7).withDayOfMonth(1)))
+                    continue;
                 getSavings(db.getDate()).stream().forEach(s -> db.addSaving(s));
                 db.getCorrections().stream().forEach((c) -> {
                     c.setDailyBalance(db);

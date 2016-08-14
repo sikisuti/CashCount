@@ -22,6 +22,7 @@ import javafx.util.StringConverter;
 public final class CashFlowChart extends LineChart {
     
     Data<Date, Integer> nowLine;
+    Data<Date, Integer> pastLine;
     
     public CashFlowChart() {
         super(new DateAxis(), new NumberAxis());
@@ -53,12 +54,25 @@ public final class CashFlowChart extends LineChart {
         this.setPadding(new Insets(20d));
         
         nowLine = new Data<>(DateHelper.toDate(LocalDate.now()), 0);
-        Line line = new Line();
-        nowLine.setNode(line);
-        getPlotChildren().add(line);
+        Line line1 = new Line();
+        nowLine.setNode(line1);        
+        getPlotChildren().add(line1);
+        pastLine = new Data<>(DateHelper.toDate(LocalDate.now()), 0);
+        Line line2 = new Line();
+        line2.setStyle("-fx-stroke: red;");
+        pastLine.setNode(line2);
+        getPlotChildren().add(line2);
         setMaxHeight(Double.MAX_VALUE);
         setPrefHeight(900);
         this.setAnimated(false);
+    }
+    
+    public void setPastLineDate(LocalDate date) {
+        pastLine = new Data<>(DateHelper.toDate(date), 0);
+    }
+    
+    public Data<Date, Integer> getPastLine() {
+        return pastLine;
     }
 
     @Override
@@ -74,11 +88,18 @@ public final class CashFlowChart extends LineChart {
     @Override
     protected void layoutPlotChildren() {
         super.layoutPlotChildren();
-        Line line = (Line) nowLine.getNode();
-        line.setStartX(getXAxis().getDisplayPosition(nowLine.getXValue()));
-        line.setEndX(line.getStartX());
-        line.setStartY(0d);
-        line.setEndY(getBoundsInLocal().getHeight());
-        line.toFront();
+        Line line2 = (Line) pastLine.getNode();
+        line2.setStartX(getXAxis().getDisplayPosition(pastLine.getXValue()));
+        line2.setEndX(line2.getStartX());
+        line2.setStartY(0d);
+        line2.setEndY(getBoundsInLocal().getHeight());
+        line2.toFront();
+        
+        Line line1 = (Line) nowLine.getNode();
+        line1.setStartX(getXAxis().getDisplayPosition(nowLine.getXValue()));
+        line1.setEndX(line1.getStartX());
+        line1.setStartY(0d);
+        line1.setEndY(getBoundsInLocal().getHeight());
+        line1.toFront();        
     }
 }
