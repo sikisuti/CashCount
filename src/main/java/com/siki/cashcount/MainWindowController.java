@@ -5,6 +5,7 @@ import com.siki.cashcount.constant.CashFlowSeries;
 import com.siki.cashcount.control.CashFlowChart;
 import com.siki.cashcount.control.DailyBalancesTitledPane;
 import com.siki.cashcount.control.DateHelper;
+import com.siki.cashcount.control.ExceptionDialog;
 import com.siki.cashcount.data.DataManager;
 import com.siki.cashcount.exception.JsonDeserializeException;
 import com.siki.cashcount.exception.NotEnoughPastDataException;
@@ -22,11 +23,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -108,6 +106,7 @@ public class MainWindowController implements Initializable {
             
         } catch (IOException | JsonDeserializeException ex) {
             Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
+            ExceptionDialog.get(ex).showAndWait();
         }
     }
     
@@ -158,8 +157,11 @@ public class MainWindowController implements Initializable {
         } catch (JsonDeserializeException ex) {
             System.out.println("Error in line: " + ex.getErrorLineNum());
             Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
-        }catch (IOException ex) {
+            ExceptionDialog.get(ex).showAndWait();
+        } catch (IOException ex) {
             Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
+            ExceptionDialog.get(ex).showAndWait();
+            
         } 
         if (ConfigManager.getBooleanProperty("LogPerformance")) StopWatch.stop("prepareDailyBalances");
     }
@@ -232,6 +234,7 @@ public class MainWindowController implements Initializable {
                 
             } catch (Exception e) {
                 Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, e);
+                ExceptionDialog.get(e).showAndWait();
             }
         }
     }
@@ -257,6 +260,7 @@ public class MainWindowController implements Initializable {
             DataManager.getInstance().saveDailyBalances();
         } catch (IOException ex) {
             Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
+            ExceptionDialog.get(ex).showAndWait();
         }
     }
     
@@ -268,11 +272,10 @@ public class MainWindowController implements Initializable {
                 refreshChart(series);
             } catch (IOException | JsonDeserializeException ex) {
                 Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
+                ExceptionDialog.get(ex).showAndWait();
             }
         }
     }
-    
-    private long cnt = 0;
     
     private void getPast() {
         try {
@@ -301,13 +304,16 @@ public class MainWindowController implements Initializable {
                     }
                 } catch (IOException | JsonDeserializeException ex) {
                     Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
+                    ExceptionDialog.get(ex).showAndWait();
                 }
             });
             gp.setConstraints(slider, 0, 0);
             gp.getChildren().add(slider);
-            vbCashFlow.getChildren().add(gp);            
+            vbCashFlow.getChildren().add(gp);       
+            DataManager.getInstance().loadAllPastSeries();
         } catch (IOException | JsonDeserializeException ex) {
             Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
+            ExceptionDialog.get(ex).showAndWait();
         }
     }
 }

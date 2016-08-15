@@ -89,12 +89,6 @@ public class DataManager {
         gsonBuilder.registerTypeAdapter(Correction.class, new CorrectionSerializer());
         gsonBuilder.registerTypeAdapter(SavingStore.class, new SavingStoreSerializer());
         gsonSerializer = gsonBuilder.create();
-        
-        try {
-            loadAllPastSeries();
-        } catch (IOException | JsonDeserializeException ex) {
-            Logger.getLogger(DataManager.class.getName()).log(Level.SEVERE, null, ex);
-        }
     }  
     
     public ObservableList<DailyBalance> getAllDailyBalances() throws IOException, JsonDeserializeException {
@@ -418,10 +412,13 @@ public class DataManager {
                 .collect(Collectors.toList());
     }
     
-    private void loadAllPastSeries() throws IOException, JsonDeserializeException {
+    public void loadAllPastSeries() throws IOException, JsonDeserializeException {
         pastSeries = new TreeMap<>();
                 
         String backupPath = ConfigManager.getStringProperty("BackupPath");
+        
+        if (!Files.exists(Paths.get(backupPath))) 
+            Files.createDirectory(Paths.get(backupPath));
         
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(backupPath), "*.{jsn}")) {
             for (Path entry: stream) {

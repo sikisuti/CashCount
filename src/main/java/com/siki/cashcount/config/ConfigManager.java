@@ -5,6 +5,7 @@
  */
 package com.siki.cashcount.config;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -26,15 +27,10 @@ public final class ConfigManager {
     private ConfigManager() {
     }
     
-    private static final Properties properties;
+    private static final Properties properties = new Properties();
     
     static {
-        properties = new Properties();
-        try (InputStream inputStream = new FileInputStream("./config.properties")) {
-            properties.load(inputStream);
-        } catch (IOException ex) {
-            Logger.getLogger(ConfigManager.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        
     }
     
 //    private void loadProperties() throws IOException {
@@ -49,6 +45,12 @@ public final class ConfigManager {
 //            }            
 //        }
 //    }
+    
+    public static void initProperties() throws IOException {
+        try (InputStream inputStream = new FileInputStream("./config.properties")) {
+            properties.load(inputStream);
+        }
+    }
     
     private static void saveProperties() {
         try (OutputStream outputStream = new FileOutputStream("./config.properties")) {   

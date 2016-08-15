@@ -10,6 +10,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
 import static javafx.application.Application.launch;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.*;
 import javafx.scene.control.Alert;
@@ -22,6 +23,17 @@ public class MainApp extends Application {
     
     @Override
     public void start(Stage stage) throws Exception {
+        try {
+            ConfigManager.initProperties();
+        } catch (IOException ex) {
+            Logger.getLogger(ConfigManager.class.getName()).log(Level.SEVERE, null, ex);
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Hiba");
+            alert.setHeaderText("Konfigurációs fájl hiba");
+            alert.showAndWait();
+            Platform.exit();
+        }
+        
         if (ConfigManager.getBooleanProperty("LogPerformance")) StopWatch.start("App start");
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/MainWindow.fxml"));
         Parent root = fxmlLoader.load();
