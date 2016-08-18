@@ -1,7 +1,7 @@
 package com.siki.cashcount;
 
 import com.siki.cashcount.config.ConfigManager;
-import com.siki.cashcount.constant.CashFlowSeries;
+import com.siki.cashcount.constant.CashFlowSeriesEnum;
 import com.siki.cashcount.control.CashFlowChart;
 import com.siki.cashcount.control.DailyBalancesTitledPane;
 import com.siki.cashcount.control.DateHelper;
@@ -30,8 +30,11 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
@@ -43,6 +46,9 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 public class MainWindowController implements Initializable {
 
@@ -110,14 +116,14 @@ public class MainWindowController implements Initializable {
         }
     }
     
-    private void refreshChart(HashMap<CashFlowSeries, ObservableList<XYChart.Data<Date, Integer>>> series) {
+    private void refreshChart(HashMap<CashFlowSeriesEnum, ObservableList<XYChart.Data<Date, Integer>>> series) {
         if (series != null ) {        
-            if (savingSeries.getData() != series.get(CashFlowSeries.SAVING))
-                savingSeries.setData(series.get(CashFlowSeries.SAVING));
-            if (cashSeries.getData() != series.get(CashFlowSeries.CASH))
-                cashSeries.setData(series.get(CashFlowSeries.CASH));
-            if (accountSeries.getData() != series.get(CashFlowSeries.ACCOUNT))
-                accountSeries.setData(series.get(CashFlowSeries.ACCOUNT));
+            if (savingSeries.getData() != series.get(CashFlowSeriesEnum.SAVING))
+                savingSeries.setData(series.get(CashFlowSeriesEnum.SAVING));
+            if (cashSeries.getData() != series.get(CashFlowSeriesEnum.CASH))
+                cashSeries.setData(series.get(CashFlowSeriesEnum.CASH));
+            if (accountSeries.getData() != series.get(CashFlowSeriesEnum.ACCOUNT))
+                accountSeries.setData(series.get(CashFlowSeriesEnum.ACCOUNT));
         }
     }
     
@@ -295,12 +301,18 @@ public class MainWindowController implements Initializable {
             //slider.setShowTickMarks(true);
             slider.setSnapToTicks(true);
             
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/PastDifferencesWindow.fxml"));
+            Parent root1 = (Parent) fxmlLoader.load();
+            PastDifferencesWindowController controller = fxmlLoader.getController();
+            
             slider.valueProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
                 try {
                     if (oldValue.longValue() - newValue.longValue() != 0) {
-                        HashMap<CashFlowSeries, ObservableList<XYChart.Data<Date, Integer>>> data = DataManager.getInstance().getPastSeries(LocalDate.now().plusDays(newValue.longValue()));
-                        flowChart.getPastLine().setXValue(DateHelper.toDate(LocalDate.now().plusDays(newValue.longValue())));
+                        LocalDate newDate = LocalDate.now().plusDays(newValue.longValue());
+                        HashMap<CashFlowSeriesEnum, ObservableList<XYChart.Data<Date, Integer>>> data = DataManager.getInstance().getPastSeries(newDate);
+                        flowChart.getPastLine().setXValue(DateHelper.toDate(newDate));
                         refreshChart(data);
+                        controller.refreshDiffs(DataManager.getInstance().getPastDifferences(newDate), newDate);
                     }
                 } catch (IOException | JsonDeserializeException ex) {
                     Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
@@ -311,6 +323,14 @@ public class MainWindowController implements Initializable {
             gp.getChildren().add(slider);
             vbCashFlow.getChildren().add(gp);       
             DataManager.getInstance().loadAllPastSeries();
+        
+            Stage stage = new Stage();
+            stage.initModality(Modality.NONE);
+            stage.setAlwaysOnTop(true);
+            stage.initStyle(StageStyle.UTILITY);
+            stage.setTitle("Különbségek");
+            stage.setScene(new Scene(root1));
+            stage.show();
         } catch (IOException | JsonDeserializeException ex) {
             Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
             ExceptionDialog.get(ex).showAndWait();

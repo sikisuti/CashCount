@@ -22,6 +22,7 @@ public class CorrectionSerializer implements JsonSerializer<Correction> {
     public JsonElement serialize(Correction c, Type type, JsonSerializationContext jsc) {
         final JsonObject jsonObject = new JsonObject();
         
+        jsonObject.addProperty("id", c.getId());
         jsonObject.addProperty("amount", c.getAmount());
         jsonObject.addProperty("comment", c.getComment());
         jsonObject.addProperty("type", c.getType());

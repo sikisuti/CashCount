@@ -209,7 +209,7 @@ public final class DailyBalanceControl extends BorderPane {
     
     @FXML
     protected void addCorrection(ActionEvent event) {
-            Correction newCorrection = new Correction();
+            Correction newCorrection = new Correction.Builder().build();
             
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/NewCorrectionWindow.fxml"));

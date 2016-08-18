@@ -8,7 +8,7 @@ package com.siki.cashcount.data;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.siki.cashcount.config.ConfigManager;
-import com.siki.cashcount.constant.CashFlowSeries;
+import com.siki.cashcount.constant.CashFlowSeriesEnum;
 import com.siki.cashcount.control.DateHelper;
 import com.siki.cashcount.exception.JsonDeserializeException;
 import com.siki.cashcount.exception.NotEnoughPastDataException;
@@ -45,9 +45,16 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -70,7 +77,8 @@ public class DataManager {
     private HashMap<LocalDate, Integer> weeklyAverages;
     private List<String> correctionTypeCache;
     private List<SavingStore> savingCache;
-    private TreeMap<LocalDate, HashMap<CashFlowSeries, ObservableList<Data<Date, Integer>>>> pastSeries;
+    private TreeMap<LocalDate, HashMap<CashFlowSeriesEnum, ObservableList<Data<Date, Integer>>>> pastSeries;
+    private TreeMap<LocalDate, LinkedHashMap<String, Integer>> pastDifferences;
     
     Gson gsonDeserializer;
     Gson gsonSerializer;
@@ -98,16 +106,6 @@ public class DataManager {
         }
         
         return dailyBalanceCache;
-    }
-    public HashMap<CashFlowSeries, ObservableList<Data<Date, Integer>>> getPastSeries(LocalDate date) throws IOException, JsonDeserializeException {
-        if (pastSeries == null) {
-            loadAllPastSeries();
-        }
-        
-        HashMap<CashFlowSeries, ObservableList<Data<Date, Integer>>> rtn = null;        
-        int decr = 0;
-        while ((rtn = pastSeries.getOrDefault(date.minusDays(decr), null)) == null && date.minusDays(decr).isAfter(pastSeries.firstKey())) { decr++; }
-        return rtn;
     }
     private ObservableList<DailyBalance> loadDailyBalances(String dataPath) throws IOException, JsonDeserializeException {        
         ObservableList<DailyBalance> rtnList = FXCollections.observableArrayList();
@@ -412,8 +410,31 @@ public class DataManager {
                 .collect(Collectors.toList());
     }
     
+    public HashMap<CashFlowSeriesEnum, ObservableList<Data<Date, Integer>>> getPastSeries(LocalDate date) throws IOException, JsonDeserializeException {
+        if (pastSeries == null) {
+            loadAllPastSeries();
+        }
+        
+        HashMap<CashFlowSeriesEnum, ObservableList<Data<Date, Integer>>> rtn = null;        
+        int decr = 0;
+        while ((rtn = pastSeries.getOrDefault(date.minusDays(decr), null)) == null && date.minusDays(decr).isAfter(pastDifferences.firstKey())) { decr++; }
+        return rtn;
+    }
+    
+    public LinkedHashMap<String, Integer> getPastDifferences(LocalDate date) throws IOException, JsonDeserializeException {
+        if (pastDifferences == null) {
+            loadAllPastSeries();
+        }
+        
+        LinkedHashMap<String, Integer> rtn = null;        
+        int decr = 0;
+        while ((rtn = pastDifferences.getOrDefault(date.minusDays(decr), null)) == null && date.minusDays(decr).isAfter(pastSeries.firstKey())) { decr++; }
+        return rtn;
+    }
+    
     public void loadAllPastSeries() throws IOException, JsonDeserializeException {
         pastSeries = new TreeMap<>();
+        pastDifferences = new TreeMap<>();
                 
         String backupPath = ConfigManager.getStringProperty("BackupPath");
         
@@ -452,11 +473,141 @@ public class DataManager {
                 yValue = yValue + db.getBalance();
                 accountSeries.add(new XYChart.Data(date, yValue));                        
             }
-            HashMap<CashFlowSeries, ObservableList<Data<Date, Integer>>> sr = new HashMap<>(3);
-            sr.put(CashFlowSeries.SAVING, savingSeries);
-            sr.put(CashFlowSeries.CASH, cashSeries);
-            sr.put(CashFlowSeries.ACCOUNT, accountSeries);
+            HashMap<CashFlowSeriesEnum, ObservableList<Data<Date, Integer>>> sr = new HashMap<>(3);
+            sr.put(CashFlowSeriesEnum.SAVING, savingSeries);
+            sr.put(CashFlowSeriesEnum.CASH, cashSeries);
+            sr.put(CashFlowSeriesEnum.ACCOUNT, accountSeries);
             pastSeries.put(lDate, sr);
+            
+            HashMap<String, Integer> correctionDiffs = collectCorrections(dbList, lDate);
+            
+            List<Entry<String, Integer>> list = new LinkedList<Entry<String, Integer>>(correctionDiffs.entrySet());
+            
+            // Sorting the list based on values
+            Collections.sort(list, new Comparator<Entry<String, Integer>>()
+            {
+                public int compare(Entry<String, Integer> o1,
+                        Entry<String, Integer> o2)
+                {
+                    return o1.getValue().compareTo(o2.getValue());
+                }
+            });
+            
+            // Maintaining insertion order with the help of LinkedList
+            LinkedHashMap<String, Integer> sortedMap = new LinkedHashMap<>();
+            list.stream().forEach((e) -> {
+                sortedMap.put(e.getKey(), e.getValue());
+            });
+            
+            pastDifferences.put(lDate, sortedMap);
         }        
+    }
+    
+    private HashMap<String, Integer> collectCorrections(ObservableList<DailyBalance> dbList, LocalDate date) throws IOException, JsonDeserializeException {
+        HashMap<String, Integer> rtn = new HashMap<>();
+        
+        List<Correction> predictedCorrectionsUpToNow = new ArrayList<>();
+        List<Correction> predictedAllCorrections = new ArrayList<>();
+        List<Correction> actCorrectionsUpToNow = new ArrayList<>();
+        List<Correction> actAllCorrections = new ArrayList<>();
+        
+        // List of predicted corrections in the past between the prediction date and now
+        List<DailyBalance> predictedDailyBalancesUpToNow = dbList.stream()
+                .filter(d -> d.getDate().isAfter(date) && d.getDate().isBefore(LocalDate.now().plusDays(1)))
+                .collect(Collectors.toList());
+        for (DailyBalance db : predictedDailyBalancesUpToNow) {
+            for (Correction c : db.getCorrections()) {
+                predictedCorrectionsUpToNow.add(c);
+            }
+        }
+        
+        // List of predicted corrections after the prediction date (including the future corrections)
+        List<DailyBalance> predictedAllDailyBalances = dbList.stream()
+                .filter(d -> d.getDate().isAfter(date))
+                .collect(Collectors.toList());
+        for (DailyBalance db : predictedAllDailyBalances) {
+            for (Correction c : db.getCorrections()) {
+                predictedAllCorrections.add(c);
+            }
+        }
+        
+        // List of actual corrections between the prediction date and now
+        List<DailyBalance> actDailyBalancesUpToNow = getAllDailyBalances().stream()
+                .filter(d -> d.getDate().isAfter(date) && d.getDate().isBefore(LocalDate.now().plusDays(1)))
+                .collect(Collectors.toList());
+        for (DailyBalance db : actDailyBalancesUpToNow) {
+            for (Correction c : db.getCorrections()) {
+                actCorrectionsUpToNow.add(c);
+            }
+        }
+        
+        // List of actual corrections after the prediction date (including the future corrections)
+        List<DailyBalance> actAllDailyBalances = getAllDailyBalances().stream()
+                .filter(d -> d.getDate().isAfter(date))
+                .collect(Collectors.toList());
+        for (DailyBalance db : actAllDailyBalances) {
+            for (Correction c : db.getCorrections()) {
+                actAllCorrections.add(c);
+            }
+        }
+        
+        for (Correction predictedCorrection : predictedCorrectionsUpToNow) {
+            Optional<Correction> matchingCorrection = actAllCorrections.stream().filter(c -> c.getId().equals(predictedCorrection.getId())).findFirst();
+            if (matchingCorrection.isPresent()) {
+                if (matchingCorrection.get().getAmount() != predictedCorrection.getAmount()) {
+                    putInto(rtn, predictedCorrection.getType(), matchingCorrection.get().getAmount() - predictedCorrection.getAmount());
+                }
+            } else {
+                putInto(rtn, predictedCorrection.getType(), -predictedCorrection.getAmount());
+            }
+        }
+        for (Correction actCorrection : actCorrectionsUpToNow) {
+            Optional<Correction> matchingCorrection = predictedAllCorrections.stream().filter(c -> c.getId().equals(actCorrection.getId())).findFirst();
+            if (matchingCorrection.isPresent()) {
+                if (matchingCorrection.get().getAmount() != actCorrection.getAmount()) {
+                    putInto(rtn, actCorrection.getType(), actCorrection.getAmount() - matchingCorrection.get().getAmount());
+                }
+            } else {
+                putInto(rtn, actCorrection.getType(), actCorrection.getAmount());
+            }
+        }
+        
+        // Calculate General daily expense differences
+        DailyBalance predictedStartDailyBalance = dbList.stream()
+                .filter(d -> d.getDate().isEqual(date))
+                .findFirst()
+                .get();
+        DailyBalance predictedEndDailyBalance = dbList.stream()
+                .filter(d -> d.getDate().isEqual(LocalDate.now()))
+                .findFirst()
+                .get();
+        Integer predictedExpense = predictedEndDailyBalance.getTotalMoney()
+                - predictedStartDailyBalance.getTotalMoney() 
+                - predictedDailyBalancesUpToNow.stream().mapToInt(db -> db.getCorrections().stream().mapToInt(c -> c.getAmount()).sum()).sum();
+        
+        DailyBalance actStartDailyBalance = getAllDailyBalances().stream()
+                .filter(d -> d.getDate().isEqual(date))
+                .findFirst()
+                .get();
+        DailyBalance actEndDailyBalance = getAllDailyBalances().stream()
+                .filter(d -> d.getDate().isEqual(LocalDate.now()))
+                .findFirst()
+                .get();
+        Integer actExpense = actEndDailyBalance.getTotalMoney()
+                - actStartDailyBalance.getTotalMoney() 
+                - actDailyBalancesUpToNow.stream().mapToInt(db -> db.getCorrections().stream().mapToInt(c -> c.getAmount()).sum()).sum();
+        
+        rtn.put("Általános", actExpense - predictedExpense);
+        
+        return rtn;
+    }
+    
+    private void putInto(HashMap<String, Integer> map, String name, Integer amount) {
+        if (map.containsKey(name)) {
+            Integer value = map.get(name);
+            value += amount;
+        } else {
+            map.put(name, amount);
+        }
     }
 }

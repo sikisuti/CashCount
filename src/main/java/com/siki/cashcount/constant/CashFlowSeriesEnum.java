@@ -9,7 +9,7 @@ package com.siki.cashcount.constant;
  *
  * @author tamas.siklosi
  */
-public enum CashFlowSeries {
+public enum CashFlowSeriesEnum {
     SAVING,
     CASH,
     ACCOUNT

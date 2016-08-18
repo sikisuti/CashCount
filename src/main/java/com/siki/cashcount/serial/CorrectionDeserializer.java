@@ -23,14 +23,17 @@ public class CorrectionDeserializer implements JsonDeserializer<Correction> {
     public Correction deserialize(JsonElement je, Type type, JsonDeserializationContext jdc) throws JsonParseException {
         final JsonObject jsonObject = je.getAsJsonObject();
         
+        final Long id = jsonObject.has("id") ? jsonObject.get("id").getAsLong() : null;
         final Integer amount = jsonObject.get("amount").getAsInt();
         final String comment = jsonObject.get("comment").getAsString();
         final String correctionType = jsonObject.get("type").getAsString();
         
-        Correction c = new Correction();
-        c.setAmount(amount);
-        c.setComment(comment);
-        c.setType(correctionType);
+        Correction c = new Correction.Builder()
+                .setId(id)
+                .setAmount(amount)
+                .setComment(comment)
+                .setType(correctionType)
+                .build();
         
         return c;
     }

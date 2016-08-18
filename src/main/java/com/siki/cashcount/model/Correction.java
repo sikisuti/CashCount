@@ -19,6 +19,11 @@ import javafx.beans.property.StringProperty;
  * @author tamas.siklosi
  */
 public class Correction implements Externalizable {    
+    
+    private Long id;
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    
     private final IntegerProperty amount;
     public Integer getAmount() { return amount.get(); }
     public void setAmount(Integer amount) { this.amount.set(amount); }
@@ -38,21 +43,22 @@ public class Correction implements Externalizable {
     public DailyBalance getDailyBalance() { return dailyBalance; }
     public void setDailyBalance(DailyBalance dailyBalance) { this.dailyBalance = dailyBalance; }
 
-    public Correction() {
+    private Correction() {
         this.amount = new SimpleIntegerProperty();
         this.comment = new SimpleStringProperty();
         this.type = new SimpleStringProperty();
     }
 
-    public Correction(String type, Integer amount, String comment) {
-        this();
-        this.type.set(type);
-        this.amount.set(amount);
-        this.comment.set(comment);
-    }
+//    public Correction(String type, Integer amount, String comment) {
+//        this();
+//        this.type.set(type);
+//        this.amount.set(amount);
+//        this.comment.set(comment);
+//    }
     
     private Correction(Builder builder) {
         this();
+        this.id = builder.id;
         this.type.set(builder.type);
         this.amount.set(builder.amount);
         this.comment.set(builder.comment);
@@ -74,10 +80,16 @@ public class Correction implements Externalizable {
     }
     
     public static class Builder {
+        Long id;
         Integer amount;
         String comment;
         String type;
         DailyBalance dailyBalance;
+        
+        public Builder setId(Long id) {
+            this.id = id;
+            return this;
+        }
         
         public Builder setAmount(Integer amount) {
             this.amount = amount;
@@ -109,6 +121,7 @@ public class Correction implements Externalizable {
         Correction other = (Correction)obj;
         
         return 
+                this.getId().equals(other.getId()) &&
                 this.getType().equals(other.getType()) &&
                 this.getAmount().equals(other.getAmount()) &&
                 this.getComment().equals(other.getComment());
