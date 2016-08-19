@@ -56,7 +56,7 @@ public class PastDifferencesWindowController implements Initializable {
                 amount += diffs.get(key);
             }
 
-            lblAmount.setText(NumberFormat.getCurrencyInstance().format(amount));
+            //lblAmount.setText(NumberFormat.getCurrencyInstance().format(amount));
             this.lblDate.setText(date.toString());
         }
     }

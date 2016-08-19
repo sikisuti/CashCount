@@ -1,3 +1,22 @@
 #DailyBalancesPH {
     -fx-alignment: center;
 }
+
+.chart-series-line {    
+    -fx-stroke-width: 2px;
+    -fx-effect: null;
+}
+ 
+.default-color0.chart-series-line { -fx-stroke: lightgray; }
+.default-color1.chart-series-line { -fx-stroke: lightgray; }
+.default-color2.chart-series-line { -fx-stroke: lightgray; }
+.default-color3.chart-series-line { -fx-stroke: indianred; }
+.default-color4.chart-series-line { -fx-stroke: orange; }
+.default-color5.chart-series-line { -fx-stroke: forestgreen; }
+
+.default-color0.chart-line-symbol { -fx-background-color: lightgray, white; }
+.default-color1.chart-line-symbol { -fx-background-color: lightgray, white; }
+.default-color2.chart-line-symbol { -fx-background-color: lightgray, white; }
+.default-color3.chart-line-symbol { -fx-background-color: indianred, white; }
+.default-color4.chart-line-symbol { -fx-background-color: orange, white; }
+.default-color5.chart-line-symbol { -fx-background-color: forestgreen, white; }

@@ -44,6 +44,7 @@ import java.nio.file.attribute.FileTime;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -72,6 +73,8 @@ import javafx.scene.chart.XYChart.Data;
 public class DataManager {
     private static final DataManager INSTANCE = new DataManager();
     public static DataManager getInstance() { return INSTANCE; }
+    
+    private final String GENERAL_TEXT = "Általános";
     
     private ObservableList<DailyBalance> dailyBalanceCache;
     private HashMap<LocalDate, Integer> weeklyAverages;
@@ -455,7 +458,11 @@ public class DataManager {
         ObservableList<Data<Date, Integer>> accountSeries;
         
         LocalDate lDate;
-        if (entry != null) lDate = LocalDateTime.ofInstant(Files.getLastModifiedTime(entry).toInstant(), ZoneId.systemDefault()).toLocalDate();
+        if (entry != null) {
+            String fileName = entry.getFileName().toString().split("[.]")[0];
+            String dateString = fileName.substring(fileName.length() - 10);
+            lDate = LocalDate.parse(dateString, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        }
         else lDate = LocalDate.now();
         if (!pastSeries.containsKey(lDate)) {
             savingSeries = FXCollections.observableArrayList();
@@ -486,9 +493,9 @@ public class DataManager {
             // Sorting the list based on values
             Collections.sort(list, new Comparator<Entry<String, Integer>>()
             {
-                public int compare(Entry<String, Integer> o1,
-                        Entry<String, Integer> o2)
-                {
+                public int compare(Entry<String, Integer> o1, Entry<String, Integer> o2) {
+                    if (o1.getKey().equals(GENERAL_TEXT)) return 1;
+                    if (o2.getKey().equals(GENERAL_TEXT)) return -1;
                     return o1.getValue().compareTo(o2.getValue());
                 }
             });
@@ -513,7 +520,7 @@ public class DataManager {
         
         // List of predicted corrections in the past between the prediction date and now
         List<DailyBalance> predictedDailyBalancesUpToNow = dbList.stream()
-                .filter(d -> d.getDate().isAfter(date) && d.getDate().isBefore(LocalDate.now().plusDays(1)))
+                .filter(d -> d.getDate().isAfter(date.minusDays(1)) && d.getDate().isBefore(LocalDate.now()))
                 .collect(Collectors.toList());
         for (DailyBalance db : predictedDailyBalancesUpToNow) {
             for (Correction c : db.getCorrections()) {
@@ -523,7 +530,7 @@ public class DataManager {
         
         // List of predicted corrections after the prediction date (including the future corrections)
         List<DailyBalance> predictedAllDailyBalances = dbList.stream()
-                .filter(d -> d.getDate().isAfter(date))
+                .filter(d -> d.getDate().isAfter(date.minusDays(1)))
                 .collect(Collectors.toList());
         for (DailyBalance db : predictedAllDailyBalances) {
             for (Correction c : db.getCorrections()) {
@@ -533,7 +540,7 @@ public class DataManager {
         
         // List of actual corrections between the prediction date and now
         List<DailyBalance> actDailyBalancesUpToNow = getAllDailyBalances().stream()
-                .filter(d -> d.getDate().isAfter(date) && d.getDate().isBefore(LocalDate.now().plusDays(1)))
+                .filter(d -> d.getDate().isAfter(date.minusDays(1)) && d.getDate().isBefore(LocalDate.now()))
                 .collect(Collectors.toList());
         for (DailyBalance db : actDailyBalancesUpToNow) {
             for (Correction c : db.getCorrections()) {
@@ -543,7 +550,7 @@ public class DataManager {
         
         // List of actual corrections after the prediction date (including the future corrections)
         List<DailyBalance> actAllDailyBalances = getAllDailyBalances().stream()
-                .filter(d -> d.getDate().isAfter(date))
+                .filter(d -> d.getDate().isAfter(date.minusDays(1)))
                 .collect(Collectors.toList());
         for (DailyBalance db : actAllDailyBalances) {
             for (Correction c : db.getCorrections()) {
@@ -554,7 +561,7 @@ public class DataManager {
         for (Correction predictedCorrection : predictedCorrectionsUpToNow) {
             Optional<Correction> matchingCorrection = actAllCorrections.stream().filter(c -> c.getId().equals(predictedCorrection.getId())).findFirst();
             if (matchingCorrection.isPresent()) {
-                if (matchingCorrection.get().getAmount() != predictedCorrection.getAmount()) {
+                if (!matchingCorrection.get().getAmount().equals(predictedCorrection.getAmount())) {
                     putInto(rtn, predictedCorrection.getType(), matchingCorrection.get().getAmount() - predictedCorrection.getAmount());
                 }
             } else {
@@ -562,9 +569,12 @@ public class DataManager {
             }
         }
         for (Correction actCorrection : actCorrectionsUpToNow) {
-            Optional<Correction> matchingCorrection = predictedAllCorrections.stream().filter(c -> c.getId().equals(actCorrection.getId())).findFirst();
+            Optional<Correction> matchingCorrection = predictedAllCorrections.stream()
+                    .filter(c -> c.getId().equals(actCorrection.getId()))
+                    .findFirst();
             if (matchingCorrection.isPresent()) {
-                if (matchingCorrection.get().getAmount() != actCorrection.getAmount()) {
+                if (!matchingCorrection.get().getAmount().equals(actCorrection.getAmount()) && 
+                        matchingCorrection.get().getDailyBalance().getDate().isAfter(LocalDate.now().minusDays(1))) {
                     putInto(rtn, actCorrection.getType(), actCorrection.getAmount() - matchingCorrection.get().getAmount());
                 }
             } else {
@@ -574,11 +584,11 @@ public class DataManager {
         
         // Calculate General daily expense differences
         DailyBalance predictedStartDailyBalance = dbList.stream()
-                .filter(d -> d.getDate().isEqual(date))
+                .filter(d -> d.getDate().isEqual(date.minusDays(1)))
                 .findFirst()
                 .get();
         DailyBalance predictedEndDailyBalance = dbList.stream()
-                .filter(d -> d.getDate().isEqual(LocalDate.now()))
+                .filter(d -> d.getDate().isEqual(LocalDate.now().minusDays(1)))
                 .findFirst()
                 .get();
         Integer predictedExpense = predictedEndDailyBalance.getTotalMoney()
@@ -586,26 +596,26 @@ public class DataManager {
                 - predictedDailyBalancesUpToNow.stream().mapToInt(db -> db.getCorrections().stream().mapToInt(c -> c.getAmount()).sum()).sum();
         
         DailyBalance actStartDailyBalance = getAllDailyBalances().stream()
-                .filter(d -> d.getDate().isEqual(date))
+                .filter(d -> d.getDate().isEqual(date.minusDays(1)))
                 .findFirst()
                 .get();
         DailyBalance actEndDailyBalance = getAllDailyBalances().stream()
-                .filter(d -> d.getDate().isEqual(LocalDate.now()))
+                .filter(d -> d.getDate().isEqual(LocalDate.now().minusDays(1)))
                 .findFirst()
                 .get();
         Integer actExpense = actEndDailyBalance.getTotalMoney()
                 - actStartDailyBalance.getTotalMoney() 
                 - actDailyBalancesUpToNow.stream().mapToInt(db -> db.getCorrections().stream().mapToInt(c -> c.getAmount()).sum()).sum();
         
-        rtn.put("Általános", actExpense - predictedExpense);
+        if (actExpense - predictedExpense != 0)
+            rtn.put(GENERAL_TEXT, actExpense - predictedExpense);
         
         return rtn;
     }
     
     private void putInto(HashMap<String, Integer> map, String name, Integer amount) {
         if (map.containsKey(name)) {
-            Integer value = map.get(name);
-            value += amount;
+            map.put(name, map.get(name) + amount);
         } else {
             map.put(name, amount);
         }

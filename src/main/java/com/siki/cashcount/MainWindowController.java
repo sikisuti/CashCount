@@ -29,6 +29,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -49,6 +50,7 @@ import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javafx.stage.WindowEvent;
 
 public class MainWindowController implements Initializable {
 
@@ -64,6 +66,10 @@ public class MainWindowController implements Initializable {
     LineChart.Series<Date, Integer> savingSeries = new LineChart.Series<>();
     LineChart.Series<Date, Integer> cashSeries = new LineChart.Series<>();
     LineChart.Series<Date, Integer> accountSeries = new LineChart.Series<>();
+        
+    LineChart.Series<Date, Integer> savingSeriesRef = new LineChart.Series<>();
+    LineChart.Series<Date, Integer> cashSeriesRef = new LineChart.Series<>();
+    LineChart.Series<Date, Integer> accountSeriesRef = new LineChart.Series<>();
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -76,8 +82,8 @@ public class MainWindowController implements Initializable {
         vbCashFlow.getChildren().add(btnGetPast);
         savingSeries.setName("Lekötések");
         cashSeries.setName("Készpénz");
-        accountSeries.setName("Számla");        
-        flowChart.getData().addAll(savingSeries, cashSeries, accountSeries);        
+        accountSeries.setName("Számla");  
+        flowChart.getData().addAll(savingSeriesRef, cashSeriesRef, accountSeriesRef, savingSeries, cashSeries, accountSeries); 
         
         prepareDailyBalances();
         DailyBalancesSP.setVvalue(ConfigManager.getDoubleProperty("DailyBalanceViewScroll"));
@@ -87,6 +93,9 @@ public class MainWindowController implements Initializable {
         savingSeries.getData().clear();
         cashSeries.getData().clear();
         accountSeries.getData().clear();
+        savingSeriesRef.getData().clear();
+        cashSeriesRef.getData().clear();
+        accountSeriesRef.getData().clear();
                 
         try {
             
@@ -94,10 +103,13 @@ public class MainWindowController implements Initializable {
                 Date date = DateHelper.toDate(db.getDate());
                 Integer yValue = db.getTotalSavings();
                 savingSeries.getData().add(new XYChart.Data(date, yValue));
+                savingSeriesRef.getData().add(new XYChart.Data(date, yValue));
                 yValue = yValue + db.getCash();
                 cashSeries.getData().add(new XYChart.Data(date, yValue));
+                cashSeriesRef.getData().add(new XYChart.Data(date, yValue));
                 yValue = yValue + db.getBalance();
-                accountSeries.getData().add(new XYChart.Data(date, yValue));                        
+                accountSeries.getData().add(new XYChart.Data(date, yValue));  
+                accountSeriesRef.getData().add(new XYChart.Data(date, yValue));                       
             });
             
             int max = accountSeries.getData().stream().mapToInt(s -> s.getYValue()).max().getAsInt();
@@ -298,6 +310,7 @@ public class MainWindowController implements Initializable {
             slider.setMin(DAYS.between(LocalDate.now(), DataManager.getInstance().getFirstDailyBalance().getDate()));
             slider.setMax(0);
             slider.setMajorTickUnit(1);
+            slider.setValue(0);
             //slider.setShowTickMarks(true);
             slider.setSnapToTicks(true);
             
@@ -325,11 +338,24 @@ public class MainWindowController implements Initializable {
             DataManager.getInstance().loadAllPastSeries();
         
             Stage stage = new Stage();
+            stage.initOwner(vbCashFlow.getScene().getWindow());
             stage.initModality(Modality.NONE);
             stage.setAlwaysOnTop(true);
             stage.initStyle(StageStyle.UTILITY);
             stage.setTitle("Különbségek");
             stage.setScene(new Scene(root1));
+            stage.setOnCloseRequest((WindowEvent event) -> {
+                vbCashFlow.getChildren().remove(gp);
+                vbCashFlow.getChildren().add(btnGetPast);
+                try {
+                    ObservableList<DailyBalance> series = DataManager.getInstance().getAllDailyBalances();
+                    flowChart.getPastLine().setXValue(DateHelper.toDate(LocalDate.now()));
+                    refreshChart(series);
+                } catch (IOException | JsonDeserializeException ex) {
+                    Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
+                    ExceptionDialog.get(ex).showAndWait();
+                }
+            });
             stage.show();
         } catch (IOException | JsonDeserializeException ex) {
             Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);

@@ -43,7 +43,7 @@ public class Correction implements Externalizable {
     public DailyBalance getDailyBalance() { return dailyBalance; }
     public void setDailyBalance(DailyBalance dailyBalance) { this.dailyBalance = dailyBalance; }
 
-    private Correction() {
+    public Correction() {
         this.amount = new SimpleIntegerProperty();
         this.comment = new SimpleStringProperty();
         this.type = new SimpleStringProperty();
@@ -67,6 +67,7 @@ public class Correction implements Externalizable {
 
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
+        out.writeLong(getId());
         out.writeObject(getType());
         out.writeInt(getAmount());
         out.writeObject(getComment());
@@ -74,6 +75,7 @@ public class Correction implements Externalizable {
 
     @Override
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+        setId(in.readLong());
         setType((String)in.readObject());
         setAmount(in.readInt());
         setComment((String)in.readObject());
@@ -81,7 +83,7 @@ public class Correction implements Externalizable {
     
     public static class Builder {
         Long id;
-        Integer amount;
+        Integer amount = 0;
         String comment;
         String type;
         DailyBalance dailyBalance;
