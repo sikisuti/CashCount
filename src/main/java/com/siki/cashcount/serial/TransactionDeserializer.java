@@ -30,6 +30,12 @@ public class TransactionDeserializer implements JsonDeserializer<AccountTransact
         final String owner = jsonObject.get("owner").getAsString();
         final String comment = jsonObject.get("comment").getAsString();
         final String counter = jsonObject.get("counter").getAsString();
+        String category = null;
+        if (jsonObject.has("category"))
+            category = jsonObject.get("category").getAsString();
+        String subCategory = null;
+        if (jsonObject.has("subCategory"))
+            subCategory = jsonObject.get("subCategory").getAsString();
         
         AccountTransaction tr = new AccountTransaction.Builder()
                 .setTransactionType(transactionType)
@@ -39,6 +45,8 @@ public class TransactionDeserializer implements JsonDeserializer<AccountTransact
                 .setOwner(owner)
                 .setComment(comment)
                 .setCounter(counter)
+                .setCategory(category)
+                .setSubCategory(subCategory)
                 .build();
         
         return tr;

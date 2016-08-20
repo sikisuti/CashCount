@@ -4,7 +4,7 @@
 
     <groupId>com.siki</groupId>
     <artifactId>CashCount</artifactId>
-    <version>1.0</version>
+    <version>1.1 - Snapshot</version>
     <packaging>jar</packaging>
 
     <name>CashCount</name>

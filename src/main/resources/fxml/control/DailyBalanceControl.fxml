@@ -6,7 +6,7 @@
 <?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-
+<!--
 <fx:root type="javafx.scene.layout.BorderPane" prefHeight="40" onMouseEntered="#mouseEntered" onMouseExited="#mouseExited" xmlns:fx="http://javafx.com/fxml" >
     <center>
         <HBox fx:id="hbLine">
@@ -19,16 +19,6 @@
                     <javafx.geometry.Insets left="20" /> 
                 </HBox.margin>
                 <children>
-                    <!--
-                    <HBox fx:id="hbSalaryPH" minWidth="100" maxWidth="100"  HBox.hgrow="NEVER"  />
-                    <HBox fx:id="hbLoanPH" minWidth="100" maxWidth="100" HBox.hgrow="NEVER"  />
-                    <HBox fx:id="hbDozsaPH" minWidth="100" maxWidth="100" HBox.hgrow="NEVER"  />
-                    <HBox fx:id="hbWeinerPH" minWidth="100" maxWidth="100" HBox.hgrow="NEVER"  />
-                    <HBox fx:id="hbFuelPH" minWidth="100" maxWidth="100" HBox.hgrow="NEVER"  />
-                    <HBox fx:id="hbCarExpensePH" minWidth="100" maxWidth="100" HBox.hgrow="NEVER"  />
-                    <HBox fx:id="hbBusTravelPH" minWidth="100" maxWidth="100" HBox.hgrow="NEVER"  />
-                    <HBox fx:id="hbOtherPH" minWidth="100" maxWidth="100" HBox.hgrow="NEVER"  />
-                    -->
                 </children>
             </HBox>
         </HBox>
@@ -40,3 +30,4 @@
         <URL value="@/styles/dailybalancecontrol.css"/>
     </stylesheets>
 </fx:root>
+-->

@@ -9,31 +9,42 @@ import com.siki.cashcount.NewCorrectionWindowController;
 import com.siki.cashcount.converter.IntegerToTextConverter;
 import com.siki.cashcount.data.DataManager;
 import com.siki.cashcount.exception.NotEnoughPastDataException;
+import com.siki.cashcount.model.AccountTransaction;
 import com.siki.cashcount.model.Correction;
 import com.siki.cashcount.model.DailyBalance;
+import java.awt.Checkbox;
 import java.io.IOException;
 import java.text.NumberFormat;
 import java.time.DayOfWeek;
 import java.time.format.DateTimeFormatter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TitledPane;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -43,15 +54,17 @@ import javafx.stage.StageStyle;
  *
  * @author tamas.siklosi
  */
-public final class DailyBalanceControl extends BorderPane {
-    @FXML private Label txtDate;
-    @FXML private Label txtBalance;
-    @FXML private TextField tfCash;
-    @FXML private CheckBox chkReviewed;
-    @FXML private HBox corrections;
-    @FXML private HBox hbLine;
+public final class DailyBalanceControl extends VBox {
+    private Label txtDate;
+    private Label txtBalance;
+    private TextField tfCash;
+    private CheckBox chkReviewed;
+    private HBox corrections;
+    private HBox hbLine;
     
-    @FXML private Button btnAdd;
+    private Button btnAdd;
+    
+    private TableView tvTransactions;
     
     private final DailyBalance dailyBalance;
     
@@ -179,15 +192,89 @@ public final class DailyBalanceControl extends BorderPane {
     }
     
     private void loadUI() {
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/control/DailyBalanceControl.fxml"));
-        fxmlLoader.setRoot(this);
-        fxmlLoader.setController(this);
-
-        try {
-            fxmlLoader.load();
-        } catch (IOException exception) {
-            throw new RuntimeException(exception);
-        }
+        this.setMinHeight(40);
+        this.setOnMouseEntered(event -> mouseEntered(event));
+        this.setOnMouseExited(event -> mouseExited(event));
+        this.setSpacing(0);
+        
+        tvTransactions = new TableView(dailyBalance.getTransactions());
+        tvTransactions.setFixedCellSize(25);
+        tvTransactions.prefHeightProperty().bind(tvTransactions.fixedCellSizeProperty().multiply(Bindings.size(tvTransactions.getItems()).add(1.5)));
+        tvTransactions.minHeightProperty().bind(tvTransactions.prefHeightProperty());
+        tvTransactions.maxHeightProperty().bind(tvTransactions.prefHeightProperty());
+        tvTransactions.setRowFactory( tv -> {
+            TableRow<AccountTransaction> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && (! row.isEmpty()) ) {
+                    AccountTransaction rowData = row.getItem();
+                    // Logic here
+                }
+            });
+            return row ;
+        });
+        
+        TableColumn<AccountTransaction, String> transactionTypeCol = new TableColumn<>("Forgalom típusa");
+        transactionTypeCol.setCellValueFactory(new PropertyValueFactory<>("transactionType"));
+//        TableColumn<AccountTransaction, LocalDate> dateCol = new TableColumn<>("Könyvelési dátum");
+//        dateCol.setCellValueFactory(new PropertyValueFactory<>("date"));
+        TableColumn<AccountTransaction, Integer> amountCol = new TableColumn<>("Összeg");
+        amountCol.setCellValueFactory(new PropertyValueFactory<>("amount"));
+//        TableColumn<AccountTransaction, Integer> balanceCol = new TableColumn<>("Új könyvelt egyenleg");
+//        balanceCol.setCellValueFactory(new PropertyValueFactory<>("balance"));
+//        TableColumn<AccountTransaction, String> accountNumberCol = new TableColumn<>("Ellenoldali számlaszám");
+//        accountNumberCol.setCellValueFactory(new PropertyValueFactory<>("accountNumber"));
+        TableColumn<AccountTransaction, String> ownerCol = new TableColumn<>("Ellenoldali név");
+        ownerCol.setCellValueFactory(new PropertyValueFactory<>("owner"));
+        TableColumn<AccountTransaction, String> commentCol = new TableColumn<>("Közlemény");
+        commentCol.setCellValueFactory(new PropertyValueFactory<>("comment"));
+//        TableColumn<AccountTransaction, String> counterCol = new TableColumn<>("?");
+//        counterCol.setCellValueFactory(new PropertyValueFactory<>("counter"));    
+        tvTransactions.getColumns().setAll(transactionTypeCol, amountCol, ownerCol, commentCol);    
+        
+        BorderPane bp = new BorderPane();
+        
+        txtDate = new Label();
+        txtDate.setPrefWidth(100);
+        txtBalance = new Label();
+        txtBalance.setPrefWidth(100);
+        tfCash = new TextField();
+        tfCash.setPrefWidth(100);
+        btnAdd = new Button("+");       
+        
+        corrections = new HBox();
+        corrections.setSpacing(10);
+        HBox.setMargin(corrections, new Insets(0, 0, 0, 20));
+        
+        hbLine = new HBox();
+        hbLine.getChildren().addAll(txtDate, txtBalance, tfCash, btnAdd, corrections);        
+        bp.setCenter(hbLine);
+        
+        HBox rightContext = new HBox();
+        
+        ToggleButton btnExpand = new ToggleButton("...");
+        btnExpand.setOnAction(event -> {
+            if (btnExpand.isSelected()) {
+                this.getChildren().add(tvTransactions);
+            } else {
+                this.getChildren().remove(tvTransactions);
+            }
+        });
+        
+        chkReviewed = new CheckBox();
+        rightContext.getChildren().addAll(chkReviewed, btnExpand);
+        bp.setRight(rightContext);
+                
+        this.getChildren().addAll(bp);
+        
+//        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/control/DailyBalanceControl.fxml"));
+//        fxmlLoader.setRoot(this);
+//        fxmlLoader.setController(this);
+//
+//        try {
+//            fxmlLoader.load();
+//        } catch (IOException exception) {
+//            throw new RuntimeException(exception);
+//        }
     }
 
     public String getDate() { return dateProperty().get(); }

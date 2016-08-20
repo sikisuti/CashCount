@@ -48,6 +48,16 @@ public final class AccountTransaction {
     public String getCounter() { return counter.get(); }
     public void setCounter(String counter) { this.counter.set(counter); }
     public StringProperty counterProperty() { return counter; }
+    
+    private final StringProperty category;
+    public String getCategory() { return category.get(); }
+    public void setCategory(String category) { this.category.set(category); }
+    public StringProperty categoryProperty() { return category; }
+    
+    private final StringProperty subCategory;
+    public String getSubCategory() { return subCategory.get(); }
+    public void setSubCategory(String subCategory) { this.subCategory.set(subCategory); }
+    public StringProperty subCategoryProperty() { return subCategory; }
 
     public AccountTransaction() {
         this.transactionType = new SimpleStringProperty();
@@ -57,7 +67,9 @@ public final class AccountTransaction {
         this.accountNumber = new SimpleStringProperty();
         this.owner = new SimpleStringProperty();
         this.comment = new SimpleStringProperty();
-        this.counter = new SimpleStringProperty();        
+        this.counter = new SimpleStringProperty();     
+        this.category = new SimpleStringProperty();
+        this.subCategory = new SimpleStringProperty();      
     }
     
     private AccountTransaction(Builder builder) {
@@ -70,6 +82,8 @@ public final class AccountTransaction {
         setOwner(builder.owner);
         setComment(builder.comment);
         setCounter(builder.counter);
+        setCategory(builder.category);
+        setSubCategory(builder.subCategory);
     }
     
     public static class Builder {
@@ -81,6 +95,8 @@ public final class AccountTransaction {
         String owner;
         String comment;
         String counter;
+        String category;
+        String subCategory;
         
         public Builder setAmount(Integer amount) {
             this.amount = amount;
@@ -121,6 +137,16 @@ public final class AccountTransaction {
             this.counter = counter;
             return this;
         }
+
+        public Builder setCategory(String category) {
+            this.category = category;
+            return this;
+        }
+
+        public Builder setSubCategory(String subCategory) {
+            this.subCategory = subCategory;
+            return this;
+        }
         
         public AccountTransaction build() {
             return new AccountTransaction(this);
@@ -133,14 +159,13 @@ public final class AccountTransaction {
         
         return 
                 this.getTransactionType().equals(other.getTransactionType()) &&
-//                this.getDate().equals(other.getDate()) &&
                 this.getAmount().equals(other.getAmount()) &&
                 this.getBalance().equals(other.getBalance()) &&
                 this.getAccountNumber().equals(other.getAccountNumber()) &&
                 this.getOwner().equals(other.getOwner()) &&
                 this.getComment().equals(other.getComment()) &&
-                this.getCounter().equals(other.getCounter());
+                this.getCounter().equals(other.getCounter()) &&
+                this.getCategory() == null ? other.getCategory() == null : this.getCategory().equals(other.getCategory()) &&
+                this.getSubCategory() == null ? other.getSubCategory() == null : this.getSubCategory().equals(other.getSubCategory());
     }
-    
-    
 }
