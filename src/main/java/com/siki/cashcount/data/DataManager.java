@@ -16,6 +16,7 @@ import com.siki.cashcount.exception.TransactionGapException;
 import com.siki.cashcount.model.AccountTransaction;
 import com.siki.cashcount.model.Correction;
 import com.siki.cashcount.model.DailyBalance;
+import com.siki.cashcount.model.MatchingRule;
 import com.siki.cashcount.model.SavingStore;
 import com.siki.cashcount.serial.CorrectionDeserializer;
 import com.siki.cashcount.serial.CorrectionSerializer;
@@ -53,7 +54,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.TreeMap;
@@ -62,7 +62,6 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.chart.XYChart.Data;
 
@@ -75,6 +74,8 @@ public class DataManager {
     public static DataManager getInstance() { return INSTANCE; }
     
     private final String GENERAL_TEXT = "Általános";
+    public static final String TRANSACTION_COMMENT_NAME = "Közlemény";
+    public static final String TRANSACTION_TYPE_NAME = "";
     
     private ObservableList<DailyBalance> dailyBalanceCache;
     private HashMap<LocalDate, Integer> weeklyAverages;
@@ -82,6 +83,7 @@ public class DataManager {
     private List<SavingStore> savingCache;
     private TreeMap<LocalDate, HashMap<CashFlowSeriesEnum, ObservableList<Data<Date, Integer>>>> pastSeries;
     private TreeMap<LocalDate, LinkedHashMap<String, Integer>> pastDifferences;
+    private List<MatchingRule> matchingRules;
     
     Gson gsonDeserializer;
     Gson gsonSerializer;
@@ -124,6 +126,15 @@ public class DataManager {
                 db.getCorrections().stream().forEach((c) -> {
                     c.setDailyBalance(db);
                 });
+                for (AccountTransaction t : db.getTransactions()) {
+                    if (t.getCategory() == null) {
+                        MatchingRule mr = findMatchingRule(t);
+                        if (mr != null) {
+                            t.setCategory(mr.getCategory());
+                            t.setSubCategory(mr.getSubCategory());
+                        }
+                    }
+                }
                 rtnList.add(db);
             }
         } catch (IOException e) {
@@ -619,5 +630,27 @@ public class DataManager {
         } else {
             map.put(name, amount);
         }
+    }
+    
+    public List<MatchingRule> getAllMatchingRules() {
+        if (matchingRules == null) {
+            loadMatchingRules();
+        }
+        return matchingRules;
+    }
+    private void loadMatchingRules() {
+        matchingRules = new ArrayList<>();
+        
+        MatchingRule m1 = new MatchingRule.Builder().setField(TRANSACTION_COMMENT_NAME).setPattern("tesco").setCategory("Kártyás vásárlás").setSubCategory("Élelmiszer").build();
+        matchingRules.add(m1);
+    }
+    private MatchingRule findMatchingRule(AccountTransaction transaction) {
+        for (MatchingRule mr : getAllMatchingRules()) {
+            if ((mr.getField().equals(TRANSACTION_COMMENT_NAME) && transaction.getComment().toLowerCase().contains(mr.getPattern())) ||
+                    (mr.getField().equals(TRANSACTION_TYPE_NAME) && transaction.getTransactionType().toLowerCase().contains(mr.getPattern()))) {
+                return mr;
+            }
+        }
+        return null;
     }
 }

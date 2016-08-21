@@ -157,15 +157,30 @@ public final class AccountTransaction {
     public boolean equals(Object obj) {
         AccountTransaction other = (AccountTransaction)obj;
         
-        return 
+        boolean rtn = 
                 this.getTransactionType().equals(other.getTransactionType()) &&
                 this.getAmount().equals(other.getAmount()) &&
                 this.getBalance().equals(other.getBalance()) &&
                 this.getAccountNumber().equals(other.getAccountNumber()) &&
                 this.getOwner().equals(other.getOwner()) &&
                 this.getComment().equals(other.getComment()) &&
-                this.getCounter().equals(other.getCounter()) &&
-                this.getCategory() == null ? other.getCategory() == null : this.getCategory().equals(other.getCategory()) &&
-                this.getSubCategory() == null ? other.getSubCategory() == null : this.getSubCategory().equals(other.getSubCategory());
+                this.getCounter().equals(other.getCounter());
+        if (!rtn) return false;
+        
+        if (this.getCategory() == null) {
+            if (other.getCategory() != null) return false;
+        } else {
+            if (!this.getCategory().equals(other.getCategory())) {
+                return false;
+            }
+        }
+        if (this.getSubCategory() == null) {
+            if (other.getSubCategory() != null) return false;
+        } else {
+            if (!this.getSubCategory().equals(other.getSubCategory())) {
+                return false;
+            }
+        }
+        return true;
     }
 }
