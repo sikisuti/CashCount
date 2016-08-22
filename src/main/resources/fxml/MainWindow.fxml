@@ -18,6 +18,7 @@
             <Menu text="Adat" >
                 <MenuItem text="Frissítés" onAction="#refreshDailyBalances"  /> 
                 <MenuItem text="Importálás" onAction="#doImport"  /> 
+                <MenuItem text="Kategóriák" onAction="#categories"  /> 
             </Menu> 
         </MenuBar>
     </top>

@@ -63,4 +63,11 @@ public class MatchingRule {
             return new MatchingRule(this);
         }
     }
+
+    @Override
+    public String toString() {
+        return "MatchingRule{" + "field=" + field + ", pattern=" + pattern + ", category=" + category + ", subCategory=" + subCategory + '}';
+    }
+    
+    
 }

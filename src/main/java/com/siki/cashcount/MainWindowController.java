@@ -29,7 +29,6 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -147,13 +146,12 @@ public class MainWindowController implements Initializable {
             DailyBalancesTitledPane tp = null;
             for (DailyBalance db : DataManager.getInstance().getAllDailyBalances()) {
                 if (date == null || !db.getDate().getMonth().equals(date.getMonth())) {
+                    if (tp != null) tp.validate();
                     date = db.getDate();
                     tp = new DailyBalancesTitledPane(date);
-                    tp.setExpanded(isAroundToday(date));
                     DailyBalancesPH.getChildren().add(tp);  
                 }
-                if (isAroundToday(db.getDate()))
-                    tp.addDailyBalance(db);
+                tp.addDailyBalance(db);
             }
             Button btnNewMonth = new Button("+");
             btnNewMonth.setStyle("-fx-alignment: center;");
@@ -182,11 +180,6 @@ public class MainWindowController implements Initializable {
             
         } 
         if (ConfigManager.getBooleanProperty("LogPerformance")) StopWatch.stop("prepareDailyBalances");
-    }
-    
-    private boolean isAroundToday(LocalDate date) {
-        return date.isAfter(LocalDate.now().minusMonths(1).withDayOfMonth(LocalDate.now().minusMonths(1).lengthOfMonth())) &&
-                date.isBefore(LocalDate.now().plusMonths(1).withDayOfMonth(1));
     }
     
     public double getDailyBalanceViewScroll() {
@@ -292,6 +285,25 @@ public class MainWindowController implements Initializable {
                 Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
                 ExceptionDialog.get(ex).showAndWait();
             }
+        }
+    }
+    
+    @FXML
+    private void categories(ActionEvent event) {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/CategoryManagerWindow.fxml"));
+            Parent root1 = (Parent) fxmlLoader.load();
+            Stage stage = new Stage();
+            stage.initOwner(vbCashFlow.getScene().getWindow());
+            stage.initModality(Modality.NONE);
+            stage.setAlwaysOnTop(true);
+            stage.initStyle(StageStyle.UTILITY);
+            stage.setTitle("Kategóriák");
+            stage.setScene(new Scene(root1));
+            stage.show();
+        } catch (IOException ex) {
+            Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
+            ExceptionDialog.get(ex).showAndWait();
         }
     }
     

@@ -12,18 +12,14 @@ import com.siki.cashcount.exception.NotEnoughPastDataException;
 import com.siki.cashcount.model.AccountTransaction;
 import com.siki.cashcount.model.Correction;
 import com.siki.cashcount.model.DailyBalance;
-import java.awt.Checkbox;
 import java.io.IOException;
 import java.text.NumberFormat;
 import java.time.DayOfWeek;
 import java.time.format.DateTimeFormatter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javafx.beans.binding.Bindings;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -33,14 +29,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableRow;
-import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
-import javafx.scene.control.TitledPane;
 import javafx.scene.control.ToggleButton;
-import javafx.scene.control.cell.ComboBoxTableCell;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
@@ -57,7 +47,6 @@ import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import javafx.util.converter.DefaultStringConverter;
 
 /**
  * FXML Controller class
@@ -65,6 +54,8 @@ import javafx.util.converter.DefaultStringConverter;
  * @author tamas.siklosi
  */
 public final class DailyBalanceControl extends VBox {
+    private DailyBalancesTitledPane parent;
+    
     private Label txtDate;
     private Label txtBalance;
     private TextField tfCash;
@@ -86,8 +77,9 @@ public final class DailyBalanceControl extends VBox {
      * Initializes the controller class.
      * @param dailyBalance
      */
-    public DailyBalanceControl(DailyBalance dailyBalance) { 
+    public DailyBalanceControl(DailyBalance dailyBalance, DailyBalancesTitledPane parent) { 
         this.dailyBalance = dailyBalance;
+        this.parent = parent;
         
         setDragAndDrop();
         
@@ -231,7 +223,7 @@ public final class DailyBalanceControl extends VBox {
         btnExpand.setOnAction(event -> {
             if (btnExpand.isSelected()) {
                 if (vbTransactions.getChildren().isEmpty() && !dailyBalance.getTransactions().isEmpty()) {
-                    vbTransactions.getChildren().add(new TransactionControl(dailyBalance.getTransactions()));
+                    vbTransactions.getChildren().add(new TransactionControl(dailyBalance.getTransactions(), this));
                 }
                 this.getChildren().add(vbTransactions);
             } else {
@@ -319,5 +311,6 @@ public final class DailyBalanceControl extends VBox {
             }
         }
         this.setBorder(new Border(new BorderStroke(Color.TRANSPARENT, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
+        parent.validate();
     }
 }

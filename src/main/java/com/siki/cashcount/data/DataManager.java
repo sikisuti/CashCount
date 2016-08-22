@@ -75,7 +75,7 @@ public class DataManager {
     
     private final String GENERAL_TEXT = "Általános";
     public static final String TRANSACTION_COMMENT_NAME = "Közlemény";
-    public static final String TRANSACTION_TYPE_NAME = "";
+    public static final String TRANSACTION_TYPE_NAME = "Forgalomtípus";
     
     private ObservableList<DailyBalance> dailyBalanceCache;
     private HashMap<LocalDate, Integer> weeklyAverages;
@@ -83,7 +83,9 @@ public class DataManager {
     private List<SavingStore> savingCache;
     private TreeMap<LocalDate, HashMap<CashFlowSeriesEnum, ObservableList<Data<Date, Integer>>>> pastSeries;
     private TreeMap<LocalDate, LinkedHashMap<String, Integer>> pastDifferences;
-    private List<MatchingRule> matchingRules;
+    private ObservableList<MatchingRule> matchingRules;
+    private ObservableList<String> categories = FXCollections.observableArrayList();
+    private ObservableList<String> subCategories = FXCollections.observableArrayList();
     
     Gson gsonDeserializer;
     Gson gsonSerializer;
@@ -108,6 +110,20 @@ public class DataManager {
         if (dailyBalanceCache == null) {
             String dataPath = ConfigManager.getStringProperty("DataPath");
             dailyBalanceCache = loadDailyBalances(dataPath);
+            for (DailyBalance db : dailyBalanceCache)
+                for (AccountTransaction t : db.getTransactions()) {
+                    if (t.getCategory() == null) {
+                        MatchingRule mr = findMatchingRule(t);
+                        if (mr != null) {
+                            t.setCategory(mr.getCategory());
+                            t.setSubCategory(mr.getSubCategory());
+                        }
+                    } 
+                    if (t.getCategory() != null) {
+                        if (!categories.contains(t.getCategory())) categories.add(t.getCategory());
+                        if (!subCategories.contains(t.getSubCategory())) subCategories.add(t.getSubCategory());
+                    }
+                }
         }
         
         return dailyBalanceCache;
@@ -126,15 +142,6 @@ public class DataManager {
                 db.getCorrections().stream().forEach((c) -> {
                     c.setDailyBalance(db);
                 });
-                for (AccountTransaction t : db.getTransactions()) {
-                    if (t.getCategory() == null) {
-                        MatchingRule mr = findMatchingRule(t);
-                        if (mr != null) {
-                            t.setCategory(mr.getCategory());
-                            t.setSubCategory(mr.getSubCategory());
-                        }
-                    }
-                }
                 rtnList.add(db);
             }
         } catch (IOException e) {
@@ -632,19 +639,41 @@ public class DataManager {
         }
     }
     
-    public List<MatchingRule> getAllMatchingRules() {
+    public ObservableList<MatchingRule> getAllMatchingRules() throws IOException, JsonDeserializeException {
         if (matchingRules == null) {
             loadMatchingRules();
         }
         return matchingRules;
     }
-    private void loadMatchingRules() {
-        matchingRules = new ArrayList<>();
+    private void loadMatchingRules() throws IOException, JsonDeserializeException {
+        matchingRules = FXCollections.observableArrayList();
         
-        MatchingRule m1 = new MatchingRule.Builder().setField(TRANSACTION_COMMENT_NAME).setPattern("tesco").setCategory("Kártyás vásárlás").setSubCategory("Élelmiszer").build();
-        matchingRules.add(m1);
+        String filePath = ConfigManager.getStringProperty("MatchingRulesPath");
+        int lineCnt = 0;
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filePath), "UTF-8"))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                lineCnt++;
+                matchingRules.add(gsonDeserializer.fromJson(line, MatchingRule.class));
+            }
+        } catch (IOException e) {
+            
+        } catch (Exception e) {
+            throw new JsonDeserializeException(lineCnt, e);
+        }
     }
-    private MatchingRule findMatchingRule(AccountTransaction transaction) {
+    private void saveMatchingRules() throws IOException {
+        String filePath = ConfigManager.getStringProperty("MatchingRulesPath");
+        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filePath), "UTF-8"))) {
+            for (int i = 0; i < matchingRules.size(); i++) {
+                bw.write(gsonSerializer.toJson(matchingRules.get(i), MatchingRule.class));
+                if (i < matchingRules.size() - 1) bw.write("\n");
+            }
+        } catch (IOException e) {
+            throw e;
+        }
+    }
+    private MatchingRule findMatchingRule(AccountTransaction transaction) throws IOException, JsonDeserializeException {
         for (MatchingRule mr : getAllMatchingRules()) {
             if ((mr.getField().equals(TRANSACTION_COMMENT_NAME) && transaction.getComment().toLowerCase().contains(mr.getPattern())) ||
                     (mr.getField().equals(TRANSACTION_TYPE_NAME) && transaction.getTransactionType().toLowerCase().contains(mr.getPattern()))) {
@@ -652,5 +681,18 @@ public class DataManager {
             }
         }
         return null;
+    }
+    public void addMatchingRule(MatchingRule matchingRule) throws IOException {
+        matchingRules.add(matchingRule);
+        if (!categories.contains(matchingRule.getCategory())) categories.add(matchingRule.getCategory());
+        if (!subCategories.contains(matchingRule.getSubCategory())) subCategories.add(matchingRule.getSubCategory());
+        saveMatchingRules();
+    }
+    
+    public ObservableList<String> getAllCategories() {
+        return categories;
+    }
+    public ObservableList<String> getAllSubCategories() {
+        return subCategories;
     }
 }

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.net.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.collections.*?>
+
+<GridPane id="AnchorPane" prefHeight="400.0" prefWidth="1000.0" styleClass="mainFxmlClass" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.siki.cashcount.CategoryManagerWindowController">
+    <columnConstraints>
+        <ColumnConstraints />
+        <ColumnConstraints hgrow="ALWAYS"  />
+    </columnConstraints>
+    <rowConstraints>
+        <RowConstraints />
+    </rowConstraints>
+    <children>
+        <GridPane GridPane.columnIndex="0" GridPane.rowIndex="0"  >
+            <columnConstraints>
+                <ColumnConstraints prefWidth="100"  />
+                <ColumnConstraints prefWidth="200"  />
+            </columnConstraints>
+            <rowConstraints>
+                <RowConstraints />
+                <RowConstraints />
+                <RowConstraints />
+                <RowConstraints />
+            </rowConstraints>
+            <children>
+                <Label text="Mező" GridPane.columnIndex="0" GridPane.rowIndex="0" />   
+                <ComboBox fx:id="cbField" GridPane.columnIndex="1" GridPane.rowIndex="0" prefWidth="200"   />
+                <Label text="Minta" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                <TextField fx:id="tfPattern" GridPane.columnIndex="1" GridPane.rowIndex="1" prefWidth="200" />  
+                <Label text="Kategória" GridPane.columnIndex="0" GridPane.rowIndex="2" />    
+                <ComboBox fx:id="cbCategory" GridPane.columnIndex="1" GridPane.rowIndex="2" prefWidth="200" editable="true"  />  
+                <Label  text="Alkategória" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                <ComboBox fx:id="cbSubCategory" GridPane.columnIndex="1" GridPane.rowIndex="3" prefWidth="200" editable="true"  />     
+            </children>
+        </GridPane>
+        <Button text="Hozzáad" onAction="#add" />  
+        
+        <ListView fx:id="lvRules" GridPane.columnIndex="1" GridPane.rowIndex="0" />  
+    </children>
+    <stylesheets>
+        <URL value="@/styles/categorymanagerwindow.css"/>
+    </stylesheets>
+</GridPane>

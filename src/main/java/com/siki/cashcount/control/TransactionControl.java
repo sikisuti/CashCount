@@ -31,9 +31,11 @@ import javafx.scene.paint.Paint;
  */
 public class TransactionControl extends GridPane {
     private ObservableList<AccountTransaction> transactions;
+    private DailyBalanceControl parent;
     
-    public TransactionControl(ObservableList<AccountTransaction> transactions) {
+    public TransactionControl(ObservableList<AccountTransaction> transactions, DailyBalanceControl parent) {
         this.transactions = transactions;
+        this.parent = parent;
         
         buildLayout();
     }
@@ -71,14 +73,6 @@ public class TransactionControl extends GridPane {
             this.getChildren().addAll(lblType, lblAmount, lblOwner, lblComment, cbCategory, cbSubCategory);        
         }
         
-//        ColumnConstraints columnConstrait = new ColumnConstraints(150d);
-//        this.getColumnConstraints().add(0, columnConstrait);
-//        this.getColumnConstraints().add(1, columnConstrait);
-//        this.getColumnConstraints().add(2, columnConstrait);
-//        this.getColumnConstraints().add(3, columnConstrait);
-//        this.getColumnConstraints().add(4, columnConstrait);
-//        this.getColumnConstraints().add(5, columnConstrait);
-        
         this.setStyle("-fx-background-color: white;");
         this.setHgap(20);
         validate();
@@ -95,5 +89,6 @@ public class TransactionControl extends GridPane {
                 }
             }
         }
+        parent.validate();
     }
 }
