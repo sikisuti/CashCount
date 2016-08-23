@@ -74,7 +74,7 @@ public class MainWindowController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
             
 //        prepareTable();   
-
+        
         // Chart layout
         vbCashFlow.getChildren().add(flowChart);
         btnGetPast.setOnAction((ActionEvent event) -> { getPast(); });

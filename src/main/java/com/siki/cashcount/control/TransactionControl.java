@@ -5,6 +5,7 @@
  */
 package com.siki.cashcount.control;
 
+import com.siki.cashcount.data.DataManager;
 import com.siki.cashcount.model.AccountTransaction;
 import java.text.NumberFormat;
 import javafx.beans.value.ChangeListener;
@@ -49,6 +50,7 @@ public class TransactionControl extends GridPane {
             Label lblOwner = new Label(t.getOwner());
             Label lblComment = new Label(t.getComment());
             ComboBox cbCategory = new ComboBox();
+            cbCategory.setItems(DataManager.getInstance().getAllCategories());
             cbCategory.valueProperty().bindBidirectional(t.categoryProperty());
             cbCategory.setPrefWidth(200);
             cbCategory.setEditable(true);
@@ -59,9 +61,16 @@ public class TransactionControl extends GridPane {
                 }
             });
             ComboBox cbSubCategory = new ComboBox();
+            cbSubCategory.setItems(DataManager.getInstance().getAllSubCategories());
             cbSubCategory.valueProperty().bindBidirectional(t.subCategoryProperty());
             cbSubCategory.setPrefWidth(200);
             cbSubCategory.setEditable(true);
+            cbSubCategory.valueProperty().addListener(new ChangeListener<String>() {
+                @Override
+                public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                    validate();
+                }
+            });
         
             GridPane.setConstraints(lblType, 0, rowCnt);
             GridPane.setConstraints(lblAmount, 1, rowCnt);

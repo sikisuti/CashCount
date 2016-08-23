@@ -8,6 +8,7 @@ package com.siki.cashcount.control;
 import com.siki.cashcount.NewCorrectionWindowController;
 import com.siki.cashcount.converter.IntegerToTextConverter;
 import com.siki.cashcount.data.DataManager;
+import com.siki.cashcount.exception.JsonDeserializeException;
 import com.siki.cashcount.exception.NotEnoughPastDataException;
 import com.siki.cashcount.model.AccountTransaction;
 import com.siki.cashcount.model.Correction;
@@ -224,6 +225,11 @@ public final class DailyBalanceControl extends VBox {
             if (btnExpand.isSelected()) {
                 if (vbTransactions.getChildren().isEmpty() && !dailyBalance.getTransactions().isEmpty()) {
                     vbTransactions.getChildren().add(new TransactionControl(dailyBalance.getTransactions(), this));
+                    try {
+                        DataManager.getInstance().categorize();
+                    } catch (IOException | JsonDeserializeException ex) {
+                        Logger.getLogger(DailyBalanceControl.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }
                 this.getChildren().add(vbTransactions);
             } else {

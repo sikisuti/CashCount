@@ -5,6 +5,7 @@
  */
 package com.siki.cashcount.model;
 
+import com.siki.cashcount.data.DataManager;
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -58,7 +59,7 @@ public class Correction implements Externalizable {
     
     private Correction(Builder builder) {
         this();
-        this.id = builder.id;
+        this.id = builder.id == null ? DataManager.getInstance().getNextCorrectionId() : builder.id;
         this.type.set(builder.type);
         this.amount.set(builder.amount);
         this.comment.set(builder.comment);

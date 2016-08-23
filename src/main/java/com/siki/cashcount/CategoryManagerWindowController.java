@@ -39,9 +39,10 @@ public class CategoryManagerWindowController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         try {
-            cbField.getItems().addAll(DataManager.TRANSACTION_COMMENT_NAME, DataManager.TRANSACTION_TYPE_NAME);
-            cbCategory.getItems().addAll(DataManager.getInstance().getAllCategories());
-            cbSubCategory.getItems().addAll(DataManager.getInstance().getAllSubCategories());
+            cbField.getItems().addAll(DataManager.TRANSACTION_COMMENT_NAME, DataManager.TRANSACTION_TYPE_NAME, DataManager.TRANSACTION_OWNER_NAME);
+            cbField.setValue(DataManager.TRANSACTION_COMMENT_NAME);
+            cbCategory.setItems(DataManager.getInstance().getAllCategories());
+            cbSubCategory.setItems(DataManager.getInstance().getAllSubCategories());
             lvRules.setItems(DataManager.getInstance().getAllMatchingRules());
         } catch (IOException | JsonDeserializeException ex) {
             Logger.getLogger(CategoryManagerWindowController.class.getName()).log(Level.SEVERE, null, ex);
@@ -62,7 +63,7 @@ public class CategoryManagerWindowController implements Initializable {
                     .setSubCategory(cbSubCategory.getValue().toString())
                     .build();
             DataManager.getInstance().addMatchingRule(mr);
-        } catch (IOException ex) {
+        } catch (IOException | JsonDeserializeException ex) {
             Logger.getLogger(CategoryManagerWindowController.class.getName()).log(Level.SEVERE, null, ex);
             ExceptionDialog.get(ex).showAndWait();
         }

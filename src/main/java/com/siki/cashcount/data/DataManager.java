@@ -35,12 +35,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
-import java.nio.file.DirectoryIteratorException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -76,6 +74,7 @@ public class DataManager {
     private final String GENERAL_TEXT = "Általános";
     public static final String TRANSACTION_COMMENT_NAME = "Közlemény";
     public static final String TRANSACTION_TYPE_NAME = "Forgalomtípus";
+    public static final String TRANSACTION_OWNER_NAME = "Számlatulajdonos";
     
     private ObservableList<DailyBalance> dailyBalanceCache;
     private HashMap<LocalDate, Integer> weeklyAverages;
@@ -110,20 +109,7 @@ public class DataManager {
         if (dailyBalanceCache == null) {
             String dataPath = ConfigManager.getStringProperty("DataPath");
             dailyBalanceCache = loadDailyBalances(dataPath);
-            for (DailyBalance db : dailyBalanceCache)
-                for (AccountTransaction t : db.getTransactions()) {
-                    if (t.getCategory() == null) {
-                        MatchingRule mr = findMatchingRule(t);
-                        if (mr != null) {
-                            t.setCategory(mr.getCategory());
-                            t.setSubCategory(mr.getSubCategory());
-                        }
-                    } 
-                    if (t.getCategory() != null) {
-                        if (!categories.contains(t.getCategory())) categories.add(t.getCategory());
-                        if (!subCategories.contains(t.getSubCategory())) subCategories.add(t.getSubCategory());
-                    }
-                }
+            categorize();
         }
         
         return dailyBalanceCache;
@@ -378,8 +364,7 @@ public class DataManager {
         }
         
         return correctionTypeCache;
-    }
-    
+    }    
     public void saveCorrectionTypes() throws IOException {
         String correctionTypesPath = ConfigManager.getStringProperty("CorrectionTypesPath");
         try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(correctionTypesPath), "UTF-8"))) {
@@ -390,6 +375,10 @@ public class DataManager {
         } catch (IOException e) {
             throw e;
         }
+    }
+    public Long getNextCorrectionId() {
+        List<Correction> corrections = dailyBalanceCache.stream().flatMap(db -> db.getCorrections().stream()).collect(Collectors.toList());
+        return corrections.stream().mapToLong(c -> c.getId()).max().getAsLong() + 1;
     }
     
     public boolean needSave() throws IOException, JsonDeserializeException {
@@ -466,8 +455,10 @@ public class DataManager {
             for (Path entry: stream) {
                 loadPastSeries(entry);
             }            
-        } 
-        loadPastSeries(null);
+            loadPastSeries(null);
+        } catch (Exception ex) {
+            throw ex;
+        }
     }
     
     private void loadPastSeries(Path entry) throws IOException, JsonDeserializeException {
@@ -675,18 +666,18 @@ public class DataManager {
     }
     private MatchingRule findMatchingRule(AccountTransaction transaction) throws IOException, JsonDeserializeException {
         for (MatchingRule mr : getAllMatchingRules()) {
-            if ((mr.getField().equals(TRANSACTION_COMMENT_NAME) && transaction.getComment().toLowerCase().contains(mr.getPattern())) ||
-                    (mr.getField().equals(TRANSACTION_TYPE_NAME) && transaction.getTransactionType().toLowerCase().contains(mr.getPattern()))) {
+            if ((mr.getField().equals(TRANSACTION_COMMENT_NAME) && transaction.getComment().toLowerCase().contains(mr.getPattern().toLowerCase())) ||
+                    (mr.getField().equals(TRANSACTION_TYPE_NAME) && transaction.getTransactionType().toLowerCase().contains(mr.getPattern().toLowerCase())) ||
+                    (mr.getField().equals(TRANSACTION_OWNER_NAME) && transaction.getOwner().toLowerCase().contains(mr.getPattern().toLowerCase()))) {
                 return mr;
             }
         }
         return null;
     }
-    public void addMatchingRule(MatchingRule matchingRule) throws IOException {
+    public void addMatchingRule(MatchingRule matchingRule) throws IOException, JsonDeserializeException {
         matchingRules.add(matchingRule);
-        if (!categories.contains(matchingRule.getCategory())) categories.add(matchingRule.getCategory());
-        if (!subCategories.contains(matchingRule.getSubCategory())) subCategories.add(matchingRule.getSubCategory());
         saveMatchingRules();
+        categorize();
     }
     
     public ObservableList<String> getAllCategories() {
@@ -694,5 +685,22 @@ public class DataManager {
     }
     public ObservableList<String> getAllSubCategories() {
         return subCategories;
+    }
+    public void categorize() throws IOException, JsonDeserializeException {
+        for (DailyBalance db : dailyBalanceCache) {
+            for (AccountTransaction t : db.getTransactions()) {
+                if (t.getCategory() == null) {
+                    MatchingRule mr = findMatchingRule(t);
+                    if (mr != null) {
+                        t.setCategory(mr.getCategory());
+                        t.setSubCategory(mr.getSubCategory());
+                    }
+                } 
+                if (t.getCategory() != null) {
+                    if (!categories.contains(t.getCategory())) categories.add(t.getCategory());
+                    if (!subCategories.contains(t.getSubCategory())) subCategories.add(t.getSubCategory());
+                }
+            }
+        }
     }
 }

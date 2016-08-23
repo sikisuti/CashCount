@@ -1,2 +1,22 @@
 {"field":"Közlemény","pattern":"tesco","category":"Kártyás vásárlás","subCategory":"Élelmiszer"}
 {"field":"Közlemény","pattern":"dm","category":"Kártyás vásárlás","subCategory":"Háztartás"}
+{"field":"Közlemény","pattern":"euronics","category":"Kártyás vásárlás","subCategory":"Műszaki"}
+{"field":"Közlemény","pattern":"Gasztro-Life","category":"Kártyás vásárlás","subCategory":"Élelmiszer"}
+{"field":"Közlemény","pattern":"gyógyszer","category":"Kártyás vásárlás","subCategory":"Gyógyszer"}
+{"field":"Közlemény","pattern":"gyogyszer","category":"Kártyás vásárlás","subCategory":"Gyógyszer"}
+{"field":"Forgalomtípus","pattern":"eseti megbízások költsége","category":"Banki költség","subCategory":"Eseti megbízás"}
+{"field":"Számlatulajdonos","pattern":"elmű","category":"Dózsa rezsi","subCategory":"Villany"}
+{"field":"Közlemény","pattern":"obi","category":"Kártyás vásárlás","subCategory":"Barkács"}
+{"field":"Számlatulajdonos","pattern":"otp bank hitel","category":"Hitel","subCategory":"OTP"}
+{"field":"Közlemény","pattern":"4839759001","category":"Megtakarítás","subCategory":"Gabó Fundamenta"}
+{"field":"Számlatulajdonos","pattern":"Accenture","category":"Bér","subCategory":"Siki"}
+{"field":"Számlatulajdonos","pattern":"Főgáz","category":"Dózsa rezsi","subCategory":"Gáz"}
+{"field":"Közlemény","pattern":"Siklósi Tamás közös költség","category":"Weiner rezsi","subCategory":"Közös költség"}
+{"field":"Közlemény","pattern":"Decathlon","category":"Kártyás vásárlás","subCategory":"Sport"}
+{"field":"Forgalomtípus","pattern":"KP.FELVÉT/-BEFIZ. DÍJA","category":"Banki költség","subCategory":"Készpénz felvét / Befizetés díja"}
+{"field":"Forgalomtípus","pattern":"Készpénzfelvét","category":"Banki költség","subCategory":"Készpénzfelvét"}
+{"field":"Közlemény","pattern":"Dunaújváros Euro","category":"Kártyás vásárlás","subCategory":"Háztartás"}
+{"field":"Közlemény","pattern":"6998253001","category":"Hitel","subCategory":"Siki Fundamenta"}
+{"field":"Közlemény","pattern":"4372331601","category":"Hitel","subCategory":"Siki Fundamenta"}
+{"field":"Közlemény","pattern":"Reál c+c","category":"Kártyás vásárlás","subCategory":"Élelmiszer"}
+{"field":"Forgalomtípus","pattern":"ÜZENETDÍJ","category":"Banki költség","subCategory":"OTPdirekt üzenetdíj"}
