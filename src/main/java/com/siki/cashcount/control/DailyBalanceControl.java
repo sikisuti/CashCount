@@ -256,11 +256,6 @@ public final class DailyBalanceControl extends VBox {
     public String getCash() { return cashProperty().get(); }
     public final void setCash(String value) { cashProperty().set(value); }
     public StringProperty cashProperty() { return tfCash.textProperty(); }
-
-    @FXML
-    protected void doSomething() {
-        System.out.println("The button was clicked!");
-    }
     
     @FXML
     protected void addCorrection(ActionEvent event) {

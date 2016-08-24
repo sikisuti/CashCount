@@ -697,8 +697,14 @@ public class DataManager {
                     }
                 } 
                 if (t.getCategory() != null) {
-                    if (!categories.contains(t.getCategory())) categories.add(t.getCategory());
-                    if (!subCategories.contains(t.getSubCategory())) subCategories.add(t.getSubCategory());
+                    if (!categories.contains(t.getCategory())) {
+                        categories.add(t.getCategory());
+                        FXCollections.sort(categories);
+                    }
+                    if (!subCategories.contains(t.getSubCategory())) {
+                        subCategories.add(t.getSubCategory());
+                        FXCollections.sort(subCategories);
+                    }
                 }
             }
         }

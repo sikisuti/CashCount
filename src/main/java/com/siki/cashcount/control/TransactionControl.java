@@ -11,12 +11,9 @@ import java.text.NumberFormat;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
-import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.Border;
 import javafx.scene.layout.BorderStroke;
 import javafx.scene.layout.BorderStrokeStyle;
@@ -24,7 +21,6 @@ import javafx.scene.layout.BorderWidths;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
 
 /**
  *
@@ -50,10 +46,10 @@ public class TransactionControl extends GridPane {
             Label lblOwner = new Label(t.getOwner());
             Label lblComment = new Label(t.getComment());
             ComboBox cbCategory = new ComboBox();
+            cbCategory.setEditable(true);
             cbCategory.setItems(DataManager.getInstance().getAllCategories());
             cbCategory.valueProperty().bindBidirectional(t.categoryProperty());
             cbCategory.setPrefWidth(200);
-            cbCategory.setEditable(true);
             cbCategory.valueProperty().addListener(new ChangeListener<String>() {
                 @Override
                 public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
@@ -61,10 +57,10 @@ public class TransactionControl extends GridPane {
                 }
             });
             ComboBox cbSubCategory = new ComboBox();
+            cbSubCategory.setEditable(true);
             cbSubCategory.setItems(DataManager.getInstance().getAllSubCategories());
             cbSubCategory.valueProperty().bindBidirectional(t.subCategoryProperty());
             cbSubCategory.setPrefWidth(200);
-            cbSubCategory.setEditable(true);
             cbSubCategory.valueProperty().addListener(new ChangeListener<String>() {
                 @Override
                 public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {

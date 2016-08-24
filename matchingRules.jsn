@@ -20,3 +20,34 @@
 {"field":"Közlemény","pattern":"4372331601","category":"Hitel","subCategory":"Siki Fundamenta"}
 {"field":"Közlemény","pattern":"Reál c+c","category":"Kártyás vásárlás","subCategory":"Élelmiszer"}
 {"field":"Forgalomtípus","pattern":"ÜZENETDÍJ","category":"Banki költség","subCategory":"OTPdirekt üzenetdíj"}
+{"field":"Forgalomtípus","pattern":"PÉNZÁTVEZ.","category":"Banki költség","subCategory":"Pénzátvezetés értékpapír számláról"}
+{"field":"Közlemény","pattern":"Shell","category":"Autó","subCategory":"Üzemanyag"}
+{"field":"Közlemény","pattern":"Percipąn","category":"Kártyás vásárlás","subCategory":"Élelmiszer"}
+{"field":"Számlatulajdonos","pattern":"Vodafone","category":"Telefon","subCategory":"Gabó telefon"}
+{"field":"Számlatulajdonos","pattern":"Dózsa Gy.út 38.THÁZ","category":"Dózsa rezsi","subCategory":"Közös költség"}
+{"field":"Számlatulajdonos","pattern":"Klebelsberg","category":"Bér","subCategory":"Gabó"}
+{"field":"Közlemény","pattern":"Spar","category":"Kártyás vásárlás","subCategory":"Élelmiszer"}
+{"field":"Közlemény","pattern":"C\u0026A","category":"Kártyás vásárlás","subCategory":"Ruha"}
+{"field":"Közlemény","pattern":"XIX.ÖNK.","category":"Bér","subCategory":"Gabó"}
+{"field":"Forgalomtípus","pattern":"OTTHONBIZT.EGYÉNI","category":"Weiner rezsi","subCategory":"Biztosítás"}
+{"field":"Számlatulajdonos","pattern":"UPC","category":"Weiner rezsi","subCategory":"TV"}
+{"field":"Forgalomtípus","pattern":"Havi zárlati díj","category":"Banki költség","subCategory":"Havi zárlati díj"}
+{"field":"Forgalomtípus","pattern":"Időszakos költségek","category":"Banki költség","subCategory":"Időszakos költségek"}
+{"field":"Közlemény","pattern":"Coop","category":"Kártyás vásárlás","subCategory":"Élelmiszer"}
+{"field":"Közlemény","pattern":"OMV","category":"Autó","subCategory":"Üzemanyag"}
+{"field":"Számlatulajdonos","pattern":"E.ON","category":"Weiner rezsi","subCategory":"Villany"}
+{"field":"Közlemény","pattern":"K2 Étterem","category":"Kártyás vásárlás","subCategory":"Élelmiszer"}
+{"field":"Forgalomtípus","pattern":"ÉRTÉKPAPÍR SZLADÍJ","category":"Banki költség","subCategory":"Értékpapír számladíj"}
+{"field":"Közlemény","pattern":"CBA","category":"Kártyás vásárlás","subCategory":"Élelmiszer"}
+{"field":"Közlemény","pattern":"Futar-Team","category":"Kártyás vásárlás","subCategory":"Élelmiszer"}
+{"field":"Közlemény","pattern":"MOL","category":"Autó","subCategory":"Üzemanyag"}
+{"field":"Számlatulajdonos","pattern":"DVCSH","category":"Weiner rezsi","subCategory":"Víz"}
+{"field":"Számlatulajdonos","pattern":"KLIK","category":"Bér","subCategory":"Gabó"}
+{"field":"Közlemény","pattern":"Genius plus","category":"Megtakarítás","subCategory":"Union"}
+{"field":"Számlatulajdonos","pattern":"Generali-Providencia","category":"Dózsa rezsi","subCategory":"Biztosítás"}
+{"field":"Közlemény","pattern":"JYSK","category":"Kártyás vásárlás","subCategory":"Bútor"}
+{"field":"Közlemény","pattern":"Rossmann","category":"Kártyás vásárlás","subCategory":"Háztartás"}
+{"field":"Közlemény","pattern":"IKEA","category":"Kártyás vásárlás","subCategory":"Bútor"}
+{"field":"Közlemény","pattern":"Volanbusz","category":"Kártyás vásárlás","subCategory":"Utazás"}
+{"field":"Közlemény","pattern":"UPC","category":"Weiner rezsi","subCategory":"TV"}
+{"field":"Közlemény","pattern":"Penny","category":"Kártyás vásárlás","subCategory":"Élelmiszer"}

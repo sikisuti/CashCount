@@ -10,7 +10,7 @@
 
 <GridPane id="AnchorPane" prefHeight="400.0" prefWidth="1000.0" styleClass="mainFxmlClass" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.siki.cashcount.CategoryManagerWindowController">
     <columnConstraints>
-        <ColumnConstraints />
+        <ColumnConstraints minWidth="300"  />
         <ColumnConstraints hgrow="ALWAYS"  />
     </columnConstraints>
     <rowConstraints>
@@ -41,7 +41,7 @@
         </GridPane>
         <Button text="Hozzáad" onAction="#add" />  
         
-        <ListView fx:id="lvRules" GridPane.columnIndex="1" GridPane.rowIndex="0" />  
+        <HBox fx:id="hbCategories" GridPane.columnIndex="1" GridPane.rowIndex="0" />  
     </children>
     <stylesheets>
         <URL value="@/styles/categorymanagerwindow.css"/>
