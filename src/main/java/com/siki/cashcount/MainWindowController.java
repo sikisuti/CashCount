@@ -144,11 +144,21 @@ public class MainWindowController implements Initializable {
         try {
             LocalDate date = null;
             DailyBalancesTitledPane tp = null;
-            for (DailyBalance db : DataManager.getInstance().getAllDailyBalances()) {
+            // 1. create DailyBalancesTitledPane
+            // 2. add DailyBalancesTitledPne to the list
+            // 3. add all DailyBalances to the DailyBalancesTitledPane
+            // 4. validate DailyBalancesTitledPane
+            for (int i = 0; i < DataManager.getInstance().getAllDailyBalances().size(); i++) {
+                DailyBalance db = DataManager.getInstance().getAllDailyBalances().get(i);
                 if (date == null || !db.getDate().getMonth().equals(date.getMonth())) {
-                    if (tp != null) tp.validate();
+                    if (tp != null) {
+                        tp.validate();
+                        tp.refreshStatistics();
+                    }
                     date = db.getDate();
                     tp = new DailyBalancesTitledPane(date);
+                    if (i != 0)
+                        tp.setLastMonthEndBalance(DataManager.getInstance().getAllDailyBalances().get(i - 1).getTotalMoney());
                     DailyBalancesPH.getChildren().add(tp);  
                 }
                 tp.addDailyBalance(db);

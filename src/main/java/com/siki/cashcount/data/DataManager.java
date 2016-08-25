@@ -5,6 +5,8 @@
  */
 package com.siki.cashcount.data;
 
+//<editor-fold desc="Imports" defaultstate="collapsed">
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.siki.cashcount.config.ConfigManager;
@@ -52,6 +54,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.TreeMap;
@@ -63,6 +66,8 @@ import javafx.collections.ObservableList;
 import javafx.scene.chart.XYChart;
 import javafx.scene.chart.XYChart.Data;
 
+//</editor-fold>
+
 /**
  *
  * @author tamas.siklosi
@@ -71,10 +76,14 @@ public class DataManager {
     private static final DataManager INSTANCE = new DataManager();
     public static DataManager getInstance() { return INSTANCE; }
     
-    private final String GENERAL_TEXT = "Általános";
+    //<editor-fold desc="Constants" defaultstate="collapsed">
+    public static final String GENERAL_TEXT = "Általános";
     public static final String TRANSACTION_COMMENT_NAME = "Közlemény";
     public static final String TRANSACTION_TYPE_NAME = "Forgalomtípus";
     public static final String TRANSACTION_OWNER_NAME = "Számlatulajdonos";
+    //</editor-fold>
+    
+    //<editor-fold desc="Fields" defaultstate="collapsed">
     
     private ObservableList<DailyBalance> dailyBalanceCache;
     private HashMap<LocalDate, Integer> weeklyAverages;
@@ -88,6 +97,8 @@ public class DataManager {
     
     Gson gsonDeserializer;
     Gson gsonSerializer;
+    
+    //</editor-fold>
 
     private DataManager() {        
         GsonBuilder gsonBuilder = new GsonBuilder();
@@ -104,6 +115,8 @@ public class DataManager {
         gsonBuilder.registerTypeAdapter(SavingStore.class, new SavingStoreSerializer());
         gsonSerializer = gsonBuilder.create();
     }  
+    
+    //<editor-fold desc="DailyBalance methods" defaultstate="collapsed">
     
     public ObservableList<DailyBalance> getAllDailyBalances() throws IOException, JsonDeserializeException {
         if (dailyBalanceCache == null) {
@@ -181,27 +194,10 @@ public class DataManager {
             throw e;
         }
     }
-    public void addOneMonth() throws IOException, JsonDeserializeException, NotEnoughPastDataException {
-        LocalDate actDate = getLastDailyBalance().getDate().plusDays(1);
-        LocalDate endDate = getLastDailyBalance().getDate().plusMonths(2).withDayOfMonth(1);
-        
-        while (actDate.isBefore(endDate)) {
-            DailyBalance db = new DailyBalance.Builder()
-                                        .setDate(actDate)
-                                        .setPredicted(Boolean.TRUE)
-                                        .setReviewed(Boolean.FALSE)
-                                        .build();
-            
-            getSavings(actDate).stream().forEach(s -> db.addSaving(s));
-            final LocalDate ld = actDate;
-            getAllDailyBalances().stream().filter(d -> d.getDate()
-                    .isEqual(ld.minusMonths(1)))
-                    .findFirst().get().getCorrections().stream().forEach(c -> db.addCorrection(c));
-            dailyBalanceCache.add(db);
-            actDate = actDate.plusDays(1);
-        }
-        calculatePredictions();
-    }
+    
+    //</editor-fold>
+    
+    //<editor-fold desc="Transaction metods" defaultstate="collapsed">
     
     public Integer saveTransactions(List<AccountTransaction> newTransactions, boolean force) throws IOException, TransactionGapException, NotEnoughPastDataException, JsonDeserializeException {
         
@@ -241,6 +237,408 @@ public class DataManager {
         
         System.out.println(newTransactions.size() + " transactions saved");
         return newTransactions.size();
+    }
+    
+    //</editor-fold>
+    
+    //<editor-fold desc="Correction methods" defaultstate="collapsed">
+    
+    public List<String> getAllCorrectionType() throws IOException {
+        if (correctionTypeCache == null) {
+            correctionTypeCache = new ArrayList<>();
+            String correctionTypesPath = ConfigManager.getStringProperty("CorrectionTypesPath");
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(correctionTypesPath), "UTF-8"))) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    correctionTypeCache.add(gsonDeserializer.fromJson(line, String.class));
+                }
+            } catch (IOException e) {
+                correctionTypeCache = null;
+                throw e;
+            }
+        }
+        
+        return correctionTypeCache;
+    }    
+    public void saveCorrectionTypes() throws IOException {
+        String correctionTypesPath = ConfigManager.getStringProperty("CorrectionTypesPath");
+        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(correctionTypesPath), "UTF-8"))) {
+            for (int i = 0; i < correctionTypeCache.size(); i++) {
+                bw.write(gsonSerializer.toJson(correctionTypeCache.get(i), String.class));
+                if (i < correctionTypeCache.size() - 1) bw.write("\n");
+            }
+        } catch (IOException e) {
+            throw e;
+        }
+    }
+    public Long getNextCorrectionId() {
+        List<Correction> corrections = dailyBalanceCache.stream().flatMap(db -> db.getCorrections().stream()).collect(Collectors.toList());
+        return corrections.stream().mapToLong(c -> c.getId()).max().getAsLong() + 1;
+    }
+    private HashMap<String, Integer> collectCorrections(ObservableList<DailyBalance> dbList, LocalDate date) throws IOException, JsonDeserializeException {
+        HashMap<String, Integer> rtn = new HashMap<>();
+        
+        List<Correction> predictedCorrectionsUpToNow = new ArrayList<>();
+        List<Correction> predictedAllCorrections = new ArrayList<>();
+        List<Correction> actCorrectionsUpToNow = new ArrayList<>();
+        List<Correction> actAllCorrections = new ArrayList<>();
+        
+        // List of predicted corrections in the past between the prediction date and now
+        List<DailyBalance> predictedDailyBalancesUpToNow = dbList.stream()
+                .filter(d -> d.getDate().isAfter(date.minusDays(1)) && d.getDate().isBefore(LocalDate.now()))
+                .collect(Collectors.toList());
+        for (DailyBalance db : predictedDailyBalancesUpToNow) {
+            for (Correction c : db.getCorrections()) {
+                predictedCorrectionsUpToNow.add(c);
+            }
+        }
+        
+        // List of predicted corrections after the prediction date (including the future corrections)
+        List<DailyBalance> predictedAllDailyBalances = dbList.stream()
+                .filter(d -> d.getDate().isAfter(date.minusDays(1)))
+                .collect(Collectors.toList());
+        for (DailyBalance db : predictedAllDailyBalances) {
+            for (Correction c : db.getCorrections()) {
+                predictedAllCorrections.add(c);
+            }
+        }
+        
+        // List of actual corrections between the prediction date and now
+        List<DailyBalance> actDailyBalancesUpToNow = getAllDailyBalances().stream()
+                .filter(d -> d.getDate().isAfter(date.minusDays(1)) && d.getDate().isBefore(LocalDate.now()))
+                .collect(Collectors.toList());
+        for (DailyBalance db : actDailyBalancesUpToNow) {
+            for (Correction c : db.getCorrections()) {
+                actCorrectionsUpToNow.add(c);
+            }
+        }
+        
+        // List of actual corrections after the prediction date (including the future corrections)
+        List<DailyBalance> actAllDailyBalances = getAllDailyBalances().stream()
+                .filter(d -> d.getDate().isAfter(date.minusDays(1)))
+                .collect(Collectors.toList());
+        for (DailyBalance db : actAllDailyBalances) {
+            for (Correction c : db.getCorrections()) {
+                actAllCorrections.add(c);
+            }
+        }
+        
+        for (Correction predictedCorrection : predictedCorrectionsUpToNow) {
+            Optional<Correction> matchingCorrection = actAllCorrections.stream().filter(c -> c.getId().equals(predictedCorrection.getId())).findFirst();
+            if (matchingCorrection.isPresent()) {
+                if (!matchingCorrection.get().getAmount().equals(predictedCorrection.getAmount())) {
+                    putInto(rtn, predictedCorrection.getType(), matchingCorrection.get().getAmount() - predictedCorrection.getAmount());
+                }
+            } else {
+                putInto(rtn, predictedCorrection.getType(), -predictedCorrection.getAmount());
+            }
+        }
+        for (Correction actCorrection : actCorrectionsUpToNow) {
+            Optional<Correction> matchingCorrection = predictedAllCorrections.stream()
+                    .filter(c -> c.getId().equals(actCorrection.getId()))
+                    .findFirst();
+            if (matchingCorrection.isPresent()) {
+                if (!matchingCorrection.get().getAmount().equals(actCorrection.getAmount()) && 
+                        matchingCorrection.get().getDailyBalance().getDate().isAfter(LocalDate.now().minusDays(1))) {
+                    putInto(rtn, actCorrection.getType(), actCorrection.getAmount() - matchingCorrection.get().getAmount());
+                }
+            } else {
+                putInto(rtn, actCorrection.getType(), actCorrection.getAmount());
+            }
+        }
+        
+        // Calculate General daily expense differences
+        DailyBalance predictedStartDailyBalance = dbList.stream()
+                .filter(d -> d.getDate().isEqual(date.minusDays(1)))
+                .findFirst()
+                .get();
+        DailyBalance predictedEndDailyBalance = dbList.stream()
+                .filter(d -> d.getDate().isEqual(LocalDate.now().minusDays(1)))
+                .findFirst()
+                .get();
+        Integer predictedExpense = predictedEndDailyBalance.getTotalMoney()
+                - predictedStartDailyBalance.getTotalMoney() 
+                - predictedDailyBalancesUpToNow.stream().mapToInt(db -> db.getCorrections().stream().mapToInt(c -> c.getAmount()).sum()).sum();
+        
+        DailyBalance actStartDailyBalance = getAllDailyBalances().stream()
+                .filter(d -> d.getDate().isEqual(date.minusDays(1)))
+                .findFirst()
+                .get();
+        DailyBalance actEndDailyBalance = getAllDailyBalances().stream()
+                .filter(d -> d.getDate().isEqual(LocalDate.now().minusDays(1)))
+                .findFirst()
+                .get();
+        Integer actExpense = actEndDailyBalance.getTotalMoney()
+                - actStartDailyBalance.getTotalMoney() 
+                - actDailyBalancesUpToNow.stream().mapToInt(db -> db.getCorrections().stream().mapToInt(c -> c.getAmount()).sum()).sum();
+        
+        if (actExpense - predictedExpense != 0)
+            rtn.put(GENERAL_TEXT, actExpense - predictedExpense);
+        
+        return rtn;
+    }
+    
+    //</editor-fold>
+    
+    //<editor-fold desc="Saving method" defaultstate="collapsed">
+    
+    private void loadSavings() throws IOException, JsonDeserializeException {
+        savingCache = new ArrayList<>();
+        
+        String filePath = ConfigManager.getStringProperty("SavingStorePath");
+        int lineCnt = 0;
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filePath), "UTF-8"))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                lineCnt++;
+                savingCache.add(gsonDeserializer.fromJson(line, SavingStore.class));
+            }
+        } catch (IOException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new JsonDeserializeException(lineCnt, e);
+        }
+    }
+    public List<SavingStore> getSavings(LocalDate date) throws IOException, JsonDeserializeException {
+        if (savingCache == null) loadSavings();
+        
+        return savingCache.stream().filter(s ->                 
+                (s.getFrom().isEqual(date) || s.getFrom().isBefore(date)) && 
+                (s.getTo() == null || s.getTo().isAfter(date)))
+                .collect(Collectors.toList());
+    }
+    
+    //</editor-fold>
+    
+    //<editor-fold desc="Past data methods" defaultstate="collapsed">
+    
+    public HashMap<CashFlowSeriesEnum, ObservableList<Data<Date, Integer>>> getPastSeries(LocalDate date) throws IOException, JsonDeserializeException {
+        if (pastSeries == null) {
+            loadAllPastSeries();
+        }
+        
+        HashMap<CashFlowSeriesEnum, ObservableList<Data<Date, Integer>>> rtn = null;        
+        int decr = 0;
+        while ((rtn = pastSeries.getOrDefault(date.minusDays(decr), null)) == null && date.minusDays(decr).isAfter(pastDifferences.firstKey())) { decr++; }
+        return rtn;
+    }    
+    public LinkedHashMap<String, Integer> getPastDifferences(LocalDate date) throws IOException, JsonDeserializeException {
+        if (pastDifferences == null) {
+            loadAllPastSeries();
+        }
+        
+        LinkedHashMap<String, Integer> rtn = null;        
+        int decr = 0;
+        while ((rtn = pastDifferences.getOrDefault(date.minusDays(decr), null)) == null && date.minusDays(decr).isAfter(pastSeries.firstKey())) { decr++; }
+        return rtn;
+    }    
+    public void loadAllPastSeries() throws IOException, JsonDeserializeException {
+        pastSeries = new TreeMap<>();
+        pastDifferences = new TreeMap<>();
+                
+        String backupPath = ConfigManager.getStringProperty("BackupPath");
+        
+        if (!Files.exists(Paths.get(backupPath))) 
+            Files.createDirectory(Paths.get(backupPath));
+        
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(backupPath), "*.{jsn}")) {
+            for (Path entry: stream) {
+                loadPastSeries(entry);
+            }            
+            loadPastSeries(null);
+        } catch (Exception ex) {
+            throw ex;
+        }
+    }    
+    private void loadPastSeries(Path entry) throws IOException, JsonDeserializeException {
+        ObservableList<Data<Date, Integer>> savingSeries;
+        ObservableList<Data<Date, Integer>> cashSeries;
+        ObservableList<Data<Date, Integer>> accountSeries;
+        
+        LocalDate lDate;
+        if (entry != null) {
+            String fileName = entry.getFileName().toString().split("[.]")[0];
+            String dateString = fileName.substring(fileName.length() - 10);
+            lDate = LocalDate.parse(dateString, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        }
+        else lDate = LocalDate.now();
+        if (!pastSeries.containsKey(lDate)) {
+            savingSeries = FXCollections.observableArrayList();
+            cashSeries = FXCollections.observableArrayList();
+            accountSeries = FXCollections.observableArrayList();   
+            ObservableList<DailyBalance> dbList;
+            if (entry != null) dbList = loadDailyBalances(entry.toString());
+            else dbList = getAllDailyBalances();
+            for (DailyBalance db : dbList) {
+                Date date = DateHelper.toDate(db.getDate());
+                Integer yValue = db.getTotalSavings();
+                savingSeries.add(new XYChart.Data(date, yValue));
+                yValue = yValue + db.getCash();
+                cashSeries.add(new XYChart.Data(date, yValue));
+                yValue = yValue + db.getBalance();
+                accountSeries.add(new XYChart.Data(date, yValue));                        
+            }
+            HashMap<CashFlowSeriesEnum, ObservableList<Data<Date, Integer>>> sr = new HashMap<>(3);
+            sr.put(CashFlowSeriesEnum.SAVING, savingSeries);
+            sr.put(CashFlowSeriesEnum.CASH, cashSeries);
+            sr.put(CashFlowSeriesEnum.ACCOUNT, accountSeries);
+            pastSeries.put(lDate, sr);
+            
+            HashMap<String, Integer> correctionDiffs = collectCorrections(dbList, lDate);
+            
+            List<Entry<String, Integer>> list = new LinkedList<Entry<String, Integer>>(correctionDiffs.entrySet());
+            
+            // Sorting the list based on values
+            Collections.sort(list, new Comparator<Entry<String, Integer>>()
+            {
+                public int compare(Entry<String, Integer> o1, Entry<String, Integer> o2) {
+                    if (o1.getKey().equals(GENERAL_TEXT)) return 1;
+                    if (o2.getKey().equals(GENERAL_TEXT)) return -1;
+                    return o1.getValue().compareTo(o2.getValue());
+                }
+            });
+            
+            // Maintaining insertion order with the help of LinkedList
+            LinkedHashMap<String, Integer> sortedMap = new LinkedHashMap<>();
+            list.stream().forEach((e) -> {
+                sortedMap.put(e.getKey(), e.getValue());
+            });
+            
+            pastDifferences.put(lDate, sortedMap);
+        }        
+    }    
+    
+    private void putInto(HashMap<String, Integer> map, String name, Integer amount) {
+        if (map.containsKey(name)) {
+            map.put(name, map.get(name) + amount);
+        } else {
+            map.put(name, amount);
+        }
+    }
+    
+    //</editor-fold>
+    
+    //<editor-fold desc="Matching rule methods" defaultstate="collapsed">
+    
+    public ObservableList<MatchingRule> getAllMatchingRules() throws IOException, JsonDeserializeException {
+        if (matchingRules == null) {
+            loadMatchingRules();
+        }
+        return matchingRules;
+    }
+    private void loadMatchingRules() throws IOException, JsonDeserializeException {
+        matchingRules = FXCollections.observableArrayList();
+        
+        String filePath = ConfigManager.getStringProperty("MatchingRulesPath");
+        int lineCnt = 0;
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filePath), "UTF-8"))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                lineCnt++;
+                matchingRules.add(gsonDeserializer.fromJson(line, MatchingRule.class));
+            }
+        } catch (IOException e) {
+            
+        } catch (Exception e) {
+            throw new JsonDeserializeException(lineCnt, e);
+        }
+    }
+    private void saveMatchingRules() throws IOException {
+        String filePath = ConfigManager.getStringProperty("MatchingRulesPath");
+        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filePath), "UTF-8"))) {
+            for (int i = 0; i < matchingRules.size(); i++) {
+                bw.write(gsonSerializer.toJson(matchingRules.get(i), MatchingRule.class));
+                if (i < matchingRules.size() - 1) bw.write("\n");
+            }
+        } catch (IOException e) {
+            throw e;
+        }
+    }
+    private MatchingRule findMatchingRule(AccountTransaction transaction) throws IOException, JsonDeserializeException {
+        for (MatchingRule mr : getAllMatchingRules()) {
+            if ((mr.getField().equals(TRANSACTION_COMMENT_NAME) && transaction.getComment().toLowerCase().contains(mr.getPattern().toLowerCase())) ||
+                    (mr.getField().equals(TRANSACTION_TYPE_NAME) && transaction.getTransactionType().toLowerCase().contains(mr.getPattern().toLowerCase())) ||
+                    (mr.getField().equals(TRANSACTION_OWNER_NAME) && transaction.getOwner().toLowerCase().contains(mr.getPattern().toLowerCase()))) {
+                return mr;
+            }
+        }
+        return null;
+    }
+    public void addMatchingRule(MatchingRule matchingRule) throws IOException, JsonDeserializeException {
+        matchingRules.add(matchingRule);
+        saveMatchingRules();
+        categorize();
+    }
+    
+    //</editor-fold>
+    
+    //<editor-fold desc="Categorie method" defaultstate="collapsed">
+    
+    public ObservableList<String> getAllCategories() {
+        return categories;
+    }
+    public ObservableList<String> getAllSubCategories() {
+        return subCategories;
+    }
+    public void categorize() throws IOException, JsonDeserializeException {
+        for (DailyBalance db : dailyBalanceCache) {
+            for (AccountTransaction t : db.getTransactions()) {
+                if (t.getCategory() == null) {
+                    MatchingRule mr = findMatchingRule(t);
+                    if (mr != null) {
+                        t.setCategory(mr.getCategory());
+                        t.setSubCategory(mr.getSubCategory());
+                    }
+                } 
+                if (t.getCategory() != null) {
+                    if (!categories.contains(t.getCategory())) {
+                        categories.add(t.getCategory());
+                        FXCollections.sort(categories);
+                    }
+                    if (!subCategories.contains(t.getSubCategory())) {
+                        subCategories.add(t.getSubCategory());
+                        FXCollections.sort(subCategories);
+                    }
+                }
+            }
+        }
+    }
+    public TreeMap<String, Integer> getStatistics(List<DailyBalance> dailyBalances) {
+        TreeMap<String, Integer> rtn = new TreeMap<>();
+        
+        Map<String, List<Correction>> cList = dailyBalances.stream().flatMap(db -> db.getCorrections().stream()).collect(Collectors.groupingBy(c -> c.getType()));
+        
+        for (String key : cList.keySet()) {
+            rtn.put(key, cList.get(key).stream().mapToInt(c -> c.getAmount()).sum());
+        }
+        
+        return rtn;
+    }
+    
+    //</editor-fold>
+    
+    //<editor-fold desc="Helper methods" defaultstate="collapsed">
+    
+    public void addOneMonth() throws IOException, JsonDeserializeException, NotEnoughPastDataException {
+        LocalDate actDate = getLastDailyBalance().getDate().plusDays(1);
+        LocalDate endDate = getLastDailyBalance().getDate().plusMonths(2).withDayOfMonth(1);
+        
+        while (actDate.isBefore(endDate)) {
+            DailyBalance db = new DailyBalance.Builder()
+                                        .setDate(actDate)
+                                        .setPredicted(Boolean.TRUE)
+                                        .setReviewed(Boolean.FALSE)
+                                        .build();
+            
+            getSavings(actDate).stream().forEach(s -> db.addSaving(s));
+            final LocalDate ld = actDate;
+            getAllDailyBalances().stream().filter(d -> d.getDate()
+                    .isEqual(ld.minusMonths(1)))
+                    .findFirst().get().getCorrections().stream().forEach(c -> db.addCorrection(c));
+            dailyBalanceCache.add(db);
+            actDate = actDate.plusDays(1);
+        }
+        calculatePredictions();
     }
     
     private void resetPredicted(DailyBalance db) throws IOException, JsonDeserializeException {
@@ -348,39 +746,6 @@ public class DataManager {
         }
     }
     
-    public List<String> getAllCorrectionType() throws IOException {
-        if (correctionTypeCache == null) {
-            correctionTypeCache = new ArrayList<>();
-            String correctionTypesPath = ConfigManager.getStringProperty("CorrectionTypesPath");
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(correctionTypesPath), "UTF-8"))) {
-                String line;
-                while ((line = br.readLine()) != null) {
-                    correctionTypeCache.add(gsonDeserializer.fromJson(line, String.class));
-                }
-            } catch (IOException e) {
-                correctionTypeCache = null;
-                throw e;
-            }
-        }
-        
-        return correctionTypeCache;
-    }    
-    public void saveCorrectionTypes() throws IOException {
-        String correctionTypesPath = ConfigManager.getStringProperty("CorrectionTypesPath");
-        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(correctionTypesPath), "UTF-8"))) {
-            for (int i = 0; i < correctionTypeCache.size(); i++) {
-                bw.write(gsonSerializer.toJson(correctionTypeCache.get(i), String.class));
-                if (i < correctionTypeCache.size() - 1) bw.write("\n");
-            }
-        } catch (IOException e) {
-            throw e;
-        }
-    }
-    public Long getNextCorrectionId() {
-        List<Correction> corrections = dailyBalanceCache.stream().flatMap(db -> db.getCorrections().stream()).collect(Collectors.toList());
-        return corrections.stream().mapToLong(c -> c.getId()).max().getAsLong() + 1;
-    }
-    
     public boolean needSave() throws IOException, JsonDeserializeException {
         String dataPath = ConfigManager.getStringProperty("DataPath");
         ObservableList<DailyBalance> original = loadDailyBalances(dataPath);
@@ -394,319 +759,5 @@ public class DataManager {
         return false;
     }
     
-    private void loadSavings() throws IOException, JsonDeserializeException {
-        savingCache = new ArrayList<>();
-        
-        String filePath = ConfigManager.getStringProperty("SavingStorePath");
-        int lineCnt = 0;
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filePath), "UTF-8"))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                lineCnt++;
-                savingCache.add(gsonDeserializer.fromJson(line, SavingStore.class));
-            }
-        } catch (IOException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new JsonDeserializeException(lineCnt, e);
-        }
-    }
-    public List<SavingStore> getSavings(LocalDate date) throws IOException, JsonDeserializeException {
-        if (savingCache == null) loadSavings();
-        
-        return savingCache.stream().filter(s ->                 
-                (s.getFrom().isEqual(date) || s.getFrom().isBefore(date)) && 
-                (s.getTo() == null || s.getTo().isAfter(date)))
-                .collect(Collectors.toList());
-    }
-    
-    public HashMap<CashFlowSeriesEnum, ObservableList<Data<Date, Integer>>> getPastSeries(LocalDate date) throws IOException, JsonDeserializeException {
-        if (pastSeries == null) {
-            loadAllPastSeries();
-        }
-        
-        HashMap<CashFlowSeriesEnum, ObservableList<Data<Date, Integer>>> rtn = null;        
-        int decr = 0;
-        while ((rtn = pastSeries.getOrDefault(date.minusDays(decr), null)) == null && date.minusDays(decr).isAfter(pastDifferences.firstKey())) { decr++; }
-        return rtn;
-    }
-    
-    public LinkedHashMap<String, Integer> getPastDifferences(LocalDate date) throws IOException, JsonDeserializeException {
-        if (pastDifferences == null) {
-            loadAllPastSeries();
-        }
-        
-        LinkedHashMap<String, Integer> rtn = null;        
-        int decr = 0;
-        while ((rtn = pastDifferences.getOrDefault(date.minusDays(decr), null)) == null && date.minusDays(decr).isAfter(pastSeries.firstKey())) { decr++; }
-        return rtn;
-    }
-    
-    public void loadAllPastSeries() throws IOException, JsonDeserializeException {
-        pastSeries = new TreeMap<>();
-        pastDifferences = new TreeMap<>();
-                
-        String backupPath = ConfigManager.getStringProperty("BackupPath");
-        
-        if (!Files.exists(Paths.get(backupPath))) 
-            Files.createDirectory(Paths.get(backupPath));
-        
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(backupPath), "*.{jsn}")) {
-            for (Path entry: stream) {
-                loadPastSeries(entry);
-            }            
-            loadPastSeries(null);
-        } catch (Exception ex) {
-            throw ex;
-        }
-    }
-    
-    private void loadPastSeries(Path entry) throws IOException, JsonDeserializeException {
-        ObservableList<Data<Date, Integer>> savingSeries;
-        ObservableList<Data<Date, Integer>> cashSeries;
-        ObservableList<Data<Date, Integer>> accountSeries;
-        
-        LocalDate lDate;
-        if (entry != null) {
-            String fileName = entry.getFileName().toString().split("[.]")[0];
-            String dateString = fileName.substring(fileName.length() - 10);
-            lDate = LocalDate.parse(dateString, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-        }
-        else lDate = LocalDate.now();
-        if (!pastSeries.containsKey(lDate)) {
-            savingSeries = FXCollections.observableArrayList();
-            cashSeries = FXCollections.observableArrayList();
-            accountSeries = FXCollections.observableArrayList();   
-            ObservableList<DailyBalance> dbList;
-            if (entry != null) dbList = loadDailyBalances(entry.toString());
-            else dbList = getAllDailyBalances();
-            for (DailyBalance db : dbList) {
-                Date date = DateHelper.toDate(db.getDate());
-                Integer yValue = db.getTotalSavings();
-                savingSeries.add(new XYChart.Data(date, yValue));
-                yValue = yValue + db.getCash();
-                cashSeries.add(new XYChart.Data(date, yValue));
-                yValue = yValue + db.getBalance();
-                accountSeries.add(new XYChart.Data(date, yValue));                        
-            }
-            HashMap<CashFlowSeriesEnum, ObservableList<Data<Date, Integer>>> sr = new HashMap<>(3);
-            sr.put(CashFlowSeriesEnum.SAVING, savingSeries);
-            sr.put(CashFlowSeriesEnum.CASH, cashSeries);
-            sr.put(CashFlowSeriesEnum.ACCOUNT, accountSeries);
-            pastSeries.put(lDate, sr);
-            
-            HashMap<String, Integer> correctionDiffs = collectCorrections(dbList, lDate);
-            
-            List<Entry<String, Integer>> list = new LinkedList<Entry<String, Integer>>(correctionDiffs.entrySet());
-            
-            // Sorting the list based on values
-            Collections.sort(list, new Comparator<Entry<String, Integer>>()
-            {
-                public int compare(Entry<String, Integer> o1, Entry<String, Integer> o2) {
-                    if (o1.getKey().equals(GENERAL_TEXT)) return 1;
-                    if (o2.getKey().equals(GENERAL_TEXT)) return -1;
-                    return o1.getValue().compareTo(o2.getValue());
-                }
-            });
-            
-            // Maintaining insertion order with the help of LinkedList
-            LinkedHashMap<String, Integer> sortedMap = new LinkedHashMap<>();
-            list.stream().forEach((e) -> {
-                sortedMap.put(e.getKey(), e.getValue());
-            });
-            
-            pastDifferences.put(lDate, sortedMap);
-        }        
-    }
-    
-    private HashMap<String, Integer> collectCorrections(ObservableList<DailyBalance> dbList, LocalDate date) throws IOException, JsonDeserializeException {
-        HashMap<String, Integer> rtn = new HashMap<>();
-        
-        List<Correction> predictedCorrectionsUpToNow = new ArrayList<>();
-        List<Correction> predictedAllCorrections = new ArrayList<>();
-        List<Correction> actCorrectionsUpToNow = new ArrayList<>();
-        List<Correction> actAllCorrections = new ArrayList<>();
-        
-        // List of predicted corrections in the past between the prediction date and now
-        List<DailyBalance> predictedDailyBalancesUpToNow = dbList.stream()
-                .filter(d -> d.getDate().isAfter(date.minusDays(1)) && d.getDate().isBefore(LocalDate.now()))
-                .collect(Collectors.toList());
-        for (DailyBalance db : predictedDailyBalancesUpToNow) {
-            for (Correction c : db.getCorrections()) {
-                predictedCorrectionsUpToNow.add(c);
-            }
-        }
-        
-        // List of predicted corrections after the prediction date (including the future corrections)
-        List<DailyBalance> predictedAllDailyBalances = dbList.stream()
-                .filter(d -> d.getDate().isAfter(date.minusDays(1)))
-                .collect(Collectors.toList());
-        for (DailyBalance db : predictedAllDailyBalances) {
-            for (Correction c : db.getCorrections()) {
-                predictedAllCorrections.add(c);
-            }
-        }
-        
-        // List of actual corrections between the prediction date and now
-        List<DailyBalance> actDailyBalancesUpToNow = getAllDailyBalances().stream()
-                .filter(d -> d.getDate().isAfter(date.minusDays(1)) && d.getDate().isBefore(LocalDate.now()))
-                .collect(Collectors.toList());
-        for (DailyBalance db : actDailyBalancesUpToNow) {
-            for (Correction c : db.getCorrections()) {
-                actCorrectionsUpToNow.add(c);
-            }
-        }
-        
-        // List of actual corrections after the prediction date (including the future corrections)
-        List<DailyBalance> actAllDailyBalances = getAllDailyBalances().stream()
-                .filter(d -> d.getDate().isAfter(date.minusDays(1)))
-                .collect(Collectors.toList());
-        for (DailyBalance db : actAllDailyBalances) {
-            for (Correction c : db.getCorrections()) {
-                actAllCorrections.add(c);
-            }
-        }
-        
-        for (Correction predictedCorrection : predictedCorrectionsUpToNow) {
-            Optional<Correction> matchingCorrection = actAllCorrections.stream().filter(c -> c.getId().equals(predictedCorrection.getId())).findFirst();
-            if (matchingCorrection.isPresent()) {
-                if (!matchingCorrection.get().getAmount().equals(predictedCorrection.getAmount())) {
-                    putInto(rtn, predictedCorrection.getType(), matchingCorrection.get().getAmount() - predictedCorrection.getAmount());
-                }
-            } else {
-                putInto(rtn, predictedCorrection.getType(), -predictedCorrection.getAmount());
-            }
-        }
-        for (Correction actCorrection : actCorrectionsUpToNow) {
-            Optional<Correction> matchingCorrection = predictedAllCorrections.stream()
-                    .filter(c -> c.getId().equals(actCorrection.getId()))
-                    .findFirst();
-            if (matchingCorrection.isPresent()) {
-                if (!matchingCorrection.get().getAmount().equals(actCorrection.getAmount()) && 
-                        matchingCorrection.get().getDailyBalance().getDate().isAfter(LocalDate.now().minusDays(1))) {
-                    putInto(rtn, actCorrection.getType(), actCorrection.getAmount() - matchingCorrection.get().getAmount());
-                }
-            } else {
-                putInto(rtn, actCorrection.getType(), actCorrection.getAmount());
-            }
-        }
-        
-        // Calculate General daily expense differences
-        DailyBalance predictedStartDailyBalance = dbList.stream()
-                .filter(d -> d.getDate().isEqual(date.minusDays(1)))
-                .findFirst()
-                .get();
-        DailyBalance predictedEndDailyBalance = dbList.stream()
-                .filter(d -> d.getDate().isEqual(LocalDate.now().minusDays(1)))
-                .findFirst()
-                .get();
-        Integer predictedExpense = predictedEndDailyBalance.getTotalMoney()
-                - predictedStartDailyBalance.getTotalMoney() 
-                - predictedDailyBalancesUpToNow.stream().mapToInt(db -> db.getCorrections().stream().mapToInt(c -> c.getAmount()).sum()).sum();
-        
-        DailyBalance actStartDailyBalance = getAllDailyBalances().stream()
-                .filter(d -> d.getDate().isEqual(date.minusDays(1)))
-                .findFirst()
-                .get();
-        DailyBalance actEndDailyBalance = getAllDailyBalances().stream()
-                .filter(d -> d.getDate().isEqual(LocalDate.now().minusDays(1)))
-                .findFirst()
-                .get();
-        Integer actExpense = actEndDailyBalance.getTotalMoney()
-                - actStartDailyBalance.getTotalMoney() 
-                - actDailyBalancesUpToNow.stream().mapToInt(db -> db.getCorrections().stream().mapToInt(c -> c.getAmount()).sum()).sum();
-        
-        if (actExpense - predictedExpense != 0)
-            rtn.put(GENERAL_TEXT, actExpense - predictedExpense);
-        
-        return rtn;
-    }
-    
-    private void putInto(HashMap<String, Integer> map, String name, Integer amount) {
-        if (map.containsKey(name)) {
-            map.put(name, map.get(name) + amount);
-        } else {
-            map.put(name, amount);
-        }
-    }
-    
-    public ObservableList<MatchingRule> getAllMatchingRules() throws IOException, JsonDeserializeException {
-        if (matchingRules == null) {
-            loadMatchingRules();
-        }
-        return matchingRules;
-    }
-    private void loadMatchingRules() throws IOException, JsonDeserializeException {
-        matchingRules = FXCollections.observableArrayList();
-        
-        String filePath = ConfigManager.getStringProperty("MatchingRulesPath");
-        int lineCnt = 0;
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filePath), "UTF-8"))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                lineCnt++;
-                matchingRules.add(gsonDeserializer.fromJson(line, MatchingRule.class));
-            }
-        } catch (IOException e) {
-            
-        } catch (Exception e) {
-            throw new JsonDeserializeException(lineCnt, e);
-        }
-    }
-    private void saveMatchingRules() throws IOException {
-        String filePath = ConfigManager.getStringProperty("MatchingRulesPath");
-        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filePath), "UTF-8"))) {
-            for (int i = 0; i < matchingRules.size(); i++) {
-                bw.write(gsonSerializer.toJson(matchingRules.get(i), MatchingRule.class));
-                if (i < matchingRules.size() - 1) bw.write("\n");
-            }
-        } catch (IOException e) {
-            throw e;
-        }
-    }
-    private MatchingRule findMatchingRule(AccountTransaction transaction) throws IOException, JsonDeserializeException {
-        for (MatchingRule mr : getAllMatchingRules()) {
-            if ((mr.getField().equals(TRANSACTION_COMMENT_NAME) && transaction.getComment().toLowerCase().contains(mr.getPattern().toLowerCase())) ||
-                    (mr.getField().equals(TRANSACTION_TYPE_NAME) && transaction.getTransactionType().toLowerCase().contains(mr.getPattern().toLowerCase())) ||
-                    (mr.getField().equals(TRANSACTION_OWNER_NAME) && transaction.getOwner().toLowerCase().contains(mr.getPattern().toLowerCase()))) {
-                return mr;
-            }
-        }
-        return null;
-    }
-    public void addMatchingRule(MatchingRule matchingRule) throws IOException, JsonDeserializeException {
-        matchingRules.add(matchingRule);
-        saveMatchingRules();
-        categorize();
-    }
-    
-    public ObservableList<String> getAllCategories() {
-        return categories;
-    }
-    public ObservableList<String> getAllSubCategories() {
-        return subCategories;
-    }
-    public void categorize() throws IOException, JsonDeserializeException {
-        for (DailyBalance db : dailyBalanceCache) {
-            for (AccountTransaction t : db.getTransactions()) {
-                if (t.getCategory() == null) {
-                    MatchingRule mr = findMatchingRule(t);
-                    if (mr != null) {
-                        t.setCategory(mr.getCategory());
-                        t.setSubCategory(mr.getSubCategory());
-                    }
-                } 
-                if (t.getCategory() != null) {
-                    if (!categories.contains(t.getCategory())) {
-                        categories.add(t.getCategory());
-                        FXCollections.sort(categories);
-                    }
-                    if (!subCategories.contains(t.getSubCategory())) {
-                        subCategories.add(t.getSubCategory());
-                        FXCollections.sort(subCategories);
-                    }
-                }
-            }
-        }
-    }
+    //</editor-fold>
 }

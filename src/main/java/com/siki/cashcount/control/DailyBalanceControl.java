@@ -91,7 +91,7 @@ public final class DailyBalanceControl extends VBox {
         chkReviewed.visibleProperty().bind(dailyBalance.predictedProperty().not());
         tfCash.visibleProperty().bind(dailyBalance.predictedProperty().not());
 
-        tfCash.disableProperty().bind(dailyBalance.predictedProperty());
+        //tfCash.disableProperty().bind(dailyBalance.predictedProperty());
         txtBalance.disableProperty().bind(dailyBalance.predictedProperty());
         txtDate.disableProperty().bind(dailyBalance.predictedProperty());
         
