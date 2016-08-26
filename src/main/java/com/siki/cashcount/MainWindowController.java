@@ -184,7 +184,7 @@ public class MainWindowController implements Initializable {
             System.out.println("Error in line: " + ex.getErrorLineNum());
             Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
             ExceptionDialog.get(ex).showAndWait();
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
             ExceptionDialog.get(ex).showAndWait();
             

@@ -44,6 +44,7 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -603,14 +604,26 @@ public class DataManager {
             }
         }
     }
-    public TreeMap<String, Integer> getStatistics(List<DailyBalance> dailyBalances) {
+    public TreeMap<String, Integer> getStatistics(Integer year, Month month) throws Exception {
         TreeMap<String, Integer> rtn = new TreeMap<>();
         
-        Map<String, List<Correction>> cList = dailyBalances.stream().flatMap(db -> db.getCorrections().stream()).collect(Collectors.groupingBy(c -> c.getType()));
+        Optional<DailyBalance> firstDb = dailyBalanceCache.stream().filter(db -> db.getDate().isEqual(LocalDate.of(year, month, 1))).findFirst();
+        if (!firstDb.isPresent()) throw new Exception("Data for given date does not exists");
+        int firstDbIndex = dailyBalanceCache.indexOf(firstDb.get());
+        Integer previousBalance = null;
+        if (firstDbIndex != 0)
+            previousBalance = dailyBalanceCache.get(firstDbIndex - 1).getTotalMoney();
+        
+        List<DailyBalance> dailyBalancesOfMonth = dailyBalanceCache.stream().filter(db -> db.getDate().getYear() == year && db.getDate().getMonth() == month).collect(Collectors.toList());
+        
+        Map<String, List<Correction>> cList = dailyBalancesOfMonth.stream().flatMap(db -> db.getCorrections().stream()).collect(Collectors.groupingBy(c -> c.getType()));
         
         for (String key : cList.keySet()) {
             rtn.put(key, cList.get(key).stream().mapToInt(c -> c.getAmount()).sum());
         }
+        
+        if (previousBalance != null)
+            rtn.put(DataManager.GENERAL_TEXT, dailyBalancesOfMonth.get(dailyBalancesOfMonth.size() - 1).getTotalMoney() - previousBalance - rtn.values().stream().mapToInt(i -> i).sum());
         
         return rtn;
     }

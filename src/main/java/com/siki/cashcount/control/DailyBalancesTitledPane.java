@@ -87,12 +87,10 @@ public class DailyBalancesTitledPane extends TitledPane {
         
     }
     
-    public void refreshStatistics() {
+    public void refreshStatistics() throws Exception {
         gpStatistics.getChildren().clear();
         
-        TreeMap<String, Integer> statistics = DataManager.getInstance().getStatistics(dailyBalances);
-        if (lastMonthEndBalance != null)
-            statistics.put(DataManager.GENERAL_TEXT, dailyBalances.get(dailyBalances.size() - 1).getTotalMoney() - lastMonthEndBalance - statistics.values().stream().mapToInt(i -> i).sum());
+        TreeMap<String, Integer> statistics = DataManager.getInstance().getStatistics(period.getYear(), period.getMonth());
         
         int rowCnt = -1;
         for (String key : statistics.keySet()) {
