@@ -16,6 +16,8 @@ import java.util.TreeMap;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.Tooltip;
@@ -52,11 +54,15 @@ public class DailyBalancesTitledPane extends TitledPane {
     public DailyBalancesTitledPane(LocalDate period) {
         super(period.format(DateTimeFormatter.ofPattern("uuuu. MMMM")), new GridPane());
         GridPane gpRoot = (GridPane)this.getContent();
+        GridPane gpStatisticsBg = new GridPane();
+        gpStatisticsBg.getChildren().add(gpStatistics);
+        gpStatisticsBg.setAlignment(Pos.CENTER);
+        gpStatisticsBg.setPadding(new Insets(20));
         
         GridPane.setColumnIndex(vbDailyBalances, 0);
-        GridPane.setColumnIndex(gpStatistics, 1);
+        GridPane.setColumnIndex(gpStatisticsBg, 1);
         
-        gpRoot.getChildren().addAll(vbDailyBalances, gpStatistics);
+        gpRoot.getChildren().addAll(vbDailyBalances, gpStatisticsBg);
         
         this.period = period.withDayOfMonth(1);
         this.setExpanded(isAroundToday(period));
@@ -102,12 +108,15 @@ public class DailyBalancesTitledPane extends TitledPane {
             GridPane.setColumnIndex(label, 0);
             GridPane.setRowIndex(label, rowCnt);
             
+            GridPane gpValueBg = new GridPane();
+            gpValueBg.setAlignment(Pos.CENTER_RIGHT);
             Label value = new Label(NumberFormat.getCurrencyInstance().format(statistics.get(key).getKey()));
             value.setTooltip(new Tooltip(statistics.get(key).getValue()));
-            GridPane.setColumnIndex(value, 1);
-            GridPane.setRowIndex(value, rowCnt);
+            gpValueBg.getChildren().add(value);
+            GridPane.setColumnIndex(gpValueBg, 1);
+            GridPane.setRowIndex(gpValueBg, rowCnt);
             
-            gpStatistics.getChildren().addAll(label, value);
+            gpStatistics.getChildren().addAll(label, gpValueBg);
         }
     }
 }

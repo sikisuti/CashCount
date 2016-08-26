@@ -342,7 +342,6 @@ public class MainWindowController implements Initializable {
     }
     private void refreshStatistics() {
         try {
-            ToolTipFixer.setupCustomTooltipBehavior(50, 30000, 50);
             vbStatistics.getChildren().clear();
             
             TreeMap<LocalDate, TreeMap<String, Entry<Integer, String>>> data = new TreeMap<>();

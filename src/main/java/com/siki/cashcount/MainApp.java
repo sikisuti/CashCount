@@ -4,6 +4,7 @@ import com.siki.cashcount.config.ConfigManager;
 import com.siki.cashcount.data.DataManager;
 import com.siki.cashcount.exception.JsonDeserializeException;
 import com.siki.cashcount.helper.StopWatch;
+import com.siki.cashcount.helper.ToolTipFixer;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -33,6 +34,9 @@ public class MainApp extends Application {
             alert.showAndWait();
             Platform.exit();
         }
+        
+        
+        ToolTipFixer.setupCustomTooltipBehavior(50, 60000, 50);
         
         if (ConfigManager.getBooleanProperty("LogPerformance")) StopWatch.start("App start");
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/MainWindow.fxml"));
