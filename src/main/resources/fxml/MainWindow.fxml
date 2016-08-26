@@ -24,27 +24,6 @@
     </top>
     <center>
         <TabPane >
-            <!--
-            <Tab text="Tranzakciók" closable="false" >
-                <GridPane>
-                    <columnConstraints>
-                        <ColumnConstraints percentWidth="100" />
-                    </columnConstraints>
-                    <rowConstraints>
-                        <RowConstraints vgrow="ALWAYS"  />
-                        <RowConstraints minHeight="50"   />  
-                    </rowConstraints>
-                    <children>
-                        <TableView fx:id="SourceTable" GridPane.rowIndex="0" GridPane.columnIndex="0" />
-                        <ButtonBar GridPane.columnIndex="0" GridPane.rowIndex="1" >
-                            <buttons>
-                                
-                            </buttons>
-                        </ButtonBar>  
-                    </children>
-                </GridPane>
-            </Tab> 
-            -->
             <Tab text="Korrekciók" closable="false">
                 <GridPane>
                     <columnConstraints>
@@ -52,23 +31,11 @@
                     </columnConstraints>
                     <rowConstraints>
                         <RowConstraints vgrow="ALWAYS"  />
-                        <!--
-                        <RowConstraints minHeight="50"   />  
-                        -->
                     </rowConstraints>
                     <children>
                         <ScrollPane fx:id="DailyBalancesSP"> 
                             <VBox fx:id="DailyBalancesPH"  />
                         </ScrollPane>
-                        <!--
-                        <ButtonBar GridPane.columnIndex="0" GridPane.rowIndex="1" >
-                            <buttons>
-                                <Button text="Frissít" onAction="#refreshDailyBalances"  /> 
-                                <Button text="Import" onAction="#doImport"  /> 
-                                <Button text="Mentés" onAction="#doSave"  />
-                            </buttons>
-                        </ButtonBar>
-                        -->
                     </children>
                 </GridPane>
             </Tab> 
@@ -77,6 +44,9 @@
                      
                 </VBox>
             </Tab> 
+            <Tab text="Statisztikák" closable="false" onSelectionChanged="#refreshStatistics" > 
+                <VBox fx:id="vbStatistics" alignment="CENTER"  />
+            </Tab>
         </TabPane>
     </center>
 </BorderPane>

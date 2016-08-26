@@ -14,15 +14,18 @@ import com.siki.cashcount.helper.StopWatch;
 import com.siki.cashcount.model.*;
 import java.io.*;
 import java.net.URL;
+import java.text.NumberFormat;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import static java.time.temporal.ChronoUnit.DAYS;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.beans.value.ObservableValue;
@@ -33,17 +36,22 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Modality;
@@ -57,6 +65,7 @@ public class MainWindowController implements Initializable {
     @FXML VBox DailyBalancesPH;
     @FXML ScrollPane DailyBalancesSP;
     @FXML VBox vbCashFlow;
+    @FXML VBox vbStatistics;
     
     Slider slider = new Slider();
     CashFlowChart flowChart = new CashFlowChart();
@@ -314,6 +323,80 @@ public class MainWindowController implements Initializable {
         } catch (IOException ex) {
             Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
             ExceptionDialog.get(ex).showAndWait();
+        }
+    }
+    
+    @FXML
+    private void refreshStatistics(Event event) {
+        if (((Tab)(event.getSource())).isSelected()) {
+            refreshStatistics();
+        }        
+    }
+    private void refreshStatistics() {
+        try {
+            vbStatistics.getChildren().clear();
+            
+            TreeMap<LocalDate, TreeMap<String, Integer>> data = new TreeMap<>();
+            List<String> keys = new ArrayList<>();
+                        
+            for (Node node : DailyBalancesPH.getChildren()) {
+                if (node.getClass() != DailyBalancesTitledPane.class) continue;
+                DailyBalancesTitledPane entry = (DailyBalancesTitledPane)node;
+                TreeMap<String, Integer> monthData = DataManager.getInstance().getStatistics(entry.getPeriod().getYear(), entry.getPeriod().getMonth());
+                data.put(entry.getPeriod(), monthData);
+                for (String key : monthData.keySet()) {
+                    if (!keys.contains(key)) {
+                        keys.add(key);
+                        Collections.sort(keys);
+                    }
+                }
+            }
+            
+            GridPane gpStatFromCorrections = new GridPane();
+            gpStatFromCorrections.setHgap(10);
+            gpStatFromCorrections.setVgap(10);
+            GridPane gpStatFromTransactions = new GridPane();
+            
+            int colCnt = 0;
+            for (LocalDate date : data.keySet()) {
+                int rowCnt = 0;
+                colCnt++;
+                
+                Label colHeader = new Label(date.getYear() + "." + date.getMonthValue() + ".");
+                GridPane.setColumnIndex(colHeader, colCnt);
+                GridPane.setRowIndex(colHeader, rowCnt);
+                gpStatFromCorrections.getChildren().add(colHeader);
+                
+                for (String category : keys) {
+                    rowCnt++;
+                    if (colCnt == 1) {
+                        Label rowHeader = new Label(category);
+                        GridPane.setColumnIndex(rowHeader, colCnt - 1);
+                        GridPane.setRowIndex(rowHeader, rowCnt);
+                        gpStatFromCorrections.getChildren().add(rowHeader);
+                    }
+                    
+                    if (data.get(date).containsKey(category)) {
+                        Integer value = data.get(date).get(category);
+                        Label lblValue = new Label(NumberFormat.getCurrencyInstance().format(value));
+                        double opacity = value / 600000d;
+                        if (Math.abs(opacity) > 1d) opacity = opacity / Math.abs(opacity);
+                        Color bgColor;
+                        if (opacity < 0) bgColor = Color.rgb(255, 0, 0, Math.abs(opacity));
+                        else bgColor = Color.rgb(0, 255, 0, opacity);
+                        lblValue.setBackground(new Background(new BackgroundFill(bgColor, CornerRadii.EMPTY, Insets.EMPTY)));
+                        GridPane.setColumnIndex(lblValue, colCnt);
+                        GridPane.setRowIndex(lblValue, rowCnt);
+                        gpStatFromCorrections.getChildren().add(lblValue);
+                    }
+                }
+            }
+            
+            vbStatistics.getChildren().addAll(gpStatFromCorrections, gpStatFromTransactions);
+        } catch (IOException | JsonDeserializeException ex) {
+            Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Exception ex) {
+            Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     

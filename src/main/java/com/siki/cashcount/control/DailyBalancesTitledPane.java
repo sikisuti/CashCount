@@ -11,7 +11,6 @@ import com.siki.cashcount.model.DailyBalance;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Map.Entry;
 import java.util.TreeMap;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -39,6 +38,8 @@ public class DailyBalancesTitledPane extends TitledPane {
     private GridPane gpStatistics = new GridPane();
     
     public void setLastMonthEndBalance(Integer lastMonthEndBalance) { this.lastMonthEndBalance = lastMonthEndBalance; }
+    
+    public LocalDate getPeriod() { return period; }
 
     public void addDailyBalance(DailyBalance db) {
         dailyBalances.add(db);
