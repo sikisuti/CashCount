@@ -11,6 +11,7 @@ import com.siki.cashcount.exception.JsonDeserializeException;
 import com.siki.cashcount.exception.NotEnoughPastDataException;
 import com.siki.cashcount.exception.TransactionGapException;
 import com.siki.cashcount.helper.StopWatch;
+import com.siki.cashcount.helper.ToolTipFixer;
 import com.siki.cashcount.model.*;
 import java.io.*;
 import java.net.URL;
@@ -23,6 +24,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.TreeMap;
@@ -36,6 +38,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -43,9 +46,14 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.Border;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.BorderStroke;
+import javafx.scene.layout.BorderStrokeStyle;
+import javafx.scene.layout.BorderWidths;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.GridPane;
@@ -334,15 +342,16 @@ public class MainWindowController implements Initializable {
     }
     private void refreshStatistics() {
         try {
+            ToolTipFixer.setupCustomTooltipBehavior(50, 30000, 50);
             vbStatistics.getChildren().clear();
             
-            TreeMap<LocalDate, TreeMap<String, Integer>> data = new TreeMap<>();
+            TreeMap<LocalDate, TreeMap<String, Entry<Integer, String>>> data = new TreeMap<>();
             List<String> keys = new ArrayList<>();
                         
             for (Node node : DailyBalancesPH.getChildren()) {
                 if (node.getClass() != DailyBalancesTitledPane.class) continue;
                 DailyBalancesTitledPane entry = (DailyBalancesTitledPane)node;
-                TreeMap<String, Integer> monthData = DataManager.getInstance().getStatistics(entry.getPeriod().getYear(), entry.getPeriod().getMonth());
+                TreeMap<String, Entry<Integer, String>> monthData = DataManager.getInstance().getStatistics(entry.getPeriod().getYear(), entry.getPeriod().getMonth());
                 data.put(entry.getPeriod(), monthData);
                 for (String key : monthData.keySet()) {
                     if (!keys.contains(key)) {
@@ -353,8 +362,9 @@ public class MainWindowController implements Initializable {
             }
             
             GridPane gpStatFromCorrections = new GridPane();
-            gpStatFromCorrections.setHgap(10);
-            gpStatFromCorrections.setVgap(10);
+//            gpStatFromCorrections.setBackground(new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY)));
+//            gpStatFromCorrections.setHgap(10);
+//            gpStatFromCorrections.setVgap(10);
             GridPane gpStatFromTransactions = new GridPane();
             
             int colCnt = 0;
@@ -362,10 +372,23 @@ public class MainWindowController implements Initializable {
                 int rowCnt = 0;
                 colCnt++;
                 
+                GridPane headerBg = new GridPane();
+                headerBg.setPrefSize(100, 30);
+                headerBg.setAlignment(Pos.CENTER);
                 Label colHeader = new Label(date.getYear() + "." + date.getMonthValue() + ".");
-                GridPane.setColumnIndex(colHeader, colCnt);
-                GridPane.setRowIndex(colHeader, rowCnt);
-                gpStatFromCorrections.getChildren().add(colHeader);
+                if (date.isEqual(LocalDate.now().withDayOfMonth(1))) {
+                    headerBg.setBorder(new Border(new BorderStroke(Color.BLACK, Color.GRAY, Color.TRANSPARENT, Color.BLACK, 
+                            BorderStrokeStyle.SOLID, BorderStrokeStyle.SOLID, BorderStrokeStyle.NONE, BorderStrokeStyle.SOLID, 
+                            CornerRadii.EMPTY, new BorderWidths(1, 2, 0, 1), Insets.EMPTY)));
+                    headerBg.setAlignment(Pos.TOP_CENTER);                        
+                    headerBg.setBackground(new Background(new BackgroundFill(Color.LIGHTGRAY, CornerRadii.EMPTY, Insets.EMPTY)));
+                    colHeader.setStyle("-fx-font-weight: bold;");
+                }
+                
+                headerBg.getChildren().add(colHeader);
+                GridPane.setColumnIndex(headerBg, colCnt);
+                GridPane.setRowIndex(headerBg, rowCnt);
+                gpStatFromCorrections.getChildren().add(headerBg);
                 
                 for (String category : keys) {
                     rowCnt++;
@@ -375,20 +398,44 @@ public class MainWindowController implements Initializable {
                         GridPane.setRowIndex(rowHeader, rowCnt);
                         gpStatFromCorrections.getChildren().add(rowHeader);
                     }
-                    
+                                        
+                    GridPane cell = new GridPane();
+                    cell.setPrefSize(100, 30);
+                    cell.setAlignment(Pos.CENTER_RIGHT);
+                    Integer value;
+                    Label lblValue;
                     if (data.get(date).containsKey(category)) {
-                        Integer value = data.get(date).get(category);
-                        Label lblValue = new Label(NumberFormat.getCurrencyInstance().format(value));
-                        double opacity = value / 600000d;
-                        if (Math.abs(opacity) > 1d) opacity = opacity / Math.abs(opacity);
-                        Color bgColor;
-                        if (opacity < 0) bgColor = Color.rgb(255, 0, 0, Math.abs(opacity));
-                        else bgColor = Color.rgb(0, 255, 0, opacity);
-                        lblValue.setBackground(new Background(new BackgroundFill(bgColor, CornerRadii.EMPTY, Insets.EMPTY)));
-                        GridPane.setColumnIndex(lblValue, colCnt);
-                        GridPane.setRowIndex(lblValue, rowCnt);
-                        gpStatFromCorrections.getChildren().add(lblValue);
+                        value = data.get(date).get(category).getKey();
+                        lblValue = new Label(NumberFormat.getCurrencyInstance().format(value));
+                        Tooltip tt = new Tooltip(data.get(date).get(category).getValue());
+                        lblValue.setTooltip(tt);
+                    } else {
+                        value = 0;
+                        lblValue = new Label();
                     }
+                    if (date.isEqual(LocalDate.now().withDayOfMonth(1))) {
+                        cell.setBorder(new Border(new BorderStroke(Color.TRANSPARENT, Color.GRAY, Color.TRANSPARENT, Color.BLACK, 
+                                BorderStrokeStyle.NONE, BorderStrokeStyle.SOLID, BorderStrokeStyle.NONE, BorderStrokeStyle.SOLID, 
+                                CornerRadii.EMPTY, new BorderWidths(0, 2, 0, 1), Insets.EMPTY)));
+                        cell.setAlignment(Pos.TOP_RIGHT);                        
+                        lblValue.setStyle("-fx-font-weight: bold;");
+                    }
+                    cell.getChildren().add(lblValue);
+                    double opacity = value / 600000d;
+                    Color bgColor;
+                    if (value < 0) {
+                        opacity = value / -300000d;
+                        if (opacity > 1d) opacity = 1;
+                        bgColor = Color.rgb(230, 0, 0, opacity);
+                    } else {
+                        opacity = ((value - 400000d) >= 0 ? (value - 400000d) : 0) / 300000d;
+                        if (opacity > 1d) opacity = 1;
+                        bgColor = Color.rgb(0, 200, 0, opacity);
+                    }
+                    cell.setBackground(new Background(new BackgroundFill(bgColor, CornerRadii.EMPTY, Insets.EMPTY)));
+                    GridPane.setColumnIndex(cell, colCnt);
+                    GridPane.setRowIndex(cell, rowCnt);
+                    gpStatFromCorrections.getChildren().add(cell);
                 }
             }
             

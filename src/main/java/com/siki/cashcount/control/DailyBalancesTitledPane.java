@@ -11,12 +11,14 @@ import com.siki.cashcount.model.DailyBalance;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Label;
 import javafx.scene.control.TitledPane;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.Border;
 import javafx.scene.layout.BorderStroke;
 import javafx.scene.layout.BorderStrokeStyle;
@@ -91,7 +93,7 @@ public class DailyBalancesTitledPane extends TitledPane {
     public void refreshStatistics() throws Exception {
         gpStatistics.getChildren().clear();
         
-        TreeMap<String, Integer> statistics = DataManager.getInstance().getStatistics(period.getYear(), period.getMonth());
+        TreeMap<String, Entry<Integer, String>> statistics = DataManager.getInstance().getStatistics(period.getYear(), period.getMonth());
         
         int rowCnt = -1;
         for (String key : statistics.keySet()) {
@@ -100,7 +102,8 @@ public class DailyBalancesTitledPane extends TitledPane {
             GridPane.setColumnIndex(label, 0);
             GridPane.setRowIndex(label, rowCnt);
             
-            Label value = new Label(NumberFormat.getCurrencyInstance().format(statistics.get(key)));
+            Label value = new Label(NumberFormat.getCurrencyInstance().format(statistics.get(key).getKey()));
+            value.setTooltip(new Tooltip(statistics.get(key).getValue()));
             GridPane.setColumnIndex(value, 1);
             GridPane.setRowIndex(value, rowCnt);
             

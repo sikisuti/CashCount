@@ -53,11 +53,7 @@ public class NewCorrectionWindowController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         tfAmount.setTextFormatter(new TextFormatter<>(new NumberStringConverter()));
             
-        try {
-            cbType.getItems().addAll(DataManager.getInstance().getAllCorrectionType());
-        } catch (IOException ex) {
-            Logger.getLogger(NewCorrectionWindowController.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        cbType.setItems(DataManager.getInstance().getAllCategories());
     }    
     
     public void setContext(Correction correction, DailyBalanceControl dbControl) {

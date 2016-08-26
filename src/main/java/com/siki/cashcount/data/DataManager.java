@@ -47,6 +47,7 @@ import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -604,8 +605,8 @@ public class DataManager {
             }
         }
     }
-    public TreeMap<String, Integer> getStatistics(Integer year, Month month) throws Exception {
-        TreeMap<String, Integer> rtn = new TreeMap<>();
+    public TreeMap<String, Entry<Integer, String>> getStatistics(Integer year, Month month) throws Exception {
+        TreeMap<String, Entry<Integer, String>> rtn = new TreeMap<>();
         
         Optional<DailyBalance> firstDb = dailyBalanceCache.stream().filter(db -> db.getDate().isEqual(LocalDate.of(year, month, 1))).findFirst();
         if (!firstDb.isPresent()) throw new Exception("Data for given date does not exists");
@@ -619,11 +620,14 @@ public class DataManager {
         Map<String, List<Correction>> cList = dailyBalancesOfMonth.stream().flatMap(db -> db.getCorrections().stream()).collect(Collectors.groupingBy(c -> c.getType()));
         
         for (String key : cList.keySet()) {
-            rtn.put(key, cList.get(key).stream().mapToInt(c -> c.getAmount()).sum());
+            List<String> comments = cList.get(key).stream().map(c -> c.getComment()).distinct().collect(Collectors.toList());
+            rtn.put(key, new AbstractMap.SimpleEntry<>(cList.get(key).stream().mapToInt(c -> c.getAmount()).sum(), String.join("\n", comments)));
         }
         
         if (previousBalance != null)
-            rtn.put(DataManager.GENERAL_TEXT, dailyBalancesOfMonth.get(dailyBalancesOfMonth.size() - 1).getTotalMoney() - previousBalance - rtn.values().stream().mapToInt(i -> i).sum());
+            rtn.put(DataManager.GENERAL_TEXT, 
+                    new AbstractMap.SimpleEntry<>(dailyBalancesOfMonth.get(dailyBalancesOfMonth.size() - 1).getTotalMoney() - previousBalance - rtn.values().stream().mapToInt(i -> i.getKey()).sum(), 
+                            ""));
         
         return rtn;
     }
