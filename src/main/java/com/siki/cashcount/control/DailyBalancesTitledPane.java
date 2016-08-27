@@ -99,7 +99,7 @@ public class DailyBalancesTitledPane extends TitledPane {
     public void refreshStatistics() throws Exception {
         gpStatistics.getChildren().clear();
         
-        TreeMap<String, Entry<Integer, String>> statistics = DataManager.getInstance().getStatistics(period.getYear(), period.getMonth());
+        TreeMap<String, Entry<Integer, String>> statistics = DataManager.getInstance().getStatisticsFromCorrections(period.getYear(), period.getMonth());
         
         int rowCnt = -1;
         for (String key : statistics.keySet()) {

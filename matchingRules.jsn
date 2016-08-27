@@ -51,3 +51,49 @@
 {"field":"Közlemény","pattern":"Volanbusz","category":"Kártyás vásárlás","subCategory":"Utazás"}
 {"field":"Közlemény","pattern":"UPC","category":"Weiner rezsi","subCategory":"TV"}
 {"field":"Közlemény","pattern":"Penny","category":"Kártyás vásárlás","subCategory":"Élelmiszer"}
+{"field":"Közlemény","pattern":"Burger King","category":"Kártyás vásárlás","subCategory":"Élelmiszer"}
+{"field":"Közlemény","pattern":"Étterem","category":"Kártyás vásárlás","subCategory":"Élelmiszer"}
+{"field":"Közlemény","pattern":"Isztambul Torok","category":"Kártyás vásárlás","subCategory":"Élelmiszer"}
+{"field":"Közlemény","pattern":"Kis Vakond","category":"Kártyás vásárlás","subCategory":"Egyéb"}
+{"field":"Közlemény","pattern":"R-Cafe","category":"Kártyás vásárlás","subCategory":"Élelmiszer"}
+{"field":"Közlemény","pattern":"Givesta","category":"Kártyás vásárlás","subCategory":"Élelmiszer"}
+{"field":"Közlemény","pattern":"Nagyi konyhaja","category":"Kártyás vásárlás","subCategory":"Élelmiszer"}
+{"field":"Közlemény","pattern":"Subway","category":"Kártyás vásárlás","subCategory":"Élelmiszer"}
+{"field":"Közlemény","pattern":"Lipoti pekseg","category":"Kártyás vásárlás","subCategory":"Élelmiszer"}
+{"field":"Közlemény","pattern":"Zoo Kecskemét","category":"Kártyás vásárlás","subCategory":"Szórakozás"}
+{"field":"Közlemény","pattern":"Kecskeméti fürdő","category":"Kártyás vásárlás","subCategory":"Szórakozás"}
+{"field":"Közlemény","pattern":"Sport Hotel","category":"Kártyás vásárlás","subCategory":"Szállás"}
+{"field":"Forgalomtípus","pattern":"Számlavezetési díj korr.","category":"Banki költség","subCategory":"Számlavezetési díj korrekció"}
+{"field":"Számlatulajdonos","pattern":"Pók Tímea","category":"Hitel","subCategory":"Egyéb"}
+{"field":"Közlemény","pattern":"BKK Automata","category":"Kártyás vásárlás","subCategory":"Utazás"}
+{"field":"Közlemény","pattern":"Deichmann","category":"Kártyás vásárlás","subCategory":"Ruha"}
+{"field":"Közlemény","pattern":"Campus etterem","category":"Kártyás vásárlás","subCategory":"Élelmiszer"}
+{"field":"Közlemény","pattern":"Patika Libra","category":"Kártyás vásárlás","subCategory":"Gyógyszer"}
+{"field":"Közlemény","pattern":"Magyar Vasuttorteneti","category":"Kártyás vásárlás","subCategory":"Szórakozás"}
+{"field":"Közlemény","pattern":"MCD Dunaújváros","category":"Kártyás vásárlás","subCategory":"Élelmiszer"}
+{"field":"Közlemény","pattern":"Vodafone","category":"Telefon","subCategory":"Gabó telefon"}
+{"field":"Közlemény","pattern":"Eurofamily","category":"Kártyás vásárlás","subCategory":"Háztartás"}
+{"field":"Közlemény","pattern":"Takko","category":"Kártyás vásárlás","subCategory":"Ruha"}
+{"field":"Közlemény","pattern":"One Euro Team","category":"Kártyás vásárlás","subCategory":"Háztartás"}
+{"field":"Közlemény","pattern":"Bier-Lak","category":"Kártyás vásárlás","subCategory":"Élelmiszer"}
+{"field":"Közlemény","pattern":"Tejbolt","category":"Kártyás vásárlás","subCategory":"Élelmiszer"}
+{"field":"Közlemény","pattern":"TV elektronika","category":"Kártyás vásárlás","subCategory":"Műszaki"}
+{"field":"Közlemény","pattern":"MCD Hengermalom","category":"Kártyás vásárlás","subCategory":"Élelmiszer"}
+{"field":"Közlemény","pattern":"Alexandra konyvesbolt","category":"Kártyás vásárlás","subCategory":"Egyéb"}
+{"field":"Közlemény","pattern":"Magyar Posta","category":"Kártyás vásárlás","subCategory":"Egyéb"}
+{"field":"Számlatulajdonos","pattern":"Gépjárműadó","category":"Autó","subCategory":"Gépjárműadó"}
+{"field":"Közlemény","pattern":"Forster","category":"Kártyás vásárlás","subCategory":"Élelmiszer"}
+{"field":"Közlemény","pattern":"Patika","category":"Kártyás vásárlás","subCategory":"Gyógyszer"}
+{"field":"Közlemény","pattern":"Diego","category":"Kártyás vásárlás","subCategory":"Bútor"}
+{"field":"Közlemény","pattern":"Festők boltja","category":"Kártyás vásárlás","subCategory":"Egyéb"}
+{"field":"Közlemény","pattern":"Kemi-Ker","category":"Kártyás vásárlás","subCategory":"Egyéb"}
+{"field":"Közlemény","pattern":"Díjbeszedő","category":"Dózsa rezsi","subCategory":"Víz"}
+{"field":"Számlatulajdonos","pattern":"Díjbeszedő","category":"Dózsa rezsi","subCategory":"Víz"}
+{"field":"Közlemény","pattern":"MT Tudósok","category":"Kártyás vásárlás","subCategory":"Élelmiszer"}
+{"field":"Közlemény","pattern":"No1-es ","category":"Kártyás vásárlás","subCategory":"Műszaki"}
+{"field":"Közlemény","pattern":"Unitel","category":"Kártyás vásárlás","subCategory":"Műszaki"}
+{"field":"Közlemény","pattern":"Multikomplex","category":"Kártyás vásárlás","subCategory":"Barkács"}
+{"field":"Közlemény","pattern":"Envi","category":"Autó","subCategory":"Üzemanyag"}
+{"field":"Közlemény","pattern":"E-Autopalyamatrica","category":"Kártyás vásárlás","subCategory":"Utazás"}
+{"field":"Közlemény","pattern":"Ofotért","category":"Kártyás vásárlás","subCategory":"Egyéb"}
+{"field":"Forgalomtípus","pattern":"Kamatjóváírás","category":"Banki költség","subCategory":"Kamatjóváírás"}

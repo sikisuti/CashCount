@@ -2,16 +2,10 @@ package com.siki.cashcount;
 
 import com.siki.cashcount.config.ConfigManager;
 import com.siki.cashcount.constant.CashFlowSeriesEnum;
-import com.siki.cashcount.control.CashFlowChart;
-import com.siki.cashcount.control.DailyBalancesTitledPane;
-import com.siki.cashcount.control.DateHelper;
-import com.siki.cashcount.control.ExceptionDialog;
+import com.siki.cashcount.control.*;
 import com.siki.cashcount.data.DataManager;
-import com.siki.cashcount.exception.JsonDeserializeException;
-import com.siki.cashcount.exception.NotEnoughPastDataException;
-import com.siki.cashcount.exception.TransactionGapException;
+import com.siki.cashcount.exception.*;
 import com.siki.cashcount.helper.StopWatch;
-import com.siki.cashcount.helper.ToolTipFixer;
 import com.siki.cashcount.model.*;
 import java.io.*;
 import java.net.URL;
@@ -19,53 +13,22 @@ import java.text.NumberFormat;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import static java.time.temporal.ChronoUnit.DAYS;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.ResourceBundle;
-import java.util.TreeMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.logging.*;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
-import javafx.event.Event;
-import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.fxml.Initializable;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.chart.LineChart;
-import javafx.scene.chart.XYChart;
+import javafx.event.*;
+import javafx.fxml.*;
+import javafx.geometry.*;
+import javafx.scene.*;
+import javafx.scene.chart.*;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
-import javafx.scene.layout.Border;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.BorderStroke;
-import javafx.scene.layout.BorderStrokeStyle;
-import javafx.scene.layout.BorderWidths;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.CornerRadii;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.stage.FileChooser;
+import javafx.stage.*;
 import javafx.stage.FileChooser.ExtensionFilter;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
-import javafx.stage.StageStyle;
-import javafx.stage.WindowEvent;
 
 public class MainWindowController implements Initializable {
 
@@ -344,29 +307,48 @@ public class MainWindowController implements Initializable {
         try {
             vbStatistics.getChildren().clear();
             
-            TreeMap<LocalDate, TreeMap<String, Entry<Integer, String>>> data = new TreeMap<>();
-            List<String> keys = new ArrayList<>();
+            TreeMap<LocalDate, TreeMap<String, Entry<Integer, String>>> correctionData = new TreeMap<>();
+            List<String> correctionKeys = new ArrayList<>();
+            TreeMap<LocalDate, TreeMap<String, Entry<Integer, String>>> transactionData = new TreeMap<>();
+            List<String> transactionKeys = new ArrayList<>();
                         
             for (Node node : DailyBalancesPH.getChildren()) {
                 if (node.getClass() != DailyBalancesTitledPane.class) continue;
                 DailyBalancesTitledPane entry = (DailyBalancesTitledPane)node;
-                TreeMap<String, Entry<Integer, String>> monthData = DataManager.getInstance().getStatistics(entry.getPeriod().getYear(), entry.getPeriod().getMonth());
-                data.put(entry.getPeriod(), monthData);
-                for (String key : monthData.keySet()) {
-                    if (!keys.contains(key)) {
-                        keys.add(key);
-                        Collections.sort(keys);
+                TreeMap<String, Entry<Integer, String>> monthCorrectionData = DataManager.getInstance().getStatisticsFromCorrections(entry.getPeriod().getYear(), entry.getPeriod().getMonth());
+                correctionData.put(entry.getPeriod(), monthCorrectionData);
+                for (String key : monthCorrectionData.keySet()) {
+                    if (!correctionKeys.contains(key)) {
+                        correctionKeys.add(key);
+                        Collections.sort(correctionKeys);
+                    }
+                }
+                TreeMap<String, Entry<Integer, String>> monthTransactionData = DataManager.getInstance().getStatisticsFromTransactions(entry.getPeriod().getYear(), entry.getPeriod().getMonth());
+                transactionData.put(entry.getPeriod(), monthTransactionData);
+                for (String key : monthTransactionData.keySet()) {
+                    if (!transactionKeys.contains(key)) {
+                        transactionKeys.add(key);
+                        Collections.sort(transactionKeys);
                     }
                 }
             }
             
             GridPane gpStatFromCorrections = new GridPane();
-//            gpStatFromCorrections.setBackground(new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY)));
-//            gpStatFromCorrections.setHgap(10);
-//            gpStatFromCorrections.setVgap(10);
-            GridPane gpStatFromTransactions = new GridPane();
+            gpStatFromCorrections.setPadding(new Insets(20, 10, 20, 10));
+            buildStatGrid(gpStatFromCorrections, correctionData, correctionKeys);
+            GridPane gpStatFromTransactions = new GridPane();            
+            gpStatFromTransactions.setPadding(new Insets(20, 10, 20, 10));
+            buildStatGrid(gpStatFromTransactions, transactionData, transactionKeys);
             
-            int colCnt = 0;
+            vbStatistics.getChildren().addAll(gpStatFromCorrections, new Separator(), gpStatFromTransactions);
+        } catch (IOException | JsonDeserializeException ex) {
+            Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Exception ex) {
+            Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    private void buildStatGrid( GridPane grid, TreeMap<LocalDate, TreeMap<String, Entry<Integer, String>>> data, List<String> keys) {
+        int colCnt = 0;
             for (LocalDate date : data.keySet()) {
                 int rowCnt = 0;
                 colCnt++;
@@ -375,27 +357,31 @@ public class MainWindowController implements Initializable {
                 headerBg.setPrefSize(100, 30);
                 headerBg.setAlignment(Pos.CENTER);
                 Label colHeader = new Label(date.getYear() + "." + date.getMonthValue() + ".");
+                colHeader.setStyle("-fx-font-weight: bold;");
                 if (date.isEqual(LocalDate.now().withDayOfMonth(1))) {
                     headerBg.setBorder(new Border(new BorderStroke(Color.BLACK, Color.GRAY, Color.TRANSPARENT, Color.BLACK, 
                             BorderStrokeStyle.SOLID, BorderStrokeStyle.SOLID, BorderStrokeStyle.NONE, BorderStrokeStyle.SOLID, 
                             CornerRadii.EMPTY, new BorderWidths(1, 2, 0, 1), Insets.EMPTY)));
                     headerBg.setAlignment(Pos.TOP_CENTER);                        
                     headerBg.setBackground(new Background(new BackgroundFill(Color.LIGHTGRAY, CornerRadii.EMPTY, Insets.EMPTY)));
-                    colHeader.setStyle("-fx-font-weight: bold;");
                 }
                 
                 headerBg.getChildren().add(colHeader);
                 GridPane.setColumnIndex(headerBg, colCnt);
                 GridPane.setRowIndex(headerBg, rowCnt);
-                gpStatFromCorrections.getChildren().add(headerBg);
+                grid.getChildren().add(headerBg);
                 
                 for (String category : keys) {
                     rowCnt++;
                     if (colCnt == 1) {
                         Label rowHeader = new Label(category);
+                        rowHeader.setMinWidth(150);
+                        rowHeader.setPrefWidth(150);
+                        rowHeader.setMaxWidth(150);
+                        rowHeader.setStyle("-fx-font-weight: bold;");
                         GridPane.setColumnIndex(rowHeader, colCnt - 1);
                         GridPane.setRowIndex(rowHeader, rowCnt);
-                        gpStatFromCorrections.getChildren().add(rowHeader);
+                        grid.getChildren().add(rowHeader);
                     }
                                         
                     GridPane cell = new GridPane();
@@ -434,16 +420,9 @@ public class MainWindowController implements Initializable {
                     cell.setBackground(new Background(new BackgroundFill(bgColor, CornerRadii.EMPTY, Insets.EMPTY)));
                     GridPane.setColumnIndex(cell, colCnt);
                     GridPane.setRowIndex(cell, rowCnt);
-                    gpStatFromCorrections.getChildren().add(cell);
+                    grid.getChildren().add(cell);
                 }
             }
-            
-            vbStatistics.getChildren().addAll(gpStatFromCorrections, gpStatFromTransactions);
-        } catch (IOException | JsonDeserializeException ex) {
-            Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (Exception ex) {
-            Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
-        }
     }
     
     private void getPast() {

@@ -45,7 +45,9 @@
                 </VBox>
             </Tab> 
             <Tab text="Statisztikák" closable="false" onSelectionChanged="#refreshStatistics" > 
-                <VBox fx:id="vbStatistics" alignment="CENTER"  />
+                <ScrollPane >
+                    <VBox fx:id="vbStatistics" alignment="CENTER"  />
+                </ScrollPane>
             </Tab>
         </TabPane>
     </center>

@@ -245,34 +245,34 @@ public class DataManager {
     
     //<editor-fold desc="Correction methods" defaultstate="collapsed">
     
-    public List<String> getAllCorrectionType() throws IOException {
-        if (correctionTypeCache == null) {
-            correctionTypeCache = new ArrayList<>();
-            String correctionTypesPath = ConfigManager.getStringProperty("CorrectionTypesPath");
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(correctionTypesPath), "UTF-8"))) {
-                String line;
-                while ((line = br.readLine()) != null) {
-                    correctionTypeCache.add(gsonDeserializer.fromJson(line, String.class));
-                }
-            } catch (IOException e) {
-                correctionTypeCache = null;
-                throw e;
-            }
-        }
-        
-        return correctionTypeCache;
-    }    
-    public void saveCorrectionTypes() throws IOException {
-        String correctionTypesPath = ConfigManager.getStringProperty("CorrectionTypesPath");
-        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(correctionTypesPath), "UTF-8"))) {
-            for (int i = 0; i < correctionTypeCache.size(); i++) {
-                bw.write(gsonSerializer.toJson(correctionTypeCache.get(i), String.class));
-                if (i < correctionTypeCache.size() - 1) bw.write("\n");
-            }
-        } catch (IOException e) {
-            throw e;
-        }
-    }
+//    public List<String> getAllCorrectionType() throws IOException {
+//        if (correctionTypeCache == null) {
+//            correctionTypeCache = new ArrayList<>();
+//            String correctionTypesPath = ConfigManager.getStringProperty("CorrectionTypesPath");
+//            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(correctionTypesPath), "UTF-8"))) {
+//                String line;
+//                while ((line = br.readLine()) != null) {
+//                    correctionTypeCache.add(gsonDeserializer.fromJson(line, String.class));
+//                }
+//            } catch (IOException e) {
+//                correctionTypeCache = null;
+//                throw e;
+//            }
+//        }
+//        
+//        return correctionTypeCache;
+//    }    
+//    public void saveCorrectionTypes() throws IOException {
+//        String correctionTypesPath = ConfigManager.getStringProperty("CorrectionTypesPath");
+//        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(correctionTypesPath), "UTF-8"))) {
+//            for (int i = 0; i < correctionTypeCache.size(); i++) {
+//                bw.write(gsonSerializer.toJson(correctionTypeCache.get(i), String.class));
+//                if (i < correctionTypeCache.size() - 1) bw.write("\n");
+//            }
+//        } catch (IOException e) {
+//            throw e;
+//        }
+//    }
     public Long getNextCorrectionId() {
         List<Correction> corrections = dailyBalanceCache.stream().flatMap(db -> db.getCorrections().stream()).collect(Collectors.toList());
         return corrections.stream().mapToLong(c -> c.getId()).max().getAsLong() + 1;
@@ -605,7 +605,7 @@ public class DataManager {
             }
         }
     }
-    public TreeMap<String, Entry<Integer, String>> getStatistics(Integer year, Month month) throws Exception {
+    public TreeMap<String, Entry<Integer, String>> getStatisticsFromCorrections(Integer year, Month month) throws Exception {
         TreeMap<String, Entry<Integer, String>> rtn = new TreeMap<>();
         
         Optional<DailyBalance> firstDb = dailyBalanceCache.stream().filter(db -> db.getDate().isEqual(LocalDate.of(year, month, 1))).findFirst();
@@ -628,6 +628,23 @@ public class DataManager {
             rtn.put(DataManager.GENERAL_TEXT, 
                     new AbstractMap.SimpleEntry<>(dailyBalancesOfMonth.get(dailyBalancesOfMonth.size() - 1).getTotalMoney() - previousBalance - rtn.values().stream().mapToInt(i -> i.getKey()).sum(), 
                             ""));
+        
+        return rtn;
+    }
+    
+    public TreeMap<String, Entry<Integer, String>> getStatisticsFromTransactions(Integer year, Month month) throws Exception { 
+        TreeMap<String, Entry<Integer, String>> rtn = new TreeMap<>();
+        
+        List<DailyBalance> dailyBalancesOfMonth = dailyBalanceCache.stream().filter(db -> db.getDate().getYear() == year && db.getDate().getMonth() == month).collect(Collectors.toList());
+        
+        Map<String, List<AccountTransaction>> tList = 
+                dailyBalancesOfMonth.stream().flatMap(db -> db.getTransactions().stream()).collect(Collectors.groupingBy(t -> 
+                        (t.getCategory() != null ? t.getCategory() : "null")));
+        
+        for (String key : tList.keySet()) {
+            List<String> comments = tList.get(key).stream().map(c -> c.getTransactionType() + " - " + c.getComment()).distinct().collect(Collectors.toList());
+            rtn.put(key, new AbstractMap.SimpleEntry<>(tList.get(key).stream().mapToInt(c -> c.getAmount()).sum(), String.join("\n", comments)));
+        }
         
         return rtn;
     }

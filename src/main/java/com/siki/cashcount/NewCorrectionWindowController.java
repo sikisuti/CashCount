@@ -119,14 +119,14 @@ public class NewCorrectionWindowController implements Initializable {
         
         okClicked = true;
         
-        try {
-            if (!DataManager.getInstance().getAllCorrectionType().contains(cbType.getValue())) {
-                DataManager.getInstance().getAllCorrectionType().add(cbType.getValue());
-                DataManager.getInstance().saveCorrectionTypes();
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(NewCorrectionWindowController.class.getName()).log(Level.SEVERE, null, ex);
-        }
+//        try {
+//            if (!DataManager.getInstance().getAllCorrectionType().contains(cbType.getValue())) {
+//                DataManager.getInstance().getAllCorrectionType().add(cbType.getValue());
+//                DataManager.getInstance().saveCorrectionTypes();
+//            }
+//        } catch (IOException ex) {
+//            Logger.getLogger(NewCorrectionWindowController.class.getName()).log(Level.SEVERE, null, ex);
+//        }
         
         dialogStage.close();
     }

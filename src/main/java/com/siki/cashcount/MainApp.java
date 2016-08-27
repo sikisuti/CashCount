@@ -19,6 +19,7 @@ import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
+import static javafx.application.Application.launch;
 
 public class MainApp extends Application {
     
