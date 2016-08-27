@@ -409,14 +409,18 @@ public class MainWindowController implements Initializable {
                         lblValue.setStyle("-fx-font-weight: bold;");
                     }
                     cell.getChildren().add(lblValue);
-                    double opacity = value / 600000d;
+                    double opacity;
                     Color bgColor;
+                    double inLowerBound = ConfigManager.getDoubleProperty("IncomeDecoratorLowerBound");
+                    double inUpperBound = ConfigManager.getDoubleProperty("IncomeDecoratorUpperBound");
+                    double outLowerBound = ConfigManager.getDoubleProperty("OutcomeDecoratorLowerBound");
+                    double outUpperBound = ConfigManager.getDoubleProperty("OutcomeDecoratorUpperBound");
                     if (value < 0) {
-                        opacity = value / -300000d;
+                        opacity = ((value + outUpperBound) <= 0 ? (value + outUpperBound) : 0) / (outLowerBound + outUpperBound);
                         if (opacity > 1d) opacity = 1;
                         bgColor = Color.rgb(230, 0, 0, opacity);
                     } else {
-                        opacity = ((value - 400000d) >= 0 ? (value - 400000d) : 0) / 300000d;
+                        opacity = ((value - inLowerBound) >= 0 ? (value - inLowerBound) : 0) / (inUpperBound - inLowerBound);
                         if (opacity > 1d) opacity = 1;
                         bgColor = Color.rgb(0, 200, 0, opacity);
                     }
