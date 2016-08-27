@@ -641,6 +641,10 @@ public class DataManager {
                 dailyBalancesOfMonth.stream().flatMap(db -> db.getTransactions().stream()).collect(Collectors.groupingBy(t -> 
                         (t.getSubCategory() != null ? "  -- " + t.getSubCategory() : "null")));
         
+        List<AccountTransaction> bankExpenses = dailyBalancesOfMonth.stream().flatMap(db -> db.getTransactions().stream()).filter(t -> t.getCategory().equals("Banki költség")).collect(Collectors.toList());
+        if (bankExpenses.size() > 0)
+            tList.put("  -- Banki költség", bankExpenses);
+        
         for (String key : tList.keySet()) {
             List<String> comments = tList.get(key).stream().map(c -> c.getTransactionType() + " - " + c.getComment()).distinct().collect(Collectors.toList());
             rtn.put(key, new AbstractMap.SimpleEntry<>(tList.get(key).stream().mapToInt(c -> c.getAmount()).sum(), String.join("\n", comments)));
