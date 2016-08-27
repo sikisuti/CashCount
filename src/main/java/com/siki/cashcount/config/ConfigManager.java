@@ -10,6 +10,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -47,7 +48,7 @@ public final class ConfigManager {
 //    }
     
     public static void initProperties() throws IOException {
-        try (InputStream inputStream = new FileInputStream("./config.properties")) {
+        try (InputStreamReader inputStream = new InputStreamReader(new FileInputStream("./config.properties"), "UTF-8")) {
             properties.load(inputStream);
         }
     }
@@ -70,6 +71,10 @@ public final class ConfigManager {
     
     public static double getDoubleProperty(String propertyName) {
         return Double.parseDouble(getStringProperty(propertyName));
+    }
+    
+    public static int getIntegerProperty(String propertyName) throws NumberFormatException {
+        return Integer.parseInt(getStringProperty(propertyName));
     }
     
     public static void setProperty(String propertyName, String propertyValue) throws IOException {

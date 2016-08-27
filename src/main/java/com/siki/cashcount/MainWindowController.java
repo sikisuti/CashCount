@@ -65,7 +65,6 @@ public class MainWindowController implements Initializable {
         flowChart.getData().addAll(savingSeriesRef, cashSeriesRef, accountSeriesRef, savingSeries, cashSeries, accountSeries); 
         
         prepareDailyBalances();
-        DailyBalancesSP.setVvalue(ConfigManager.getDoubleProperty("DailyBalanceViewScroll"));
     }
     
     public void refreshChart(ObservableList<DailyBalance> series) {
@@ -170,10 +169,6 @@ public class MainWindowController implements Initializable {
             
         } 
         if (ConfigManager.getBooleanProperty("LogPerformance")) StopWatch.stop("prepareDailyBalances");
-    }
-    
-    public double getDailyBalanceViewScroll() {
-        return DailyBalancesSP.getVvalue();
     }
     
     @FXML
@@ -307,40 +302,43 @@ public class MainWindowController implements Initializable {
         try {
             vbStatistics.getChildren().clear();
             
-            TreeMap<LocalDate, TreeMap<String, Entry<Integer, String>>> correctionData = new TreeMap<>();
-            List<String> correctionKeys = new ArrayList<>();
-            TreeMap<LocalDate, TreeMap<String, Entry<Integer, String>>> transactionData = new TreeMap<>();
-            List<String> transactionKeys = new ArrayList<>();
+//            TreeMap<LocalDate, TreeMap<String, Entry<Integer, String>>> correctionData = new TreeMap<>();
+//            List<String> correctionKeys = new ArrayList<>();
+//            TreeMap<LocalDate, TreeMap<String, Entry<Integer, String>>> transactionData = new TreeMap<>();
+//            List<String> transactionKeys = new ArrayList<>();
+            TreeMap<LocalDate, TreeMap<String, Entry<Integer, String>>> data = new TreeMap<>();
+            List<String> keys = new ArrayList<>();
                         
             for (Node node : DailyBalancesPH.getChildren()) {
                 if (node.getClass() != DailyBalancesTitledPane.class) continue;
                 DailyBalancesTitledPane entry = (DailyBalancesTitledPane)node;
+                
                 TreeMap<String, Entry<Integer, String>> monthCorrectionData = DataManager.getInstance().getStatisticsFromCorrections(entry.getPeriod().getYear(), entry.getPeriod().getMonth());
-                correctionData.put(entry.getPeriod(), monthCorrectionData);
-                for (String key : monthCorrectionData.keySet()) {
-                    if (!correctionKeys.contains(key)) {
-                        correctionKeys.add(key);
-                        Collections.sort(correctionKeys);
-                    }
-                }
                 TreeMap<String, Entry<Integer, String>> monthTransactionData = DataManager.getInstance().getStatisticsFromTransactions(entry.getPeriod().getYear(), entry.getPeriod().getMonth());
-                transactionData.put(entry.getPeriod(), monthTransactionData);
-                for (String key : monthTransactionData.keySet()) {
-                    if (!transactionKeys.contains(key)) {
-                        transactionKeys.add(key);
-                        Collections.sort(transactionKeys);
+                monthCorrectionData.putAll(monthTransactionData);
+                data.put(entry.getPeriod(), monthCorrectionData);
+                for (String key : monthCorrectionData.keySet()) {
+                    if (!keys.contains(key)) {
+                        keys.add(key);
                     }
                 }
+                
+//                data.put(entry.getPeriod(), monthTransactionData);
+//                for (String key : monthTransactionData.keySet()) {
+//                    if (!keys.contains(key)) {
+//                        keys.add(key);
+//                    }
+//                }
             }
             
             GridPane gpStatFromCorrections = new GridPane();
             gpStatFromCorrections.setPadding(new Insets(20, 10, 20, 10));
-            buildStatGrid(gpStatFromCorrections, correctionData, correctionKeys);
-            GridPane gpStatFromTransactions = new GridPane();            
-            gpStatFromTransactions.setPadding(new Insets(20, 10, 20, 10));
-            buildStatGrid(gpStatFromTransactions, transactionData, transactionKeys);
+            buildStatGrid(gpStatFromCorrections, data, keys);
+//            GridPane gpStatFromTransactions = new GridPane();            
+//            gpStatFromTransactions.setPadding(new Insets(20, 10, 20, 10));
+//            buildStatGrid(gpStatFromTransactions, transactionData, transactionKeys);
             
-            vbStatistics.getChildren().addAll(gpStatFromCorrections, new Separator(), gpStatFromTransactions);
+            vbStatistics.getChildren().addAll(gpStatFromCorrections);
         } catch (IOException | JsonDeserializeException ex) {
             Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
         } catch (Exception ex) {
@@ -350,7 +348,7 @@ public class MainWindowController implements Initializable {
     private void buildStatGrid( GridPane grid, TreeMap<LocalDate, TreeMap<String, Entry<Integer, String>>> data, List<String> keys) {
         int colCnt = 0;
             for (LocalDate date : data.keySet()) {
-                int rowCnt = 0;
+//                int rowCnt = 0;
                 colCnt++;
                 
                 GridPane headerBg = new GridPane();
@@ -368,19 +366,24 @@ public class MainWindowController implements Initializable {
                 
                 headerBg.getChildren().add(colHeader);
                 GridPane.setColumnIndex(headerBg, colCnt);
-                GridPane.setRowIndex(headerBg, rowCnt);
+                GridPane.setRowIndex(headerBg, 0);
                 grid.getChildren().add(headerBg);
                 
                 for (String category : keys) {
-                    rowCnt++;
+                    int rowNo = 0;
+                    try {
+                        rowNo = ConfigManager.getIntegerProperty(category);
+                    } catch (NumberFormatException ex) {
+                        continue;
+                    }
                     if (colCnt == 1) {
                         Label rowHeader = new Label(category);
                         rowHeader.setMinWidth(150);
                         rowHeader.setPrefWidth(150);
                         rowHeader.setMaxWidth(150);
-                        rowHeader.setStyle("-fx-font-weight: bold;");
+                        if (!category.startsWith("  -- ")) rowHeader.setStyle("-fx-font-weight: bold;");
                         GridPane.setColumnIndex(rowHeader, colCnt - 1);
-                        GridPane.setRowIndex(rowHeader, rowCnt);
+                        GridPane.setRowIndex(rowHeader, rowNo);
                         grid.getChildren().add(rowHeader);
                     }
                                         
@@ -419,7 +422,7 @@ public class MainWindowController implements Initializable {
                     }
                     cell.setBackground(new Background(new BackgroundFill(bgColor, CornerRadii.EMPTY, Insets.EMPTY)));
                     GridPane.setColumnIndex(cell, colCnt);
-                    GridPane.setRowIndex(cell, rowCnt);
+                    GridPane.setRowIndex(cell, rowNo);
                     grid.getChildren().add(cell);
                 }
             }

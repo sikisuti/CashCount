@@ -67,7 +67,6 @@ public class MainApp extends Application {
                         event.consume();
                     }
                 }
-                ConfigManager.setProperty("DailyBalanceViewScroll", String.valueOf(controller.getDailyBalanceViewScroll()));
             } catch (IOException | JsonDeserializeException ex) {
                 Logger.getLogger(MainApp.class.getName()).log(Level.SEVERE, null, ex);
             }

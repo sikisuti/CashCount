@@ -639,7 +639,7 @@ public class DataManager {
         
         Map<String, List<AccountTransaction>> tList = 
                 dailyBalancesOfMonth.stream().flatMap(db -> db.getTransactions().stream()).collect(Collectors.groupingBy(t -> 
-                        (t.getCategory() != null ? t.getCategory() : "null")));
+                        (t.getSubCategory() != null ? "  -- " + t.getSubCategory() : "null")));
         
         for (String key : tList.keySet()) {
             List<String> comments = tList.get(key).stream().map(c -> c.getTransactionType() + " - " + c.getComment()).distinct().collect(Collectors.toList());
