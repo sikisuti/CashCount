@@ -57,6 +57,16 @@ public final class DailyBalance {
     public void setReviewed(Boolean reviewed) { this.reviewed.set(reviewed); }
     public BooleanProperty reviewedProperty() { return reviewed; }
     
+    private final IntegerProperty dailySpend;
+    public Integer getDailySpend() { return dailySpend.get(); }
+    public void setDailySpend(Integer dailySpend) { this.dailySpend.set(dailySpend); }
+    public IntegerProperty dailySpendProperty() { return dailySpend; }
+    
+    private final IntegerProperty averageDailySpend;
+    public Integer getAverageDailySpend() { return averageDailySpend.get(); }
+    public void setAverageDailySpend(Integer averageDailySpend) { this.averageDailySpend.set(averageDailySpend); }
+    public IntegerProperty averageDailySpendProperty() { return averageDailySpend; }
+    
     ObservableList<Saving> savings;
     ObservableList<Correction> corrections;
     ObservableList<AccountTransaction> transactions;
@@ -68,6 +78,8 @@ public final class DailyBalance {
         this.predicted = new SimpleBooleanProperty();
         this.totalMoney = new SimpleIntegerProperty();
         this.reviewed = new SimpleBooleanProperty();
+        this.dailySpend = new SimpleIntegerProperty();
+        this.averageDailySpend = new SimpleIntegerProperty();
         savings = FXCollections.observableArrayList();
         corrections = FXCollections.observableArrayList();
         transactions = FXCollections.observableArrayList();

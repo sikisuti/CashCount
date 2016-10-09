@@ -60,6 +60,8 @@ public final class DailyBalanceControl extends VBox {
     private Label txtDate;
     private Label txtBalance;
     private TextField tfCash;
+    private Label txtDailySpend;
+    private Label txtAverageDailySpend;
     private CheckBox chkReviewed;
     private HBox corrections;
     private HBox hbLine;
@@ -99,6 +101,8 @@ public final class DailyBalanceControl extends VBox {
         setBalance(NumberFormat.getCurrencyInstance().format(dailyBalance.getTotalMoney()));
         dailyBalance.totalMoneyProperty().addListener(new IntegerToTextConverter(txtBalance.textProperty()));
         setCash(NumberFormat.getCurrencyInstance().format(dailyBalance.getCash()));
+        setDailySpend(NumberFormat.getCurrencyInstance().format(3000));
+        setAverageDailySpend(NumberFormat.getCurrencyInstance().format(5000));
         tfCash.focusedProperty().addListener((ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) -> {
             if (!newValue) {
                 try {
@@ -208,6 +212,10 @@ public final class DailyBalanceControl extends VBox {
         txtBalance.setPrefWidth(100);
         tfCash = new TextField();
         tfCash.setPrefWidth(100);
+        txtDailySpend = new Label();
+        txtDailySpend.setPrefWidth(100);
+        txtAverageDailySpend = new Label();
+        txtAverageDailySpend.setPrefWidth(100);
         btnAdd = new Button("+");       
         
         corrections = new HBox();
@@ -215,7 +223,7 @@ public final class DailyBalanceControl extends VBox {
         HBox.setMargin(corrections, new Insets(0, 0, 0, 20));
         
         hbLine = new HBox();
-        hbLine.getChildren().addAll(txtDate, txtBalance, tfCash, btnAdd, corrections);        
+        hbLine.getChildren().addAll(txtDate, txtBalance, tfCash, txtDailySpend, txtAverageDailySpend, btnAdd, corrections);        
         bp.setCenter(hbLine);
         
         HBox rightContext = new HBox();
@@ -256,6 +264,14 @@ public final class DailyBalanceControl extends VBox {
     public String getCash() { return cashProperty().get(); }
     public final void setCash(String value) { cashProperty().set(value); }
     public StringProperty cashProperty() { return tfCash.textProperty(); }
+
+    public String getDailySpend() { return dailySpendProperty().get(); }
+    public final void setDailySpend(String value) { dailySpendProperty().set(value); }
+    public StringProperty dailySpendProperty() { return txtDailySpend.textProperty(); }
+
+    public String getAverageDailySpend() { return averageDailySpendProperty().get(); }
+    public final void setAverageDailySpend(String value) { averageDailySpendProperty().set(value); }
+    public StringProperty averageDailySpendProperty() { return txtAverageDailySpend.textProperty(); }
     
     @FXML
     protected void addCorrection(ActionEvent event) {
