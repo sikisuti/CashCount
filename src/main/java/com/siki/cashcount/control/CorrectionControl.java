@@ -137,9 +137,9 @@ public class CorrectionControl extends GridPane {
 
                 if (controller.isOkClicked()) {       
                     DataManager.getInstance().calculatePredictions();
-                    parent.setDailySpend(NumberFormat.getCurrencyInstance().format(
-                            parent.getDailyBalance().getTotalMoney() - parent.getDailyBalance().getPrevDailyBalance().getTotalMoney() - parent.getDailyBalance().getTotalCorrections()
-                    ));
+//                    parent.setDailySpend(NumberFormat.getCurrencyInstance().format(
+//                            parent.getDailyBalance().getTotalMoney() - parent.getDailyBalance().getPrevDailyBalance().getTotalMoney() - parent.getDailyBalance().getTotalCorrections()
+//                    ));
                 }
             } catch (IOException | NotEnoughPastDataException ex) {
                 Logger.getLogger(DailyBalanceControl.class.getName()).log(Level.SEVERE, null, ex);

@@ -21,7 +21,11 @@ import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.beans.binding.IntegerBinding;
+import javafx.beans.binding.NumberBinding;
+import javafx.beans.binding.StringBinding;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -100,18 +104,9 @@ public final class DailyBalanceControl extends VBox {
         txtDate.disableProperty().bind(dailyBalance.predictedProperty());
         
         setDate(dailyBalance.getDate().format(DateTimeFormatter.ofPattern("yyyy.MM.dd")));
-        setBalance(NumberFormat.getCurrencyInstance().format(dailyBalance.getTotalMoney()));
-        dailyBalance.totalMoneyProperty().addListener(new IntegerToTextConverter(txtBalance.textProperty()));
-        setCash(NumberFormat.getCurrencyInstance().format(dailyBalance.getCash()));
-        if (dailyBalance.getDate().isEqual(LocalDate.of(2016, Month.OCTOBER, 3))) {
-            int i = 0;
-        }
-        if (dailyBalance.getPrevDailyBalance() != null) {
-            setDailySpend(NumberFormat.getCurrencyInstance().format(
-                    dailyBalance.getTotalMoney() - dailyBalance.getPrevDailyBalance().getTotalMoney() - dailyBalance.getTotalCorrections()
-            ));
-        }
-//        setAverageDailySpend(NumberFormat.getCurrencyInstance().format(5000));
+        txtBalance.textProperty().bindBidirectional(this.dailyBalance.totalMoneyProperty(), NumberFormat.getCurrencyInstance());
+        setCash(NumberFormat.getCurrencyInstance().format(dailyBalance.getCash()));   
+        txtDailySpend.textProperty().bindBidirectional(this.dailyBalance.dailySpendProperty(), NumberFormat.getCurrencyInstance());
         tfCash.focusedProperty().addListener((ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) -> {
             if (!newValue) {
                 try {
@@ -274,9 +269,9 @@ public final class DailyBalanceControl extends VBox {
     public final void setCash(String value) { cashProperty().set(value); }
     public StringProperty cashProperty() { return tfCash.textProperty(); }
 
-    public String getDailySpend() { return dailySpendProperty().get(); }
-    public final void setDailySpend(String value) { dailySpendProperty().set(value); }
-    public StringProperty dailySpendProperty() { return txtDailySpend.textProperty(); }
+//    public String getDailySpend() { return dailySpendProperty().get(); }
+//    public final void setDailySpend(String value) { dailySpendProperty().set(value); }
+//    public StringProperty dailySpendProperty() { return txtDailySpend.textProperty(); }
 
 //    public String getAverageDailySpend() { return averageDailySpendProperty().get(); }
 //    public final void setAverageDailySpend(String value) { averageDailySpendProperty().set(value); }
@@ -300,11 +295,11 @@ public final class DailyBalanceControl extends VBox {
             stage.showAndWait();
             
             if (controller.isOkClicked()) {
-                dailyBalance.getCorrections().add(newCorrection);
+                dailyBalance.addCorrection(newCorrection);
                 loadCorrections();           
-                setDailySpend(NumberFormat.getCurrencyInstance().format(
-                        dailyBalance.getTotalMoney() - dailyBalance.getPrevDailyBalance().getTotalMoney() - dailyBalance.getTotalCorrections()
-                ));
+//                setDailySpend(NumberFormat.getCurrencyInstance().format(
+//                        dailyBalance.getTotalMoney() - dailyBalance.getPrevDailyBalance().getTotalMoney() - dailyBalance.getTotalCorrections()
+//                ));
                 DataManager.getInstance().calculatePredictions();
             }
         } catch (IOException | NotEnoughPastDataException ex) {
@@ -314,11 +309,11 @@ public final class DailyBalanceControl extends VBox {
     
     public void removeCorrection(Correction correction) {
         try {
-            dailyBalance.getCorrections().remove(correction);
+            dailyBalance.removeCorrection(correction);
             loadCorrections();         
-            setDailySpend(NumberFormat.getCurrencyInstance().format(
-                    dailyBalance.getTotalMoney() - dailyBalance.getPrevDailyBalance().getTotalMoney() - dailyBalance.getTotalCorrections()
-            ));
+//            setDailySpend(NumberFormat.getCurrencyInstance().format(
+//                    dailyBalance.getTotalMoney() - dailyBalance.getPrevDailyBalance().getTotalMoney() - dailyBalance.getTotalCorrections()
+//            ));
             DataManager.getInstance().calculatePredictions();
         } catch (NotEnoughPastDataException | IOException ex) {
             Logger.getLogger(DailyBalanceControl.class.getName()).log(Level.SEVERE, null, ex);

@@ -717,7 +717,7 @@ public class DataManager {
                 Logger.getLogger(DataManager.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        String line = "";
+        String line = date.toString();
         
         int averageSum = 0;
         // Consider the last 6 months
@@ -747,11 +747,11 @@ public class DataManager {
                 else throw new NotEnoughPastDataException();
             }
             averageSum += weeklyAverage;
-            if (exportDataForDebug) line = weeklyAverage.toString().concat(";" + line);
+            if (exportDataForDebug) line = line.concat(";" + weeklyAverage.toString());
         }
         Integer average = Math.round(averageSum / 6f);
         if (exportDataForDebug) {
-            line = line + ";" + average;
+            line = line + ";;" + average;
             
             if (bw != null) {
                 try {
@@ -772,7 +772,15 @@ public class DataManager {
         if (exportDataForDebug) {
             exportDataPath = ConfigManager.getStringProperty("ExportDataPath");
             try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(exportDataPath), "UTF-8"))) {
-
+                bw.write("date;"
+                        + "weekly average date -6 months;"
+                        + "weekly average date -5 months;"
+                        + "weekly average date -4 months;"
+                        + "weekly average date -3 months;"
+                        + "weekly average date -2 months;"
+                        + "weekly average date -1 months;;"
+                        + "6 months average;;"
+                        + "Balance\n");
             } catch (IOException ex) {
                 Logger.getLogger(DataManager.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -784,7 +792,12 @@ public class DataManager {
         dbList.add(notPredictedList.get(notPredictedList.size() - 1));
         dbList.addAll(dailyBalanceCache.stream().filter(d -> d.isPredicted()).collect(Collectors.toList()));
         for (int i = 1; i < dbList.size(); i++) {
-            dbList.get(i).setBalance(dbList.get(i - 1).getTotalMoney() + getDayAverage(dbList.get(i).getDate()) + dbList.get(i).getTotalCorrections());
+            int dayUsed = dbList.get(i).getDate().getDayOfMonth();
+            int dayNow = LocalDate.now().getDayOfMonth();
+            dbList.get(i).setBalance(
+                    dbList.get(i - 1).getTotalMoney() + 
+                    getDayAverage(LocalDate.now().plusMonths((dayUsed + 4) > dayNow ? 0 : 1).withDayOfMonth(1).plusDays(dbList.get(i).getDate().getDayOfMonth() - 1)) + 
+                    dbList.get(i).getTotalCorrections());
             if (exportDataForDebug) {
                 try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(exportDataPath, true), "UTF-8"))) {
                     bw.write(";;" + dbList.get(i).getBalance().toString() + "\n");

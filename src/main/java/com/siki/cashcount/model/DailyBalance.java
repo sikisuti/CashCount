@@ -21,7 +21,14 @@ import javafx.collections.ObservableList;
  */
 public final class DailyBalance {
     private DailyBalance prevDailyBalance;
-    public void setPrevDailyBalance(DailyBalance prevDailyBalance) { this.prevDailyBalance = prevDailyBalance; }
+    public void setPrevDailyBalance(DailyBalance prevDailyBalance) { 
+        this.prevDailyBalance = prevDailyBalance; 
+        if (getPrevDailyBalance() != null) {
+            setDailySpend(getTotalMoney() - getPrevDailyBalance().getTotalMoney() - getTotalCorrections());
+        } else {
+            setDailySpend(0);
+        }
+    }
     public DailyBalance getPrevDailyBalance() { return prevDailyBalance; }
     
     private final ObjectProperty date;
@@ -33,7 +40,7 @@ public final class DailyBalance {
     public Integer getBalance() { return balance.get(); }
     public void setBalance(Integer balance) { 
         this.balance.set(balance); 
-        this.totalMoneyProperty().set(getBalance() + getCash());
+        this.setTotalMoney(getBalance() + getCash());
     }
     public IntegerProperty balanceProperty() { return balance; }
     
@@ -41,7 +48,7 @@ public final class DailyBalance {
     public Integer getCash() { return cash.get(); }
     public void setCash(Integer cash) { 
         this.cash.set(cash); 
-        this.totalMoneyProperty().set(getBalance() + getCash());
+        this.setTotalMoney(getBalance() + getCash());
     }
     public IntegerProperty cashProperty() { return cash; }
     
@@ -54,6 +61,14 @@ public final class DailyBalance {
     
     private final IntegerProperty totalMoney;
     public Integer getTotalMoney() { return totalMoney.get(); }
+    public void setTotalMoney(Integer value) { 
+        totalMoneyProperty().set(value); 
+        if (getPrevDailyBalance() != null) {
+            setDailySpend(getTotalMoney() - getPrevDailyBalance().getTotalMoney() - getTotalCorrections());
+        } else {
+            setDailySpend(0);
+        }
+    }
     public IntegerProperty totalMoneyProperty() { return totalMoney; }
     
     private final BooleanProperty reviewed;
@@ -63,13 +78,13 @@ public final class DailyBalance {
     
     private final IntegerProperty dailySpend;
     public Integer getDailySpend() { return dailySpend.get(); }
-    public void setDailySpend(Integer dailySpend) { this.dailySpend.set(dailySpend); }
+    public void setDailySpend(Integer value) { this.dailySpend.set(value); }
     public IntegerProperty dailySpendProperty() { return dailySpend; }
     
-    private final IntegerProperty averageDailySpend;
-    public Integer getAverageDailySpend() { return averageDailySpend.get(); }
-    public void setAverageDailySpend(Integer averageDailySpend) { this.averageDailySpend.set(averageDailySpend); }
-    public IntegerProperty averageDailySpendProperty() { return averageDailySpend; }
+//    private final IntegerProperty averageDailySpend;
+//    public Integer getAverageDailySpend() { return averageDailySpend.get(); }
+//    public void setAverageDailySpend(Integer averageDailySpend) { this.averageDailySpend.set(averageDailySpend); }
+//    public IntegerProperty averageDailySpendProperty() { return averageDailySpend; }
     
     ObservableList<Saving> savings;
     ObservableList<Correction> corrections;
@@ -83,7 +98,7 @@ public final class DailyBalance {
         this.totalMoney = new SimpleIntegerProperty();
         this.reviewed = new SimpleBooleanProperty();
         this.dailySpend = new SimpleIntegerProperty();
-        this.averageDailySpend = new SimpleIntegerProperty();
+//        this.averageDailySpend = new SimpleIntegerProperty();
         savings = FXCollections.observableArrayList();
         corrections = FXCollections.observableArrayList();
         transactions = FXCollections.observableArrayList();
@@ -119,7 +134,21 @@ public final class DailyBalance {
     }
     
     public void addCorrection(Correction correction) {
+        if (getPrevDailyBalance() != null) {
+            setDailySpend(getTotalMoney() - getPrevDailyBalance().getTotalMoney() - getTotalCorrections());
+        } else {
+            setDailySpend(0);
+        }
         corrections.add(correction);
+    }
+    
+    public void removeCorrection(Correction correction) {
+        if (getPrevDailyBalance() != null) {
+            setDailySpend(getTotalMoney() - getPrevDailyBalance().getTotalMoney() - getTotalCorrections());
+        } else {
+            setDailySpend(0);
+        }
+        corrections.remove(correction);
     }
     
     public ObservableList<Correction> getCorrections() {
