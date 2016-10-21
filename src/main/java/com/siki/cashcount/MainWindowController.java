@@ -302,10 +302,6 @@ public class MainWindowController implements Initializable {
         try {
             vbStatistics.getChildren().clear();
             
-//            TreeMap<LocalDate, TreeMap<String, Entry<Integer, String>>> correctionData = new TreeMap<>();
-//            List<String> correctionKeys = new ArrayList<>();
-//            TreeMap<LocalDate, TreeMap<String, Entry<Integer, String>>> transactionData = new TreeMap<>();
-//            List<String> transactionKeys = new ArrayList<>();
             TreeMap<LocalDate, TreeMap<String, Entry<Integer, String>>> data = new TreeMap<>();
             List<String> keys = new ArrayList<>();
                         
@@ -322,21 +318,11 @@ public class MainWindowController implements Initializable {
                         keys.add(key);
                     }
                 }
-                
-//                data.put(entry.getPeriod(), monthTransactionData);
-//                for (String key : monthTransactionData.keySet()) {
-//                    if (!keys.contains(key)) {
-//                        keys.add(key);
-//                    }
-//                }
             }
             
             GridPane gpStatFromCorrections = new GridPane();
             gpStatFromCorrections.setPadding(new Insets(20, 10, 20, 10));
             buildStatGrid(gpStatFromCorrections, data, keys);
-//            GridPane gpStatFromTransactions = new GridPane();            
-//            gpStatFromTransactions.setPadding(new Insets(20, 10, 20, 10));
-//            buildStatGrid(gpStatFromTransactions, transactionData, transactionKeys);
             
             vbStatistics.getChildren().addAll(gpStatFromCorrections);
         } catch (IOException | JsonDeserializeException ex) {

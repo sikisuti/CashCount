@@ -132,6 +132,8 @@ public class DataManager {
     private ObservableList<DailyBalance> loadDailyBalances(String dataPath) throws IOException, JsonDeserializeException {        
         ObservableList<DailyBalance> rtnList = FXCollections.observableArrayList();
         int lineCnt = 0;
+        DailyBalance prevDailyBalance = null;
+        
         try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(dataPath), "UTF-8"))) {
             String line;
             while ((line = br.readLine()) != null) {
@@ -143,7 +145,9 @@ public class DataManager {
                 db.getCorrections().stream().forEach((c) -> {
                     c.setDailyBalance(db);
                 });
+                if (prevDailyBalance != null) { db.setPrevDailyBalance(prevDailyBalance); }
                 rtnList.add(db);
+                prevDailyBalance = db;
             }
         } catch (IOException e) {
             throw e;
@@ -601,6 +605,13 @@ public class DataManager {
                         subCategories.add(t.getSubCategory());
                         FXCollections.sort(subCategories);
                     }
+                }
+            }
+            
+            for (Correction c : db.getCorrections()) {
+                if (!categories.contains(c.getType())) {
+                    categories.add(c.getType());
+                    FXCollections.sort(categories);
                 }
             }
         }

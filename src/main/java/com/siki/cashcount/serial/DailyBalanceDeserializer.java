@@ -13,7 +13,6 @@ import com.google.gson.JsonParseException;
 import com.siki.cashcount.model.AccountTransaction;
 import com.siki.cashcount.model.Correction;
 import com.siki.cashcount.model.DailyBalance;
-import com.siki.cashcount.model.Saving;
 import java.lang.reflect.Type;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;

@@ -97,3 +97,4 @@
 {"field":"Közlemény","pattern":"E-Autopalyamatrica","category":"Kártyás vásárlás","subCategory":"Utazás"}
 {"field":"Közlemény","pattern":"Ofotért","category":"Kártyás vásárlás","subCategory":"Egyéb"}
 {"field":"Forgalomtípus","pattern":"Kamatjóváírás","category":"Banki költség","subCategory":"Kamatjóváírás"}
+{"field":"Közlemény","pattern":"Optimavill","category":"Kártyás vásárlás","subCategory":"Műszaki"}

@@ -9,7 +9,6 @@ import com.siki.cashcount.control.DailyBalanceControl;
 import com.siki.cashcount.data.DataManager;
 import com.siki.cashcount.model.AccountTransaction;
 import com.siki.cashcount.model.Correction;
-import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.logging.Level;

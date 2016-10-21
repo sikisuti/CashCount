@@ -16,6 +16,8 @@ import com.siki.cashcount.model.DailyBalance;
 import java.io.IOException;
 import java.text.NumberFormat;
 import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -61,7 +63,7 @@ public final class DailyBalanceControl extends VBox {
     private Label txtBalance;
     private TextField tfCash;
     private Label txtDailySpend;
-    private Label txtAverageDailySpend;
+//    private Label txtAverageDailySpend;
     private CheckBox chkReviewed;
     private HBox corrections;
     private HBox hbLine;
@@ -101,8 +103,15 @@ public final class DailyBalanceControl extends VBox {
         setBalance(NumberFormat.getCurrencyInstance().format(dailyBalance.getTotalMoney()));
         dailyBalance.totalMoneyProperty().addListener(new IntegerToTextConverter(txtBalance.textProperty()));
         setCash(NumberFormat.getCurrencyInstance().format(dailyBalance.getCash()));
-        setDailySpend(NumberFormat.getCurrencyInstance().format(3000));
-        setAverageDailySpend(NumberFormat.getCurrencyInstance().format(5000));
+        if (dailyBalance.getDate().isEqual(LocalDate.of(2016, Month.OCTOBER, 3))) {
+            int i = 0;
+        }
+        if (dailyBalance.getPrevDailyBalance() != null) {
+            setDailySpend(NumberFormat.getCurrencyInstance().format(
+                    dailyBalance.getTotalMoney() - dailyBalance.getPrevDailyBalance().getTotalMoney() - dailyBalance.getTotalCorrections()
+            ));
+        }
+//        setAverageDailySpend(NumberFormat.getCurrencyInstance().format(5000));
         tfCash.focusedProperty().addListener((ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) -> {
             if (!newValue) {
                 try {
@@ -214,8 +223,8 @@ public final class DailyBalanceControl extends VBox {
         tfCash.setPrefWidth(100);
         txtDailySpend = new Label();
         txtDailySpend.setPrefWidth(100);
-        txtAverageDailySpend = new Label();
-        txtAverageDailySpend.setPrefWidth(100);
+//        txtAverageDailySpend = new Label();
+//        txtAverageDailySpend.setPrefWidth(100);
         btnAdd = new Button("+");       
         
         corrections = new HBox();
@@ -223,7 +232,7 @@ public final class DailyBalanceControl extends VBox {
         HBox.setMargin(corrections, new Insets(0, 0, 0, 20));
         
         hbLine = new HBox();
-        hbLine.getChildren().addAll(txtDate, txtBalance, tfCash, txtDailySpend, txtAverageDailySpend, btnAdd, corrections);        
+        hbLine.getChildren().addAll(txtDate, txtBalance, tfCash, txtDailySpend, btnAdd, corrections);        
         bp.setCenter(hbLine);
         
         HBox rightContext = new HBox();
@@ -269,9 +278,9 @@ public final class DailyBalanceControl extends VBox {
     public final void setDailySpend(String value) { dailySpendProperty().set(value); }
     public StringProperty dailySpendProperty() { return txtDailySpend.textProperty(); }
 
-    public String getAverageDailySpend() { return averageDailySpendProperty().get(); }
-    public final void setAverageDailySpend(String value) { averageDailySpendProperty().set(value); }
-    public StringProperty averageDailySpendProperty() { return txtAverageDailySpend.textProperty(); }
+//    public String getAverageDailySpend() { return averageDailySpendProperty().get(); }
+//    public final void setAverageDailySpend(String value) { averageDailySpendProperty().set(value); }
+//    public StringProperty averageDailySpendProperty() { return txtAverageDailySpend.textProperty(); }
     
     @FXML
     protected void addCorrection(ActionEvent event) {
@@ -293,6 +302,9 @@ public final class DailyBalanceControl extends VBox {
             if (controller.isOkClicked()) {
                 dailyBalance.getCorrections().add(newCorrection);
                 loadCorrections();           
+                setDailySpend(NumberFormat.getCurrencyInstance().format(
+                        dailyBalance.getTotalMoney() - dailyBalance.getPrevDailyBalance().getTotalMoney() - dailyBalance.getTotalCorrections()
+                ));
                 DataManager.getInstance().calculatePredictions();
             }
         } catch (IOException | NotEnoughPastDataException ex) {
@@ -303,7 +315,10 @@ public final class DailyBalanceControl extends VBox {
     public void removeCorrection(Correction correction) {
         try {
             dailyBalance.getCorrections().remove(correction);
-            loadCorrections();
+            loadCorrections();         
+            setDailySpend(NumberFormat.getCurrencyInstance().format(
+                    dailyBalance.getTotalMoney() - dailyBalance.getPrevDailyBalance().getTotalMoney() - dailyBalance.getTotalCorrections()
+            ));
             DataManager.getInstance().calculatePredictions();
         } catch (NotEnoughPastDataException | IOException ex) {
             Logger.getLogger(DailyBalanceControl.class.getName()).log(Level.SEVERE, null, ex);

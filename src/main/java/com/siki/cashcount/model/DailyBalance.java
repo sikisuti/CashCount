@@ -20,6 +20,10 @@ import javafx.collections.ObservableList;
  * @author tamas.siklosi
  */
 public final class DailyBalance {
+    private DailyBalance prevDailyBalance;
+    public void setPrevDailyBalance(DailyBalance prevDailyBalance) { this.prevDailyBalance = prevDailyBalance; }
+    public DailyBalance getPrevDailyBalance() { return prevDailyBalance; }
+    
     private final ObjectProperty date;
     public LocalDate getDate() { return (LocalDate)date.get(); }
     public void setDate(LocalDate date) { this.date.set(date); }
@@ -94,6 +98,7 @@ public final class DailyBalance {
     
     private DailyBalance(Builder builder) {
         this();
+        setPrevDailyBalance(builder.prevDailyBalance);
         setDate(builder.date);
         setBalance(builder.balance == null ? 0 : builder.balance);
         setCash(builder.cash == null ? 0 : builder.cash);
@@ -135,12 +140,18 @@ public final class DailyBalance {
     }
     
     public static class Builder {
+        DailyBalance prevDailyBalance;
         LocalDate date;
         Integer balance;
         Integer cash;
         Boolean predicted;
         Boolean reviewed;
 //        Integer predictedBalance;
+
+        public Builder setPrevDailyBalance(DailyBalance prevDailyBalance) {
+            this.prevDailyBalance = prevDailyBalance;
+            return this;
+        }
 
         public Builder setDate(LocalDate date) {
             this.date = date;
