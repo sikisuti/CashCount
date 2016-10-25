@@ -14,7 +14,7 @@
 {"field":"Közlemény","pattern":"Siklósi Tamás közös költség","category":"Weiner rezsi","subCategory":"Közös költség"}
 {"field":"Közlemény","pattern":"Decathlon","category":"Kártyás vásárlás","subCategory":"Sport"}
 {"field":"Forgalomtípus","pattern":"KP.FELVÉT/-BEFIZ. DÍJA","category":"Banki költség","subCategory":"Készpénz felvét / Befizetés díja"}
-{"field":"Forgalomtípus","pattern":"Készpénzfelvét","category":"Banki költség","subCategory":"Készpénzfelvét"}
+{"field":"Forgalomtípus","pattern":"Készpénzfelvét","category":"Készpénzfelvét","subCategory":"Készpénzfelvét"}
 {"field":"Közlemény","pattern":"Dunaújváros Euro","category":"Kártyás vásárlás","subCategory":"Háztartás"}
 {"field":"Közlemény","pattern":"6998253001","category":"Hitel","subCategory":"Siki Fundamenta"}
 {"field":"Közlemény","pattern":"4372331601","category":"Hitel","subCategory":"Siki Fundamenta"}

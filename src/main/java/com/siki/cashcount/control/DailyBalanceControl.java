@@ -6,7 +6,6 @@
 package com.siki.cashcount.control;
 
 import com.siki.cashcount.NewCorrectionWindowController;
-import com.siki.cashcount.converter.IntegerToTextConverter;
 import com.siki.cashcount.data.DataManager;
 import com.siki.cashcount.exception.JsonDeserializeException;
 import com.siki.cashcount.exception.NotEnoughPastDataException;
@@ -16,16 +15,10 @@ import com.siki.cashcount.model.DailyBalance;
 import java.io.IOException;
 import java.text.NumberFormat;
 import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javafx.beans.binding.IntegerBinding;
-import javafx.beans.binding.NumberBinding;
-import javafx.beans.binding.StringBinding;
 import javafx.beans.property.StringProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -170,7 +163,7 @@ public final class DailyBalanceControl extends VBox {
             boolean success = false;
             if (db.hasContent(CorrectionControl.CORRECTION_DATA_FORMAT)) {
                 Correction data = (Correction)db.getContent(CorrectionControl.CORRECTION_DATA_FORMAT);
-                dailyBalance.getCorrections().add(data);                
+                dailyBalance.addCorrection(data);                
                 loadCorrections();
                 success = true;
             }

@@ -134,21 +134,21 @@ public final class DailyBalance {
     }
     
     public void addCorrection(Correction correction) {
+        corrections.add(correction);
         if (getPrevDailyBalance() != null) {
             setDailySpend(getTotalMoney() - getPrevDailyBalance().getTotalMoney() - getTotalCorrections());
         } else {
             setDailySpend(0);
         }
-        corrections.add(correction);
     }
     
     public void removeCorrection(Correction correction) {
+        corrections.remove(correction);
         if (getPrevDailyBalance() != null) {
             setDailySpend(getTotalMoney() - getPrevDailyBalance().getTotalMoney() - getTotalCorrections());
         } else {
             setDailySpend(0);
         }
-        corrections.remove(correction);
     }
     
     public ObservableList<Correction> getCorrections() {

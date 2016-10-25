@@ -334,7 +334,6 @@ public class MainWindowController implements Initializable {
     private void buildStatGrid( GridPane grid, TreeMap<LocalDate, TreeMap<String, Entry<Integer, String>>> data, List<String> keys) {
         int colCnt = 0;
             for (LocalDate date : data.keySet()) {
-//                int rowCnt = 0;
                 colCnt++;
                 
                 GridPane headerBg = new GridPane();
