@@ -182,12 +182,14 @@ public class MainWindowController implements Initializable {
                 String line;
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
                 List<AccountTransaction> newTransactions = new ArrayList<>();
+                long actId = DataManager.getInstance().getNextTransactionId();
 
                 while ((line = br.readLine()) != null) {      
                     line = line.replace("\"", "");
                     String[] elements = line.split(";");
 
                     AccountTransaction newTransaction = new AccountTransaction.Builder()
+                            .setId(actId++)
                             .setAmount(Integer.valueOf(elements[2]))
                             .setDate(LocalDate.parse(elements[4], formatter))
                             .setBalance(Integer.valueOf(elements[6]))
