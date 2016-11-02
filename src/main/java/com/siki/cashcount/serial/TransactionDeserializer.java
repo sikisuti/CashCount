@@ -23,6 +23,7 @@ public class TransactionDeserializer implements JsonDeserializer<AccountTransact
     public AccountTransaction deserialize(JsonElement je, Type type, JsonDeserializationContext jdc) throws JsonParseException {
         final JsonObject jsonObject = je.getAsJsonObject();
         
+        final Long id = jsonObject.has("id") ? jsonObject.get("id").getAsLong() : null;
         final String transactionType = jsonObject.get("type").getAsString();
         final Integer amount = jsonObject.get("amount").getAsInt();
         final Integer balance = jsonObject.get("balance").getAsInt();
@@ -38,6 +39,7 @@ public class TransactionDeserializer implements JsonDeserializer<AccountTransact
             subCategory = jsonObject.get("subCategory").getAsString();
         
         AccountTransaction tr = new AccountTransaction.Builder()
+                .setId(id)
                 .setTransactionType(transactionType)
                 .setAmount(amount)
                 .setBalance(balance)

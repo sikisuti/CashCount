@@ -26,6 +26,7 @@ public class CorrectionSerializer implements JsonSerializer<Correction> {
         jsonObject.addProperty("amount", c.getAmount());
         jsonObject.addProperty("comment", c.getComment());
         jsonObject.addProperty("type", c.getType());
+        jsonObject.addProperty("pairedTransactionId", c.getPairedTransaction() != null ? c.getPairedTransaction().getId() : null);
         
         return jsonObject;
     }

@@ -27,12 +27,14 @@ public class CorrectionDeserializer implements JsonDeserializer<Correction> {
         final Integer amount = jsonObject.get("amount").getAsInt();
         final String comment = jsonObject.get("comment").getAsString();
         final String correctionType = jsonObject.get("type").getAsString();
+        final Long pairedTransactionId = jsonObject.has("pairedTransactionId") ? jsonObject.get("pairedTransactionId").getAsLong() : null;
         
         Correction c = new Correction.Builder()
                 .setId(id)
                 .setAmount(amount)
                 .setComment(comment)
                 .setType(correctionType)
+                .setPairedTransactionId(pairedTransactionId)
                 .build();
         
         return c;

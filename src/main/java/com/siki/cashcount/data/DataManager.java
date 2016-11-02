@@ -42,6 +42,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
+import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
@@ -90,13 +91,13 @@ public class DataManager {
     
     private ObservableList<DailyBalance> dailyBalanceCache;
     private HashMap<LocalDate, Integer> weeklyAverages;
-    private List<String> correctionTypeCache;
     private List<SavingStore> savingCache;
     private TreeMap<LocalDate, HashMap<CashFlowSeriesEnum, ObservableList<Data<Date, Integer>>>> pastSeries;
     private TreeMap<LocalDate, LinkedHashMap<String, Integer>> pastDifferences;
     private ObservableList<MatchingRule> matchingRules;
     private ObservableList<String> categories = FXCollections.observableArrayList();
     private ObservableList<String> subCategories = FXCollections.observableArrayList();
+    private ObservableList<String> correctionTypes = FXCollections.observableArrayList();
     
     Gson gsonDeserializer;
     Gson gsonSerializer;
@@ -125,6 +126,16 @@ public class DataManager {
         if (dailyBalanceCache == null) {
             String dataPath = ConfigManager.getStringProperty("DataPath");
             dailyBalanceCache = loadDailyBalances(dataPath);
+        
+            List<Correction> cList = dailyBalanceCache.stream().flatMap(db -> db.getCorrections().stream()).collect(Collectors.toList());
+            for (Correction c : cList) {
+                if (c.getPairedTransactionId() != null) {
+                    AccountTransaction transaction = getTransactionById(c.getPairedTransactionId());
+                    transaction.addPairedCorrection(c);
+                    c.setPairedTransaction(transaction);
+                }
+            }
+            
             categorize();
         }
         
@@ -206,6 +217,10 @@ public class DataManager {
     
     //<editor-fold desc="Transaction metods" defaultstate="collapsed">
     
+    public Long getNextTransactionId() {
+        List<AccountTransaction> transactions = dailyBalanceCache.stream().flatMap(db -> db.getTransactions().stream()).collect(Collectors.toList());
+        return transactions.stream().mapToLong(c -> c.getId()).max().getAsLong() + 1;
+    }
     public Integer saveTransactions(List<AccountTransaction> newTransactions, boolean force) throws IOException, TransactionGapException, NotEnoughPastDataException, JsonDeserializeException {
         
         LocalDate nextDay = getAllDailyBalances().stream().filter(db -> db.isPredicted()).findFirst().get().getDate();
@@ -245,39 +260,15 @@ public class DataManager {
         System.out.println(newTransactions.size() + " transactions saved");
         return newTransactions.size();
     }
+    public AccountTransaction getTransactionById(Long id) {
+        Optional<AccountTransaction> rtn = dailyBalanceCache.stream().flatMap(db -> db.getTransactions().stream()).collect(Collectors.toList()).stream().filter(t -> t.getId().equals(id)).findFirst();
+        return rtn.isPresent() ? rtn.get() : null;
+    }
     
     //</editor-fold>
     
     //<editor-fold desc="Correction methods" defaultstate="collapsed">
     
-//    public List<String> getAllCorrectionType() throws IOException {
-//        if (correctionTypeCache == null) {
-//            correctionTypeCache = new ArrayList<>();
-//            String correctionTypesPath = ConfigManager.getStringProperty("CorrectionTypesPath");
-//            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(correctionTypesPath), "UTF-8"))) {
-//                String line;
-//                while ((line = br.readLine()) != null) {
-//                    correctionTypeCache.add(gsonDeserializer.fromJson(line, String.class));
-//                }
-//            } catch (IOException e) {
-//                correctionTypeCache = null;
-//                throw e;
-//            }
-//        }
-//        
-//        return correctionTypeCache;
-//    }    
-//    public void saveCorrectionTypes() throws IOException {
-//        String correctionTypesPath = ConfigManager.getStringProperty("CorrectionTypesPath");
-//        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(correctionTypesPath), "UTF-8"))) {
-//            for (int i = 0; i < correctionTypeCache.size(); i++) {
-//                bw.write(gsonSerializer.toJson(correctionTypeCache.get(i), String.class));
-//                if (i < correctionTypeCache.size() - 1) bw.write("\n");
-//            }
-//        } catch (IOException e) {
-//            throw e;
-//        }
-//    }
     public Long getNextCorrectionId() {
         List<Correction> corrections = dailyBalanceCache.stream().flatMap(db -> db.getCorrections().stream()).collect(Collectors.toList());
         return corrections.stream().mapToLong(c -> c.getId()).max().getAsLong() + 1;
@@ -587,6 +578,9 @@ public class DataManager {
     public ObservableList<String> getAllSubCategories() {
         return subCategories;
     }
+    public ObservableList<String> getAllCorrectionTypes() {
+        return correctionTypes;
+    }
     public void categorize() throws IOException, JsonDeserializeException {
         for (DailyBalance db : dailyBalanceCache) {
             for (AccountTransaction t : db.getTransactions()) {
@@ -610,9 +604,9 @@ public class DataManager {
             }
             
             for (Correction c : db.getCorrections()) {
-                if (!categories.contains(c.getType())) {
-                    categories.add(c.getType());
-                    FXCollections.sort(categories);
+                if (!correctionTypes.contains(c.getType())) {
+                    correctionTypes.add(c.getType());
+                    FXCollections.sort(correctionTypes);
                 }
             }
         }
@@ -636,10 +630,11 @@ public class DataManager {
             rtn.put(key, new AbstractMap.SimpleEntry<>(cList.get(key).stream().mapToInt(c -> c.getAmount()).sum(), String.join("\n", comments)));
         }
         
+        Integer allCorrections = rtn.values().stream().mapToInt(i -> i.getKey()).sum();
         if (previousBalance != null)
             rtn.put(DataManager.GENERAL_TEXT, 
-                    new AbstractMap.SimpleEntry<>(dailyBalancesOfMonth.get(dailyBalancesOfMonth.size() - 1).getTotalMoney() - previousBalance - rtn.values().stream().mapToInt(i -> i.getKey()).sum(), 
-                            ""));
+                    new AbstractMap.SimpleEntry<>(dailyBalancesOfMonth.get(dailyBalancesOfMonth.size() - 1).getTotalMoney() - previousBalance - allCorrections, 
+                            "Máshová nem sorolható költések"));
         
         return rtn;
     }
@@ -650,7 +645,7 @@ public class DataManager {
         List<DailyBalance> dailyBalancesOfMonth = dailyBalanceCache.stream().filter(db -> db.getDate().getYear() == year && db.getDate().getMonth() == month).collect(Collectors.toList());
         
         Map<String, List<AccountTransaction>> tList = 
-                dailyBalancesOfMonth.stream().flatMap(db -> db.getTransactions().stream()).collect(Collectors.groupingBy(t -> 
+                dailyBalancesOfMonth.stream().flatMap(db -> db.getTransactions().stream()).filter(t -> (!t.isPaired() || (t.isPaired() && t.getNotPairedAmount()!= 0)) && !t.getCategory().equals("Banki költség") && !t.getCategory().equals("Készpénzfelvét")).collect(Collectors.groupingBy(t -> 
                         (t.getSubCategory() != null ? "  -- " + t.getSubCategory() : "null")));
         
         List<AccountTransaction> bankExpenses = dailyBalancesOfMonth.stream().flatMap(db -> db.getTransactions().stream()).filter(t -> t.getCategory().equals("Banki költség")).collect(Collectors.toList());
@@ -658,14 +653,28 @@ public class DataManager {
             tList.put("  -- Banki költség", bankExpenses);
         
         List<String> ConsideredCategories = Arrays.asList(ConfigManager.getStringProperty("ConsideredCategories").split(","));
-        List<AccountTransaction> remaining = dailyBalancesOfMonth.stream().flatMap(db -> db.getTransactions().stream())
-                .filter(t -> t.getCategory().equals("Kártyás vásárlás") && !ConsideredCategories.contains(t.getSubCategory())).collect(Collectors.toList());
-        if (remaining.size() > 0)
-            tList.put("  -- Maradék", remaining);
+        tList.put("  -- Maradék", new ArrayList<AccountTransaction>());
+        List<String> keysToDelete = new ArrayList<>();
+        for (String key : tList.keySet()) {
+            if (!ConsideredCategories.contains(key) && !key.equals("  -- Maradék") ) {
+                tList.get("  -- Maradék").addAll(tList.get(key));
+                keysToDelete.add(key);
+            }
+        }
+        if (tList.get("  -- Maradék").stream().mapToInt(t -> t.getNotPairedAmount()).sum() == 0){
+            keysToDelete.add("  -- Maradék");
+        }
+        for (String key : keysToDelete) {
+            tList.remove(key);
+        }
+//        List<AccountTransaction> remaining = dailyBalancesOfMonth.stream().flatMap(db -> db.getTransactions().stream())
+//                .filter(t -> t.getCategory().equals("Kártyás vásárlás") && !ConsideredCategories.contains(t.getSubCategory())).collect(Collectors.toList());
+//        if (remaining.size() > 0)
+//            tList.put("  -- Maradék", remaining);
         
         for (String key : tList.keySet()) {
-            List<String> comments = tList.get(key).stream().map(c -> c.getTransactionType() + " - " + c.getComment()).distinct().collect(Collectors.toList());
-            rtn.put(key, new AbstractMap.SimpleEntry<>(tList.get(key).stream().mapToInt(c -> c.getAmount()).sum(), String.join("\n", comments)));
+            List<String> comments = tList.get(key).stream().map(c -> NumberFormat.getCurrencyInstance().format(c.getAmount()) + " " + c.getTransactionType() + " - " + c.getComment()).distinct().collect(Collectors.toList());
+            rtn.put(key, new AbstractMap.SimpleEntry<>(tList.get(key).stream().mapToInt(t -> t.getNotPairedAmount()).sum(), String.join("\n", comments)));
         }
         
         return rtn;

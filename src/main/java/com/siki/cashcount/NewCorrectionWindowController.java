@@ -17,13 +17,17 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 import javafx.util.converter.NumberStringConverter;
 
 /**
@@ -34,6 +38,7 @@ import javafx.util.converter.NumberStringConverter;
 public class NewCorrectionWindowController implements Initializable {
     Correction correction;
     DailyBalanceControl dailyBalanceControl;
+//    AccountTransaction pairedTransaction;
     
     private Stage dialogStage;
     private boolean okClicked = false;
@@ -52,7 +57,7 @@ public class NewCorrectionWindowController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         tfAmount.setTextFormatter(new TextFormatter<>(new NumberStringConverter()));
             
-        cbType.setItems(DataManager.getInstance().getAllCategories());
+        cbType.setItems(DataManager.getInstance().getAllCorrectionTypes());
     }    
     
     public void setContext(Correction correction, DailyBalanceControl dbControl) {
@@ -62,6 +67,7 @@ public class NewCorrectionWindowController implements Initializable {
         
         this.correction = correction;
         this.dailyBalanceControl = dbControl;
+//        this.pairedTransaction = correction.getPairedTransaction();
         
         prepareTable();
         try {
@@ -85,7 +91,17 @@ public class NewCorrectionWindowController implements Initializable {
             row.setOnMouseClicked(event -> {
                 if (event.getClickCount() == 2 && (! row.isEmpty()) ) {
                     AccountTransaction rowData = row.getItem();
+                    correction.setAmount(rowData.getAmount());
                     tfAmount.setText(rowData.getAmount().toString());
+                    if (correction.getPairedTransaction() != null && correction.getPairedTransaction() != rowData) {
+                        correction.getPairedTransaction().removePairedCorrection(correction);
+                    }
+                    if (rowData != null && correction.getPairedTransaction() != rowData) {
+                        rowData.addPairedCorrection(correction);
+                        correction.setPairedTransaction(rowData);
+                    } else {
+                        correction.setPairedTransaction(null);
+                    }
                 }
             });
             return row ;
@@ -107,7 +123,30 @@ public class NewCorrectionWindowController implements Initializable {
         commentCol.setCellValueFactory(new PropertyValueFactory<>("comment"));
 //        TableColumn<AccountTransaction, String> counterCol = new TableColumn<>("?");
 //        counterCol.setCellValueFactory(new PropertyValueFactory<>("counter"));    
-        tblTransactions.getColumns().setAll(transactionTypeCol, amountCol, ownerCol, commentCol);    
+        TableColumn<AccountTransaction, Boolean> isPairedCol = new TableColumn<>("Párosítva");
+        isPairedCol.setCellValueFactory(new PropertyValueFactory<>("paired"));
+        isPairedCol.setCellFactory(new Callback<TableColumn<AccountTransaction, Boolean>, TableCell<AccountTransaction, Boolean>>() {
+            @Override
+            public TableCell<AccountTransaction, Boolean> call(TableColumn<AccountTransaction, Boolean> param) {
+                return new TableCell<AccountTransaction, Boolean>(){
+                    {
+                    }
+                    
+                    @Override
+                    protected void updateItem(Boolean item, boolean empty) {
+                        super.updateItem(item, empty);
+                        
+                        if (empty || !item) {
+                            setText(null);
+                            setGraphic(null);
+                        } else {
+                            setGraphic(new Circle(10, new Color(0, 0, 1, 1)));
+                        }
+                    }
+                };
+            }
+        });
+        tblTransactions.getColumns().setAll(transactionTypeCol, amountCol, isPairedCol, ownerCol, commentCol);    
     }    
     
     @FXML
@@ -117,15 +156,6 @@ public class NewCorrectionWindowController implements Initializable {
         correction.setComment(tfComment.getText());
         
         okClicked = true;
-        
-//        try {
-//            if (!DataManager.getInstance().getAllCorrectionType().contains(cbType.getValue())) {
-//                DataManager.getInstance().getAllCorrectionType().add(cbType.getValue());
-//                DataManager.getInstance().saveCorrectionTypes();
-//            }
-//        } catch (IOException ex) {
-//            Logger.getLogger(NewCorrectionWindowController.class.getName()).log(Level.SEVERE, null, ex);
-//        }
         
         dialogStage.close();
     }
@@ -137,7 +167,20 @@ public class NewCorrectionWindowController implements Initializable {
     
     @FXML
     protected void doRemove(ActionEvent event) {
+        if (correction.getPairedTransaction() != null) {
+            correction.getPairedTransaction().removePairedCorrection(correction);
+        }
         dailyBalanceControl.removeCorrection(correction);
         dialogStage.close();
+    }
+    
+    @FXML
+    protected void doRemovePair(ActionEvent event) {
+        if (correction.getPairedTransaction() != null) {
+            correction.getPairedTransaction().removePairedCorrection(correction);
+        }
+        correction.setPairedTransaction(null);
+        correction.setPairedTransactionId(null);
+//        pairedTransaction = null;
     }
 }

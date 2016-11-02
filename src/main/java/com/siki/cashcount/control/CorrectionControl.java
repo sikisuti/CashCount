@@ -30,6 +30,7 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.GridPane;
+import javafx.scene.shape.Circle;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -43,6 +44,7 @@ public class CorrectionControl extends GridPane {
     
     @FXML private Label txtType;
     @FXML private Text txtAmount;
+    @FXML private Circle cirPaired;
     
     private final Correction correction;
     private final DailyBalanceControl parent;
@@ -56,11 +58,14 @@ public class CorrectionControl extends GridPane {
         setDragAndDrop();        
         loadUI();
                 
-        txtType.setTooltip(new Tooltip("abc"));
         txtType.textProperty().bind(correction.commentProperty());
+        Tooltip tt = new Tooltip();
+        tt.textProperty().bind(txtType.textProperty());
+        txtType.setTooltip(tt);
         txtAmount.textProperty().set(NumberFormat.getCurrencyInstance().format(correction.getAmount()));
         correction.amountProperty().addListener(new IntegerToTextConverter(txtAmount.textProperty()));
         //txtAmount.textProperty().bind(Bindings.convert(correction.amountProperty()));
+        cirPaired.visibleProperty().bind(correction.pairedProperty());
         
         CorrectionSelection.getInstance().selectedCategoryProperty().addListener((ObservableValue<? extends String> observable, String oldValue, String newValue) -> {
             if (newValue.equals(correction.getType())) {

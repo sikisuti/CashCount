@@ -13,9 +13,9 @@
             <columnConstraints>
                 <ColumnConstraints />
                 <ColumnConstraints />
+                <ColumnConstraints />
             </columnConstraints>
             <rowConstraints>
-                <RowConstraints />
                 <RowConstraints />
                 <RowConstraints />
                 <RowConstraints />
@@ -27,6 +27,7 @@
                 <TextField fx:id="tfAmount" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                 <Label  text="Megjegyzés" GridPane.columnIndex="0" GridPane.rowIndex="2" />   
                 <TextField  fx:id="tfComment" GridPane.columnIndex="1" GridPane.rowIndex="2" />  
+                <Button fx:id="btnRemovePair" GridPane.columnIndex="3" GridPane.rowSpan="3" text="Párosítás törlése"  onAction="#doRemovePair" /> 
             </children>
         </GridPane> 
         <TableView fx:id="tblTransactions" prefWidth="1000" prefHeight="300" />

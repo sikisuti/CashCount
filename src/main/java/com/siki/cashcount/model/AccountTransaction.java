@@ -5,10 +5,18 @@
  */
 package com.siki.cashcount.model;
 
+import com.siki.cashcount.data.DataManager;
 import java.time.*;
+import java.util.ArrayList;
+import java.util.List;
 import javafx.beans.property.*;
 
 public final class AccountTransaction {
+    
+    private Long id;
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    
     private final StringProperty transactionType;    
     public String getTransactionType() { return transactionType.get(); }
     public void setTransactionType(String transactionType) { this.transactionType.set(transactionType); }
@@ -58,6 +66,28 @@ public final class AccountTransaction {
     public String getSubCategory() { return subCategory.get(); }
     public void setSubCategory(String subCategory) { this.subCategory.set(subCategory); }
     public StringProperty subCategoryProperty() { return subCategory; }
+        
+    private BooleanProperty paired;
+    public Boolean isPaired() { return paired.get(); }
+    public void setPaired(Boolean value) { this.paired.set(value); }
+    public BooleanProperty pairedProperty() { return paired; }
+    
+    private List<Correction> pairedCorrections;
+    public void addPairedCorrection(Correction correction) { 
+        if (!pairedCorrections.contains(correction)) {
+            pairedCorrections.add(correction);
+        }
+        setPaired(true);
+    }
+    public void removePairedCorrection(Correction correction) {
+        if (pairedCorrections.contains(correction)) {
+            pairedCorrections.remove(correction);
+        }
+        if (pairedCorrections.size() == 0) setPaired(false);
+    }
+    public Integer getNotPairedAmount() {
+        return getAmount() - pairedCorrections.stream().mapToInt(pc -> pc.getAmount()).sum();
+    }
 
     public AccountTransaction() {
         this.transactionType = new SimpleStringProperty();
@@ -69,11 +99,14 @@ public final class AccountTransaction {
         this.comment = new SimpleStringProperty();
         this.counter = new SimpleStringProperty();     
         this.category = new SimpleStringProperty();
-        this.subCategory = new SimpleStringProperty();      
+        this.subCategory = new SimpleStringProperty();   
+        this.pairedCorrections = new ArrayList<>();
+        this.paired = new SimpleBooleanProperty();
     }
     
     private AccountTransaction(Builder builder) {
         this();
+        this.id = builder.id == null ? DataManager.getInstance().getNextTransactionId() : builder.id;
         setTransactionType(builder.transactionType);
         setDate(builder.date);
         setAmount(builder.amount);
@@ -87,6 +120,7 @@ public final class AccountTransaction {
     }
     
     public static class Builder {
+        Long id;
         String transactionType;
         LocalDate date;
         Integer amount;
@@ -97,6 +131,11 @@ public final class AccountTransaction {
         String counter;
         String category;
         String subCategory;
+        
+        public Builder setId(Long id) {
+            this.id = id;
+            return this;
+        }
         
         public Builder setAmount(Integer amount) {
             this.amount = amount;
@@ -158,6 +197,7 @@ public final class AccountTransaction {
         AccountTransaction other = (AccountTransaction)obj;
         
         boolean rtn = 
+                this.getId().equals(other.getId()) &&
                 this.getTransactionType().equals(other.getTransactionType()) &&
                 this.getAmount().equals(other.getAmount()) &&
                 this.getBalance().equals(other.getBalance()) &&

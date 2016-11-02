@@ -6,6 +6,7 @@
 <?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
 <?import javafx.scene.text.*?>
 
 <fx:root fx:id="root" type="javafx.scene.layout.GridPane" minWidth="100" maxWidth="100" GridPane.hgrow="NEVER" onMouseClicked="#doModify" styleClass="mainFxmlClass" xmlns:fx="http://javafx.com/fxml">
@@ -18,8 +19,9 @@
         <RowConstraints />
     </rowConstraints>
     
-    <Label fx:id="txtType" GridPane.columnIndex="0" GridPane.rowIndex="0" maxWidth="100"  />
+    <Label fx:id="txtType" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2"  />
     <Text fx:id="txtAmount" GridPane.columnIndex="0" GridPane.rowIndex="1" /> 
+    <Circle fx:id="cirPaired" radius="5" fill="blue" GridPane.columnIndex="1" GridPane.rowIndex="1" />    
     
     <stylesheets>
         <URL value="@/styles/correctioncontrol.css"/>

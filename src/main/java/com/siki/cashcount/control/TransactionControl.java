@@ -21,6 +21,7 @@ import javafx.scene.layout.BorderWidths;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 
 /**
  *
@@ -44,6 +45,8 @@ public class TransactionControl extends GridPane {
             Label lblType = new Label(t.getTransactionType());
             Label lblAmount = new Label(NumberFormat.getCurrencyInstance().format(t.getAmount()));
             Label lblOwner = new Label(t.getOwner());
+            Circle isPaired = new Circle(10, new Color(0, 0, 1, 1));
+            isPaired.visibleProperty().bind(t.pairedProperty());
             Label lblComment = new Label(t.getComment());
             ComboBox cbCategory = new ComboBox();
             cbCategory.setEditable(true);
@@ -71,11 +74,12 @@ public class TransactionControl extends GridPane {
             GridPane.setConstraints(lblType, 0, rowCnt);
             GridPane.setConstraints(lblAmount, 1, rowCnt);
             GridPane.setConstraints(lblOwner, 2, rowCnt);
-            GridPane.setConstraints(lblComment, 3, rowCnt);
-            GridPane.setConstraints(cbCategory, 4, rowCnt);
-            GridPane.setConstraints(cbSubCategory, 5, rowCnt);
+            GridPane.setConstraints(isPaired, 3, rowCnt);
+            GridPane.setConstraints(lblComment, 4, rowCnt);
+            GridPane.setConstraints(cbCategory, 5, rowCnt);
+            GridPane.setConstraints(cbSubCategory, 6, rowCnt);
         
-            this.getChildren().addAll(lblType, lblAmount, lblOwner, lblComment, cbCategory, cbSubCategory);        
+            this.getChildren().addAll(lblType, lblAmount, lblOwner, isPaired, lblComment, cbCategory, cbSubCategory);        
         }
         
         this.setStyle("-fx-background-color: white;");

@@ -311,6 +311,15 @@ public class MainWindowController implements Initializable {
                 
                 TreeMap<String, Entry<Integer, String>> monthCorrectionData = DataManager.getInstance().getStatisticsFromCorrections(entry.getPeriod().getYear(), entry.getPeriod().getMonth());
                 TreeMap<String, Entry<Integer, String>> monthTransactionData = DataManager.getInstance().getStatisticsFromTransactions(entry.getPeriod().getYear(), entry.getPeriod().getMonth());
+                Integer allTransactionAmount = 0;
+                for (String key : monthTransactionData.keySet()) {
+                    allTransactionAmount += monthTransactionData.get(key).getKey();
+                }
+                if (monthCorrectionData.containsKey(DataManager.GENERAL_TEXT) && LocalDate.of(entry.getPeriod().getYear(), entry.getPeriod().getMonthValue(), 1).isBefore(LocalDate.now().withDayOfMonth(1))) {
+                    Integer cashSpent = monthCorrectionData.get(DataManager.GENERAL_TEXT).getKey() - allTransactionAmount;
+                    if (cashSpent != 0)
+                        monthTransactionData.put("  -- Készpénzköltés", new AbstractMap.SimpleEntry<>(cashSpent, "Költés készpénzből"));
+                }
                 monthCorrectionData.putAll(monthTransactionData);
                 data.put(entry.getPeriod(), monthCorrectionData);
                 for (String key : monthCorrectionData.keySet()) {

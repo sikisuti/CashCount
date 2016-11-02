@@ -10,7 +10,9 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -43,19 +45,32 @@ public class Correction implements Externalizable {
     private DailyBalance dailyBalance;
     public DailyBalance getDailyBalance() { return dailyBalance; }
     public void setDailyBalance(DailyBalance dailyBalance) { this.dailyBalance = dailyBalance; }
+        
+    private BooleanProperty paired;
+    public Boolean isPaired() { return paired.get(); }
+    public void setPaired(Boolean value) { this.paired.set(value); }
+    public BooleanProperty pairedProperty() { return paired; }
+    
+    private Long pairedTransactionId;
+    public void setPairedTransactionId(Long value) { pairedTransactionId = value; }
+    public Long getPairedTransactionId() { return pairedTransactionId; }
+    
+    private AccountTransaction pairedTransaction;
+    public void setPairedTransaction(AccountTransaction transaction) {
+        pairedTransaction = transaction;
+        setPaired(transaction != null ? true : false);
+        setPairedTransactionId(transaction != null ? transaction.getId() : null);
+    }
+    public AccountTransaction getPairedTransaction() {
+        return pairedTransaction;
+    }
 
     public Correction() {
         this.amount = new SimpleIntegerProperty();
         this.comment = new SimpleStringProperty();
         this.type = new SimpleStringProperty();
+        this.paired = new SimpleBooleanProperty();
     }
-
-//    public Correction(String type, Integer amount, String comment) {
-//        this();
-//        this.type.set(type);
-//        this.amount.set(amount);
-//        this.comment.set(comment);
-//    }
     
     private Correction(Builder builder) {
         this();
@@ -64,6 +79,7 @@ public class Correction implements Externalizable {
         this.amount.set(builder.amount);
         this.comment.set(builder.comment);
         this.dailyBalance = builder.dailyBalance;
+        setPairedTransactionId(builder.pairedTransactionId);
     }
 
     @Override
@@ -88,6 +104,7 @@ public class Correction implements Externalizable {
         String comment;
         String type;
         DailyBalance dailyBalance;
+        Long pairedTransactionId;
         
         public Builder setId(Long id) {
             this.id = id;
@@ -114,6 +131,11 @@ public class Correction implements Externalizable {
             return this;
         }
         
+        public Builder setPairedTransactionId(Long id) {
+            this.pairedTransactionId = id;
+            return this;
+        }
+        
         public Correction build() {
             return new Correction(this);
         }
@@ -123,11 +145,16 @@ public class Correction implements Externalizable {
     public boolean equals(Object obj) {
         Correction other = (Correction)obj;
         
-        return 
+        boolean rtn =
                 this.getId().equals(other.getId()) &&
                 this.getType().equals(other.getType()) &&
                 this.getAmount().equals(other.getAmount()) &&
-                this.getComment().equals(other.getComment());
+                this.getComment().equals(other.getComment()) &&
+                (this.getPairedTransactionId() == null ? 
+                    (other.getPairedTransactionId() == null ? true : false) : 
+                    (this.getPairedTransactionId().equals(other.getPairedTransactionId())));
+        
+        return rtn;
     }
     
     
