@@ -295,6 +295,35 @@ public class MainWindowController implements Initializable {
     }
     
     @FXML
+    private void loadPredictedCorrections(ActionEvent event) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Válaszd ki a korrekciós fájlt");
+        fileChooser.getExtensionFilters().addAll(new ExtensionFilter("json files", "*.jsn"), new ExtensionFilter("Minden fájl", "*.*"));
+        File selectedFile = fileChooser.showOpenDialog(PageFrame.getScene().getWindow());
+        if (selectedFile != null) {
+            List<PredictedCorrection> pcList;
+            try {
+                pcList = DataManager.getInstance().loadPredictedCorrection(selectedFile.getAbsolutePath());
+                DataManager.getInstance().clearPredictedCorrections();
+                DataManager.getInstance().fillPredictedCorrections(pcList);
+                prepareDailyBalances();
+            } catch (IOException ex) {
+                Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (JsonDeserializeException ex) {
+                Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (NotEnoughPastDataException ex) {
+                Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+                Alert alert = new Alert(AlertType.INFORMATION);
+                alert.setTitle("Üzenet");
+                alert.setHeaderText("So far so good :)");
+                alert.setContentText("Eddig jó!");
+                alert.showAndWait();
+        }
+    }
+    
+    @FXML
     private void refreshStatistics(Event event) {
         if (((Tab)(event.getSource())).isSelected()) {
             refreshStatistics();

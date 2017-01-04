@@ -20,6 +20,9 @@
                 <MenuItem text="Importálás" onAction="#doImport"  /> 
                 <MenuItem text="Kategóriák" onAction="#categories"  /> 
             </Menu> 
+            <Menu text="Korrekciók">
+                <MenuItem text="Betöltés" onAction="#loadPredictedCorrections" />  
+            </Menu>
         </MenuBar>
     </top>
     <center>

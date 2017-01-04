@@ -19,11 +19,13 @@ import com.siki.cashcount.model.AccountTransaction;
 import com.siki.cashcount.model.Correction;
 import com.siki.cashcount.model.DailyBalance;
 import com.siki.cashcount.model.MatchingRule;
+import com.siki.cashcount.model.PredictedCorrection;
 import com.siki.cashcount.model.SavingStore;
 import com.siki.cashcount.serial.CorrectionDeserializer;
 import com.siki.cashcount.serial.CorrectionSerializer;
 import com.siki.cashcount.serial.DailyBalanceDeserializer;
 import com.siki.cashcount.serial.DailyBalanceSerialiser;
+import com.siki.cashcount.serial.PredictedCorrectionDeserializer;
 import com.siki.cashcount.serial.SavingStoreDeserializer;
 import com.siki.cashcount.serial.SavingStoreSerializer;
 import com.siki.cashcount.serial.TransactionDeserializer;
@@ -110,6 +112,7 @@ public class DataManager {
         gsonBuilder.registerTypeAdapter(AccountTransaction.class, new TransactionDeserializer());
         gsonBuilder.registerTypeAdapter(Correction.class, new CorrectionDeserializer());
         gsonBuilder.registerTypeAdapter(SavingStore.class, new SavingStoreDeserializer());
+        gsonBuilder.registerTypeAdapter(PredictedCorrection.class, new PredictedCorrectionDeserializer());
         gsonDeserializer = gsonBuilder.create();
         
         gsonBuilder = new GsonBuilder();
@@ -183,9 +186,11 @@ public class DataManager {
         // fill the possible date gaps
         while (!getLastDailyBalance().getDate().equals(date)) {
             newDb = new DailyBalance.Builder()
-                    .setDate(date)
+                    .setPrevDailyBalance(getLastDailyBalance())
+                    .setDate(getLastDailyBalance().getDate().plusDays(1))
                     .setBalance(getLastDailyBalance().getTotalMoney() + getDayAverage(getLastDailyBalance().getDate().plusDays(1)))
                     .setPredicted(Boolean.TRUE)
+                    .setReviewed(Boolean.FALSE)
                     //.setPredictedBalance(getLastDailyBalance().getPredictedBalance() + getDayAverage(date) + getLastDailyBalance().getTotalCorrections())
                     .build();
             
@@ -678,6 +683,53 @@ public class DataManager {
         }
         
         return rtn;
+    }
+    
+    //</editor-fold>
+    
+    //<editor-fold desc="Predicted corrections" defaultstate="collapsed">
+    
+    public List<PredictedCorrection> loadPredictedCorrection(String path) throws IOException, JsonDeserializeException {
+        List<PredictedCorrection> pcList = new ArrayList<>();
+        int lineCnt = 0;
+        
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(path), "UTF-8"))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                lineCnt++;
+                pcList.add(gsonDeserializer.fromJson(line, PredictedCorrection.class));
+            }
+        } catch (IOException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new JsonDeserializeException(lineCnt, e);
+        }
+        
+        return pcList;
+    }
+    
+    public void clearPredictedCorrections() throws NotEnoughPastDataException, IOException, JsonDeserializeException {
+        dailyBalanceCache.stream().filter(db -> db.isPredicted() && db.getDate().isAfter(LocalDate.now().plusMonths(1))).forEach(db -> { db.getCorrections().clear(); });
+        getOrCreateDailyBalance(LocalDate.now().plusYears(1));
+        calculatePredictions();
+    }
+    
+    public void fillPredictedCorrections(List<PredictedCorrection> predictedCorrections) throws NotEnoughPastDataException, IOException {
+        
+        predictedCorrections.forEach(pc -> {
+            if (pc.getDayOfWeek() != null) {
+                dailyBalanceCache.stream().filter(db -> db.getDate().isAfter(LocalDate.now().plusMonths(1)) && db.getDate().getDayOfWeek().equals(pc.getDayOfWeek())).forEach(db -> {
+                    db.addCorrection(new Correction.Builder()
+                            .setType(pc.getCategory())
+                            .setComment(pc.getSubCategory())
+                            .setAmount(pc.getAmount())
+                            .setDailyBalance(db)
+                            .build()
+                    );
+                });
+            }
+        });
+        calculatePredictions();
     }
     
     //</editor-fold>
