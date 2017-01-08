@@ -24,8 +24,11 @@ public class PredictedCorrection {
     private DayOfWeek dayOfWeek;
     public DayOfWeek getDayOfWeek() { return dayOfWeek; }
     
-    private MonthAndDay monthAndDay;
-    public MonthAndDay getMonthAndDay() { return monthAndDay; }
+    private Month month;
+    public Month getMonth() { return month; }
+    
+    private Integer monthDay;
+    public Integer getMonthDay() { return monthDay; }
     
     private Integer day;
     public Integer getDay() { return day; }
@@ -43,7 +46,8 @@ public class PredictedCorrection {
         this.category = builder.category;
         this.subCategory = builder.subCategory;
         this.dayOfWeek = builder.dayOfWeek;
-        this.monthAndDay = builder.month != null ? new MonthAndDay(builder.month, builder.monthDay) : null;
+        this.month = builder.month;
+        this.monthDay = builder.monthDay;
         this.day = builder.day;
         this.startDate = builder.startDate;
         this.endDate = builder.endDate;
@@ -52,7 +56,9 @@ public class PredictedCorrection {
     
     private class MonthAndDay {
         private Month month;
+        public Month getMonth() { return month; }
         private Integer day;
+        public Integer getDay() { return day; }
         
         private MonthAndDay(Month month, Integer day) {
             this.month = month;

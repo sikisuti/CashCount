@@ -67,6 +67,7 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.chart.XYChart;
@@ -697,6 +698,7 @@ public class DataManager {
             String line;
             while ((line = br.readLine()) != null) {
                 lineCnt++;
+                if (line.startsWith("#") || line.trim().isEmpty()) { continue; }
                 pcList.add(gsonDeserializer.fromJson(line, PredictedCorrection.class));
             }
         } catch (IOException e) {
@@ -716,9 +718,15 @@ public class DataManager {
     
     public void fillPredictedCorrections(List<PredictedCorrection> predictedCorrections) throws NotEnoughPastDataException, IOException {
         
+        List<DailyBalance> dbList = dailyBalanceCache.stream().filter(db -> db.getDate().isAfter(LocalDate.now().plusMonths(1))).collect(Collectors.toList());
+        
         predictedCorrections.forEach(pc -> {
+            List<DailyBalance> dbSchedList = dbList;
+            if (pc.getStartDate() != null) { dbSchedList = dbSchedList.stream().filter(db -> db.getDate().isAfter(pc.getStartDate())).collect(Collectors.toList()); }
+            if (pc.getEndDate() != null) { dbSchedList = dbSchedList.stream().filter(db -> db.getDate().isBefore(pc.getEndDate())).collect(Collectors.toList()); }
+            
             if (pc.getDayOfWeek() != null) {
-                dailyBalanceCache.stream().filter(db -> db.getDate().isAfter(LocalDate.now().plusMonths(1)) && db.getDate().getDayOfWeek().equals(pc.getDayOfWeek())).forEach(db -> {
+                dbSchedList.stream().filter(db -> db.getDate().getDayOfWeek().equals(pc.getDayOfWeek())).forEach(db -> {
                     db.addCorrection(new Correction.Builder()
                             .setType(pc.getCategory())
                             .setComment(pc.getSubCategory())
@@ -727,6 +735,38 @@ public class DataManager {
                             .build()
                     );
                 });
+            } else if (pc.getDay() != null) {
+                boolean found = false;
+                for (int i = dbSchedList.size() - 1; i >= 0; i--) {
+                    if (dbSchedList.get(i).getDate().getDayOfMonth() == pc.getDay()) {
+                        found = true;
+                    }
+                    if (dbSchedList.get(i).getDate().getDayOfWeek().getValue() >= 1 && dbSchedList.get(i).getDate().getDayOfWeek().getValue() <= 5 && found) {
+                        dbSchedList.get(i).addCorrection(new Correction.Builder()
+                            .setType(pc.getCategory())
+                            .setComment(pc.getSubCategory())
+                            .setAmount(pc.getAmount())
+                            .setDailyBalance(dbSchedList.get(i))
+                            .build());
+                        found = false;
+                    }
+                }
+            } else if (pc.getMonth() != null && pc.getMonthDay() != null) {
+                boolean found = false;
+                for (int i = dbSchedList.size() - 1; i >= 0; i--) {
+                    if (dbSchedList.get(i).getDate().getMonth().equals(pc.getMonth()) && dbSchedList.get(i).getDate().getDayOfMonth() == pc.getMonthDay()) {
+                        found = true;
+                    }
+                    if (dbSchedList.get(i).getDate().getDayOfWeek().getValue() >= 1 && dbSchedList.get(i).getDate().getDayOfWeek().getValue() <= 5 && found) {
+                        dbSchedList.get(i).addCorrection(new Correction.Builder()
+                            .setType(pc.getCategory())
+                            .setComment(pc.getSubCategory())
+                            .setAmount(pc.getAmount())
+                            .setDailyBalance(dbSchedList.get(i))
+                            .build());
+                        found = false;
+                    }
+                }
             }
         });
         calculatePredictions();

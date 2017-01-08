@@ -1,1 +1,98 @@
-{"category":"Utazás","subCategory":"Siki busz","dayOfWeek":1,"amount":2980}
+# Bér
+{"category":"Bér","subCategory":"Siki bér","day":10,"amount":340000}
+{"category":"Bér","subCategory":"Siki bónusz","month":12,"monthDay":10,"amount":350000}
+
+# Juttatás
+{"category":"Juttatás","subCategory":"Családi pótlék","day":3,"amount":26600}
+{"category":"Juttatás","subCategory":"CSED (forrásház)","day":3,"amount":28470}
+{"category":"Juttatás","subCategory":"CSED (klikk)","day":3,"amount":133560}
+
+# Utazás támogatás
+{"category":"Utazás támogatás","subCategory":"Siki utazás támogatás","day":8,"amount":8000}
+{"category":"Utazás támogatás","subCategory":"Siki utazás támogatás","day":23,"amount":8000}
+
+# Hitel
+{"category":"Hitel","subCategory":"Siki Fundamenta","day":8,"amount":-23920,"endDate":"2020-10-01"}
+{"category":"Hitel","subCategory":"Siki Fundamenta","day":8,"amount":-62188,"endDate":"2018-08-01"}
+{"category":"Hitel","subCategory":"Siki Fundamenta","day":8,"amount":-42188,"startDate":"2018-08-01","endDate":"2018-11-01"}
+{"category":"Hitel","subCategory":"Siki Fundamenta","day":8,"amount":-38750,"startDate":"2018-11-01","endDate":"2028-09-01"}
+{"category":"Hitel","subCategory":"Gabó OTP","day":13,"amount":-27560}
+{"category":"Hitel","subCategory":"Timótól hitelre","day":13,"amount":28000}
+
+# Üzemanyag
+{"category":"Üzemanyag","subCategory":"Pesti ingázás","dayOfWeek":1,"amount":-4000}
+{"category":"Üzemanyag","subCategory":"Pesti ingázás","dayOfWeek":5,"amount":-4000}
+{"category":"Üzemanyag","subCategory":"Üzemanyag","dayOfWeek":4,"amount":-2000}
+
+# Weiner rezsi
+{"category":"Weiner rezsi","subCategory":"Közös költség","day":10,"amount":-10600}
+{"category":"Weiner rezsi","subCategory":"Víz","day":14,"amount":-6000}
+{"category":"Weiner rezsi","subCategory":"Hődíj, fűtés","day":15,"amount":-15000}
+{"category":"Weiner rezsi","subCategory":"Villany","day":25,"amount":-5000}
+{"category":"Weiner rezsi","subCategory":"UPC","day":4,"amount":-9000}
+{"category":"Weiner rezsi","subCategory":"Biztosítás","day":3,"amount":-974}
+
+# Dózsa rezsi
+{"category":"Dózsa rezsi","subCategory":"Közös költség","day":5,"amount":-10120}
+{"category":"Dózsa rezsi","subCategory":"Víz","month":2,"monthDay":15,"amount":-504}
+{"category":"Dózsa rezsi","subCategory":"Víz","month":4,"monthDay":15,"amount":-504}
+{"category":"Dózsa rezsi","subCategory":"Víz","month":6,"monthDay":15,"amount":-504}
+{"category":"Dózsa rezsi","subCategory":"Víz","month":8,"monthDay":15,"amount":-504}
+{"category":"Dózsa rezsi","subCategory":"Víz","month":10,"monthDay":15,"amount":-504}
+{"category":"Dózsa rezsi","subCategory":"Víz","month":12,"monthDay":15,"amount":-504}
+{"category":"Dózsa rezsi","subCategory":"Villany","day":12,"amount":-160}
+{"category":"Dózsa rezsi","subCategory":"Gáz","day":11,"amount":-1000}
+{"category":"Dózsa rezsi","subCategory":"Biztosítás","month":1,"monthDay":5,"amount":-6444}
+{"category":"Dózsa rezsi","subCategory":"Biztosítás","month":4,"monthDay":5,"amount":-6444}
+{"category":"Dózsa rezsi","subCategory":"Biztosítás","month":7,"monthDay":5,"amount":-6444}
+{"category":"Dózsa rezsi","subCategory":"Biztosítás","month":10,"monthDay":5,"amount":-6444}
+
+# Ruha
+{"category":"Ruha","subCategory":"Ruha","dayOfWeek":2,"amount":-5000}
+
+# Gyógyszer
+{"category":"Gyógyszer","subCategory":"Gyógyszer","dayOfWeek":2,"amount":-4000}
+
+# Autó
+{"category":"Autó","subCategory":"Autó műszaki","month":7,"monthDay":10,"amount":-30000,"startDate":"2018-01-01","endDate":"2018-12-31"}
+{"category":"Autó","subCategory":"Autó műszaki","month":7,"monthDay":10,"amount":-30000,"startDate":"2020-01-01","endDate":"2020-12-31"}
+{"category":"Autó","subCategory":"Autó szervíz","day":5,"amount":-5000}
+{"category":"Autó","subCategory":"KGFB","month":1,"monthDay":5,"amount":-25000}
+{"category":"Autó","subCategory":"Autópálya díj","month":1,"monthDay":5,"amount":-10000}
+{"category":"Autó","subCategory":"Gépjárműadó","month":3,"monthDay":5,"amount":-4000}
+{"category":"Autó","subCategory":"Gépjárműadó","month":9,"monthDay":5,"amount":-4000}
+
+# Utazás
+{"category":"Utazás","subCategory":"Siki busz","dayOfWeek":3,"amount":-2980}
+
+# Megtakarítás
+{"category":"Megtakarítás","subCategory":"Gabó Fundamenta","day":10,"amount":-20150}
+{"category":"Megtakarítás","subCategory":"Union","month":6,"monthDay":20,"amount":-210000}
+
+# Szórakozás
+{"category":"Szórakozás","subCategory":"Szórakozás","day":25,"amount":-5000}
+
+# Telefon
+{"category":"Telefon","subCategory":"Gabó telefon","day":5,"amount":-4000}
+
+# Egyéb
+# Ovi
+{"category":"Egyéb","subCategory":"Vince étkezés","day":19,"amount":-7000,"startDate":"2016-09-01","endDate":"2017-06-30"}
+{"category":"Egyéb","subCategory":"Vince étkezés","day":19,"amount":-7000,"startDate":"2017-09-01","endDate":"2018-06-30"}
+{"category":"Egyéb","subCategory":"Ovi éves szakmai pénz","month":9,"monthDay":10,"amount":-9000}
+{"category":"Egyéb","subCategory":"Ovi éves csoportpénz","month":9,"monthDay":10,"amount":-9000}
+{"category":"Egyéb","subCategory":"Ovi Biztosítás","month":9,"monthDay":10,"amount":-5000}
+{"category":"Egyéb","subCategory":"Mini manó előfizetés","month":9,"monthDay":10,"amount":-2500}
+# Szülinapok
+{"category":"Egyéb","subCategory":"Vince szülinap","month":10,"monthDay":10,"amount":-20000}
+{"category":"Egyéb","subCategory":"Anna szülinap","month":8,"monthDay":5,"amount":-20000}
+# Labda-banda
+{"category":"Egyéb","subCategory":"Labda-banda","day":5,"amount":-4500,"startDate":"2016-09-01","endDate":"2017-06-30"}
+{"category":"Egyéb","subCategory":"Labda-banda","day":5,"amount":-4500,"startDate":"2017-09-01","endDate":"2018-06-30"}
+# Autex
+{"category":"Egyéb","subCategory":"Autex éves pénz","month":12,"monthDay":5,"amount":80000}
+# Karácsony
+{"category":"Egyéb","subCategory":"Karácsony","month":12,"monthDay":10,"amount":-80000}
+# Gabó kontaktlencse
+{"category":"Egyéb","subCategory":"Gabó féléves kontaktlencse","month":1,"monthDay":28,"amount":-30000}
+{"category":"Egyéb","subCategory":"Gabó féléves kontaktlencse","month":7,"monthDay":28,"amount":-30000}
