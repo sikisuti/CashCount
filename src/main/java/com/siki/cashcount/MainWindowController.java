@@ -317,8 +317,8 @@ public class MainWindowController implements Initializable {
             
                 Alert alert = new Alert(AlertType.INFORMATION);
                 alert.setTitle("Üzenet");
-                alert.setHeaderText("So far so good :)");
-                alert.setContentText("Eddig jó!");
+                alert.setHeaderText("Végrehajtva");
+                alert.setContentText("Korrekciók betöltve");
                 alert.showAndWait();
         }
     }

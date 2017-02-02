@@ -155,7 +155,7 @@ public class DataManager {
             while ((line = br.readLine()) != null) {
                 lineCnt++;
                 DailyBalance db = gsonDeserializer.fromJson(line, DailyBalance.class);
-                if (db.getDate().isBefore(LocalDate.now().minusMonths(7).withDayOfMonth(1)))
+                if (db.getDate().isBefore(LocalDate.now().minusYears(1).withDayOfMonth(1)))
                     continue;
                 getSavings(db.getDate()).stream().forEach(s -> db.addSaving(s));
                 db.getCorrections().stream().forEach((c) -> {
@@ -712,7 +712,7 @@ public class DataManager {
     
     public void clearPredictedCorrections() throws NotEnoughPastDataException, IOException, JsonDeserializeException {
         dailyBalanceCache.stream().filter(db -> db.isPredicted() && db.getDate().isAfter(LocalDate.now().plusMonths(1))).forEach(db -> { db.getCorrections().clear(); });
-        getOrCreateDailyBalance(LocalDate.now().plusYears(1));
+        getOrCreateDailyBalance(LocalDate.now().plusYears(1).withDayOfMonth(LocalDate.now().plusYears(1).lengthOfMonth()));
         calculatePredictions();
     }
     
