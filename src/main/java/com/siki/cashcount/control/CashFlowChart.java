@@ -5,7 +5,7 @@
  */
 package com.siki.cashcount.control;
 
-import extfx.scene.chart.DateAxis;
+import com.siki.cashcount.extfx.DateAxis;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.Date;

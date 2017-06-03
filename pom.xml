@@ -4,7 +4,7 @@
 
     <groupId>com.siki</groupId>
     <artifactId>CashCount</artifactId>
-    <version>1.6</version>
+    <version>1.7</version>
     <packaging>jar</packaging>
 
     <name>CashCount</name>
@@ -105,11 +105,6 @@
         </plugins>
     </build>
     <dependencies>
-        <dependency>
-            <groupId>extfx</groupId>
-            <artifactId>extfx</artifactId>
-            <version>0.3</version>
-        </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>

@@ -2,4 +2,7 @@
 {"from":"2015-12-01","to":"2015-12-04","amount":500000,"comment":"OTP rövidtávú lekötés"}
 {"from":"2015-12-04","to":"2016-05-09","amount":573016,"comment":"OTP hosszútávú lekötés"}
 {"from":"2016-05-09","to":"2016-06-29","amount":582793,"comment":"OTP hosszútávú lekötés"}
-{"from":"2015-12-04","to":"","amount":511773,"comment":"OTP rövidtávú lekötés"}
+{"from":"2015-12-04","to":"2017-02-01","amount":511773,"comment":"OTP rövidtávú lekötés"}
+{"from":"2017-02-01","to":"2017-03-31","amount":520260,"comment":"OTP rövidtávú lekötés"}
+{"from":"2017-03-31","to":"","amount":1321158,"comment":"Befektetési Jegy"}
+{"from":"2017-03-31","to":"","amount":300000,"comment":"Kamatozó Kincstár"}
