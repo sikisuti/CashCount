@@ -14,11 +14,6 @@
         <mainClass>com.siki.cashcount.MainApp</mainClass>
     </properties>
 
-    <organization>
-        <!-- Used as the 'Vendor' for JNLP generation -->
-        <name>Your Organisation</name>
-    </organization>
-
     <build>
         <plugins>
             <plugin>
