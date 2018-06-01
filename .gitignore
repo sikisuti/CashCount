@@ -1,2 +1,4 @@
 /Backup/
 /target/
+.idea
+*.iml
