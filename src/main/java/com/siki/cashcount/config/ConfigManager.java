@@ -5,51 +5,30 @@
  */
 package com.siki.cashcount.config;
 
-import java.io.File;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-/**
- *
- * @author tamas.siklosi
- */
 public final class ConfigManager {
-//    private final static ConfigManager INSTANCE = new ConfigManager();
-//    public final static ConfigManager getInstance() {
-//        return INSTANCE;
-//    }
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConfigManager.class);
+
     private ConfigManager() {
     }
     
     private static final Properties properties = new Properties();
-    
-    static {
-        
-    }
-    
-//    private void loadProperties() throws IOException {
-//        properties = new Properties();
-//        
-//        try (InputStream inputStream = new FileInputStream("./config.properties")) {            
-//            
-//            if (inputStream != null) {
-//                    properties.load(inputStream);
-//            } else {
-//                    throw new FileNotFoundException("property file 'config/config.properties' not found in the classpath");
-//            }            
-//        }
-//    }
-    
+
     public static void initProperties() throws IOException {
         try (InputStreamReader inputStream = new InputStreamReader(new FileInputStream("./config.properties"), "UTF-8")) {
             properties.load(inputStream);
+        } catch (IOException e) {
+            LOGGER.error("Unable to initialize properties", e);
+            throw e;
         }
     }
     
@@ -57,7 +36,7 @@ public final class ConfigManager {
         try (OutputStream outputStream = new FileOutputStream("./config.properties")) {   
             properties.store(outputStream, "CashCount property file");
         } catch (IOException ex) {
-            Logger.getLogger(ConfigManager.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.error("Unable to save properties", ex);
         }
     }
     
@@ -73,11 +52,11 @@ public final class ConfigManager {
         return Double.parseDouble(getStringProperty(propertyName));
     }
     
-    public static int getIntegerProperty(String propertyName) throws NumberFormatException {
+    public static int getIntegerProperty(String propertyName) {
         return Integer.parseInt(getStringProperty(propertyName));
     }
     
-    public static void setProperty(String propertyName, String propertyValue) throws IOException {
+    public static void setProperty(String propertyName, String propertyValue) {
         properties.setProperty(propertyName, propertyValue);
         saveProperties();
     }

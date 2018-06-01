@@ -5,13 +5,13 @@
  */
 package com.siki.cashcount.helper;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashMap;
 
-/**
- *
- * @author tamas.siklosi
- */
 public class StopWatch {
+    private static final Logger LOGGER = LoggerFactory.getLogger(StopWatch.class);
     
     private static final HashMap<String, Long> ROUNDS = new HashMap<>();
     
@@ -28,6 +28,6 @@ public class StopWatch {
         long stop = System.currentTimeMillis();
         long start = ROUNDS.get(name);
         ROUNDS.remove(name);
-        System.out.println(name + " time: " + (stop - start) / 1000d + "s");
+        LOGGER.info("{} time: {}s", name, (stop - start) / 1000d);
     }
 }
