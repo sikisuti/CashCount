@@ -294,19 +294,15 @@ public class MainWindowController implements Initializable {
                 DataManager.getInstance().clearPredictedCorrections();
                 DataManager.getInstance().fillPredictedCorrections(pcList);
                 prepareDailyBalances();
-            } catch (IOException ex) {
-                Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (JsonDeserializeException ex) {
-                Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (NotEnoughPastDataException ex) {
-                Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException | JsonDeserializeException | NotEnoughPastDataException ex) {
+                LOGGER.error("", ex);
             }
             
-                Alert alert = new Alert(AlertType.INFORMATION);
-                alert.setTitle("Üzenet");
-                alert.setHeaderText("Végrehajtva");
-                alert.setContentText("Korrekciók betöltve");
-                alert.showAndWait();
+            Alert alert = new Alert(AlertType.INFORMATION);
+            alert.setTitle("Üzenet");
+            alert.setHeaderText("Végrehajtva");
+            alert.setContentText("Korrekciók betöltve");
+            alert.showAndWait();
         }
     }
     
@@ -352,10 +348,8 @@ public class MainWindowController implements Initializable {
             buildStatGrid(gpStatFromCorrections, data, keys);
             
             vbStatistics.getChildren().addAll(gpStatFromCorrections);
-        } catch (IOException | JsonDeserializeException ex) {
-            Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
         } catch (Exception ex) {
-            Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.error("", ex);
         }
     }
     
