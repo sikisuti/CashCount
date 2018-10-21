@@ -1,15 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.chart.*?>
-<?import extfx.scene.chart.*?>
-<?import com.siki.cashcount.control.*?>
 
-<BorderPane fx:id="PageFrame" prefHeight="1000" prefWidth="1800" xmlns:fx="http://javafx.com/fxml" fx:controller="com.siki.cashcount.MainWindowController">
+<BorderPane fx:id="pageFrame" prefHeight="1000" prefWidth="1800" xmlns:fx="http://javafx.com/fxml" fx:controller="com.siki.cashcount.MainWindowController">
     <top>
         <MenuBar >
             <Menu text="Fájl" >
@@ -36,8 +30,8 @@
                         <RowConstraints vgrow="ALWAYS"  />
                     </rowConstraints>
                     <children>
-                        <ScrollPane fx:id="DailyBalancesSP"> 
-                            <VBox fx:id="DailyBalancesPH"  />
+                        <ScrollPane fx:id="dailyBalancesSP">
+                            <VBox fx:id="dailyBalancesPH"  />
                         </ScrollPane>
                     </children>
                 </GridPane>

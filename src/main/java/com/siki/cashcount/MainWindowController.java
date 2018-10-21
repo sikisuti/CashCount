@@ -12,12 +12,10 @@ import java.net.URL;
 import java.text.NumberFormat;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
-import static java.time.temporal.ChronoUnit.DAYS;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.logging.*;
+//import java.util.logging.*;
 import java.util.stream.Collectors;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.event.*;
 import javafx.fxml.*;
@@ -30,45 +28,111 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.*;
 import javafx.stage.FileChooser.ExtensionFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MainWindowController implements Initializable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MainWindowController.class);
 
-    @FXML BorderPane PageFrame;
-    @FXML VBox DailyBalancesPH;
-    @FXML ScrollPane DailyBalancesSP;
+    @FXML BorderPane pageFrame;
+    @FXML VBox dailyBalancesPH;
+    @FXML ScrollPane dailyBalancesSP;
     @FXML VBox vbCashFlow;
     @FXML VBox vbStatistics;
-    
-    Slider slider = new Slider();
-    CashFlowChart flowChart = new CashFlowChart();
-    Button btnGetPast = new Button("Időgép");
-        
-    LineChart.Series<Date, Integer> savingSeries = new LineChart.Series<>();
-    LineChart.Series<Date, Integer> cashSeries = new LineChart.Series<>();
-    LineChart.Series<Date, Integer> accountSeries = new LineChart.Series<>();
-        
-    LineChart.Series<Date, Integer> savingSeriesRef = new LineChart.Series<>();
-    LineChart.Series<Date, Integer> cashSeriesRef = new LineChart.Series<>();
-    LineChart.Series<Date, Integer> accountSeriesRef = new LineChart.Series<>();
+
+    private CashFlowChart flowChart = new CashFlowChart();
+
+    private LineChart.Series<Date, Integer> savingSeries = new LineChart.Series<>();
+    private LineChart.Series<Date, Integer> cashSeries = new LineChart.Series<>();
+    private LineChart.Series<Date, Integer> accountSeries = new LineChart.Series<>();
+
+    private LineChart.Series<Date, Integer> savingSeriesRef = new LineChart.Series<>();
+    private LineChart.Series<Date, Integer> cashSeriesRef = new LineChart.Series<>();
+    private LineChart.Series<Date, Integer> accountSeriesRef = new LineChart.Series<>();
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-            
-//        prepareTable();   
         
         // Chart layout
         vbCashFlow.getChildren().add(flowChart);
-        btnGetPast.setOnAction((ActionEvent event) -> { getPast(); });
-        vbCashFlow.getChildren().add(btnGetPast);
         savingSeries.setName("Lekötések");
         cashSeries.setName("Készpénz");
         accountSeries.setName("Számla");  
-        flowChart.getData().addAll(savingSeriesRef, cashSeriesRef, accountSeriesRef, savingSeries, cashSeries, accountSeries); 
+        flowChart.getData().addAll(savingSeriesRef, cashSeriesRef, accountSeriesRef, savingSeries, cashSeries, accountSeries);
         
         prepareDailyBalances();
     }
+
+    private void prepareDailyBalances() {
+        if (ConfigManager.getBooleanProperty("LogPerformance")) StopWatch.start("prepareDailyBalances");
+        dailyBalancesPH.getChildren().clear();
+        try {
+            LocalDate date = null;
+            DailyBalancesTitledPane tp = null;
+            // 1. create DailyBalancesTitledPane
+            // 2. add DailyBalancesTitledPne to the list
+            // 3. add all DailyBalances to the DailyBalancesTitledPane
+            // 4. validate DailyBalancesTitledPane
+            for (int i = 0; i < DataManager.getInstance().getAllDailyBalances().size(); i++) {
+                DailyBalance db = DataManager.getInstance().getAllDailyBalances().get(i);
+                if (date == null || !db.getDate().getMonth().equals(date.getMonth())) {
+                    if (tp != null) {
+                        tp.validate();
+                        tp.refreshStatistics();
+                    }
+
+                    date = db.getDate();
+                    tp = new DailyBalancesTitledPane(date);
+                    if (i != 0)
+                        tp.setLastMonthEndBalance(DataManager.getInstance().getAllDailyBalances().get(i - 1).getTotalMoney());
+                    dailyBalancesPH.getChildren().add(tp);
+                }
+
+                tp.addDailyBalance(db);
+            }
+
+            Button btnNewMonth = new Button("+");
+            btnNewMonth.setStyle("-fx-alignment: center;");
+            btnNewMonth.setOnAction((ActionEvent event) -> {
+                Alert alert = new Alert(AlertType.CONFIRMATION);
+                alert.setHeaderText("Kibővíted a kalkulációt egy hónappal?");
+                Optional<ButtonType> result = alert.showAndWait();
+
+                if (result.isPresent() && result.get() == ButtonType.OK) {
+                    try {
+                        DataManager.getInstance().addOneMonth();
+                        prepareDailyBalances();
+                    } catch (IOException | JsonDeserializeException | NotEnoughPastDataException ex) {
+                        LOGGER.error("", ex);
+                    }
+                }
+            });
+            dailyBalancesPH.getChildren().add(btnNewMonth);
+        } catch (JsonDeserializeException ex) {
+            LOGGER.error("Error in line: " + ex.getErrorLineNum(), ex);
+            ExceptionDialog.get(ex).showAndWait();
+        } catch (Exception ex) {
+            LOGGER.error("", ex);
+            ExceptionDialog.get(ex).showAndWait();
+
+        }
+        if (ConfigManager.getBooleanProperty("LogPerformance")) StopWatch.stop("prepareDailyBalances");
+    }
+
+    @FXML
+    private void refreshChart(Event event) {
+        if (((Tab)(event.getSource())).isSelected()) {
+            try {
+                ObservableList<DailyBalance> series = DataManager.getInstance().getAllDailyBalances();
+                refreshChart(series);
+            } catch (IOException | JsonDeserializeException ex) {
+                LOGGER.error("", ex);
+                ExceptionDialog.get(ex).showAndWait();
+            }
+        }
+    }
     
-    public void refreshChart(ObservableList<DailyBalance> series) {
+    private void refreshChart(ObservableList<DailyBalance> series) {
         savingSeries.getData().clear();
         cashSeries.getData().clear();
         accountSeries.getData().clear();
@@ -78,7 +142,7 @@ public class MainWindowController implements Initializable {
                 
         try {
             
-            series.stream().forEach((db) -> {
+            series.forEach(db -> {
                 Date date = DateHelper.toDate(db.getDate());
                 Integer yValue = db.getTotalSavings();
                 savingSeries.getData().add(new XYChart.Data(date, yValue));
@@ -102,74 +166,9 @@ public class MainWindowController implements Initializable {
         
             
         } catch (IOException | JsonDeserializeException ex) {
-            Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.error("", ex);
             ExceptionDialog.get(ex).showAndWait();
         }
-    }
-    
-    private void refreshChart(HashMap<CashFlowSeriesEnum, ObservableList<XYChart.Data<Date, Integer>>> series) {
-        if (series != null ) {        
-            if (savingSeries.getData() != series.get(CashFlowSeriesEnum.SAVING))
-                savingSeries.setData(series.get(CashFlowSeriesEnum.SAVING));
-            if (cashSeries.getData() != series.get(CashFlowSeriesEnum.CASH))
-                cashSeries.setData(series.get(CashFlowSeriesEnum.CASH));
-            if (accountSeries.getData() != series.get(CashFlowSeriesEnum.ACCOUNT))
-                accountSeries.setData(series.get(CashFlowSeriesEnum.ACCOUNT));
-        }
-    }
-    
-    private void prepareDailyBalances() {
-        if (ConfigManager.getBooleanProperty("LogPerformance")) StopWatch.start("prepareDailyBalances");
-        DailyBalancesPH.getChildren().clear();
-        try {
-            LocalDate date = null;
-            DailyBalancesTitledPane tp = null;
-            // 1. create DailyBalancesTitledPane
-            // 2. add DailyBalancesTitledPne to the list
-            // 3. add all DailyBalances to the DailyBalancesTitledPane
-            // 4. validate DailyBalancesTitledPane
-            for (int i = 0; i < DataManager.getInstance().getAllDailyBalances().size(); i++) {
-                DailyBalance db = DataManager.getInstance().getAllDailyBalances().get(i);
-                if (date == null || !db.getDate().getMonth().equals(date.getMonth())) {
-                    if (tp != null) {
-                        tp.validate();
-                        tp.refreshStatistics();
-                    }
-                    date = db.getDate();
-                    tp = new DailyBalancesTitledPane(date);
-                    if (i != 0)
-                        tp.setLastMonthEndBalance(DataManager.getInstance().getAllDailyBalances().get(i - 1).getTotalMoney());
-                    DailyBalancesPH.getChildren().add(tp);  
-                }
-                tp.addDailyBalance(db);
-            }
-            Button btnNewMonth = new Button("+");
-            btnNewMonth.setStyle("-fx-alignment: center;");
-            btnNewMonth.setOnAction((ActionEvent event) -> {
-                Alert alert = new Alert(AlertType.CONFIRMATION);
-                alert.setHeaderText("Kibővíted a kalkulációt egy hónappal?");
-                Optional<ButtonType> result = alert.showAndWait();
-                
-                if (result.get() == ButtonType.OK) {
-                    try {
-                        DataManager.getInstance().addOneMonth();
-                        prepareDailyBalances();
-                    } catch (IOException | JsonDeserializeException | NotEnoughPastDataException ex) {
-                        Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-            });
-            DailyBalancesPH.getChildren().add(btnNewMonth);
-        } catch (JsonDeserializeException ex) {
-            System.out.println("Error in line: " + ex.getErrorLineNum());
-            Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
-            ExceptionDialog.get(ex).showAndWait();
-        } catch (Exception ex) {
-            Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
-            ExceptionDialog.get(ex).showAndWait();
-            
-        } 
-        if (ConfigManager.getBooleanProperty("LogPerformance")) StopWatch.stop("prepareDailyBalances");
     }
     
     @FXML
@@ -177,7 +176,7 @@ public class MainWindowController implements Initializable {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Válaszd ki a fájlt");
         fileChooser.getExtensionFilters().addAll(new ExtensionFilter("csv files", "*.csv"), new ExtensionFilter("Minden fájl", "*.*"));
-        File selectedFile = fileChooser.showOpenDialog(PageFrame.getScene().getWindow());
+        File selectedFile = fileChooser.showOpenDialog(pageFrame.getScene().getWindow());
         if (selectedFile != null) {
             try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(selectedFile), "UTF-8"))) {
                 String line;
@@ -232,7 +231,7 @@ public class MainWindowController implements Initializable {
                 alert.showAndWait();
                 
             } catch (Exception e) {
-                Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, e);
+                LOGGER.error("", e);
                 ExceptionDialog.get(e).showAndWait();
             }
         }
@@ -243,7 +242,7 @@ public class MainWindowController implements Initializable {
         try {
             DataManager.getInstance().calculatePredictions();
         } catch (NotEnoughPastDataException ex) {
-            Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.error("", ex);
             
             Alert alert = new Alert(AlertType.ERROR);
             alert.setTitle("Hiba");
@@ -258,21 +257,8 @@ public class MainWindowController implements Initializable {
         try {
             DataManager.getInstance().saveDailyBalances();
         } catch (IOException ex) {
-            Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.error("", ex);
             ExceptionDialog.get(ex).showAndWait();
-        }
-    }
-    
-    @FXML
-    private void refreshChart(Event event) {
-        if (((Tab)(event.getSource())).isSelected()) {
-            try {
-                ObservableList<DailyBalance> series = DataManager.getInstance().getAllDailyBalances();
-                refreshChart(series);
-            } catch (IOException | JsonDeserializeException ex) {
-                Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
-                ExceptionDialog.get(ex).showAndWait();
-            }
         }
     }
     
@@ -290,7 +276,7 @@ public class MainWindowController implements Initializable {
             stage.setScene(new Scene(root1));
             stage.show();
         } catch (IOException ex) {
-            Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.error("", ex);
             ExceptionDialog.get(ex).showAndWait();
         }
     }
@@ -300,7 +286,7 @@ public class MainWindowController implements Initializable {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Válaszd ki a korrekciós fájlt");
         fileChooser.getExtensionFilters().addAll(new ExtensionFilter("json files", "*.jsn"), new ExtensionFilter("Minden fájl", "*.*"));
-        File selectedFile = fileChooser.showOpenDialog(PageFrame.getScene().getWindow());
+        File selectedFile = fileChooser.showOpenDialog(pageFrame.getScene().getWindow());
         if (selectedFile != null) {
             List<PredictedCorrection> pcList;
             try {
@@ -337,7 +323,7 @@ public class MainWindowController implements Initializable {
             TreeMap<LocalDate, TreeMap<String, Entry<Integer, String>>> data = new TreeMap<>();
             List<String> keys = new ArrayList<>();
                         
-            for (Node node : DailyBalancesPH.getChildren()) {
+            for (Node node : dailyBalancesPH.getChildren()) {
                 if (node.getClass() != DailyBalancesTitledPane.class) continue;
                 DailyBalancesTitledPane entry = (DailyBalancesTitledPane)node;
                 
@@ -493,73 +479,5 @@ public class MainWindowController implements Initializable {
         }
         
         return averages;
-    }
-    
-    private void getPast() {
-        try {
-            vbCashFlow.getChildren().remove(btnGetPast);
-            
-            GridPane gp = new GridPane();
-            gp.setHgrow(slider, Priority.ALWAYS);
-            ColumnConstraints col1 = new ColumnConstraints();
-            col1.setPercentWidth(41);
-            ColumnConstraints col2 = new ColumnConstraints();
-            gp.getColumnConstraints().addAll(col1, col2);
-            slider.setPadding(new Insets(0, 0, 0, 110));
-            
-            slider.setMin(DAYS.between(LocalDate.now(), DataManager.getInstance().getFirstDailyBalance().getDate()));
-            slider.setMax(0);
-            slider.setMajorTickUnit(1);
-            slider.setValue(0);
-            //slider.setShowTickMarks(true);
-            slider.setSnapToTicks(true);
-            
-            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/PastDifferencesWindow.fxml"));
-            Parent root1 = (Parent) fxmlLoader.load();
-            PastDifferencesWindowController controller = fxmlLoader.getController();
-            
-            slider.valueProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
-                try {
-                    if (oldValue.longValue() - newValue.longValue() != 0) {
-                        LocalDate newDate = LocalDate.now().plusDays(newValue.longValue());
-                        HashMap<CashFlowSeriesEnum, ObservableList<XYChart.Data<Date, Integer>>> data = DataManager.getInstance().getPastSeries(newDate);
-                        flowChart.getPastLine().setXValue(DateHelper.toDate(newDate));
-                        refreshChart(data);
-                        controller.refreshDiffs(DataManager.getInstance().getPastDifferences(newDate), newDate);
-                    }
-                } catch (IOException | JsonDeserializeException ex) {
-                    Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
-                    ExceptionDialog.get(ex).showAndWait();
-                }
-            });
-            gp.setConstraints(slider, 0, 0);
-            gp.getChildren().add(slider);
-            vbCashFlow.getChildren().add(gp);       
-            DataManager.getInstance().loadAllPastSeries();
-        
-            Stage stage = new Stage();
-            stage.initOwner(vbCashFlow.getScene().getWindow());
-            stage.initModality(Modality.NONE);
-            stage.setAlwaysOnTop(true);
-            stage.initStyle(StageStyle.UTILITY);
-            stage.setTitle("Különbségek");
-            stage.setScene(new Scene(root1));
-            stage.setOnCloseRequest((WindowEvent event) -> {
-                vbCashFlow.getChildren().remove(gp);
-                vbCashFlow.getChildren().add(btnGetPast);
-                try {
-                    ObservableList<DailyBalance> series = DataManager.getInstance().getAllDailyBalances();
-                    flowChart.getPastLine().setXValue(DateHelper.toDate(LocalDate.now()));
-                    refreshChart(series);
-                } catch (IOException | JsonDeserializeException ex) {
-                    Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
-                    ExceptionDialog.get(ex).showAndWait();
-                }
-            });
-            stage.show();
-        } catch (IOException | JsonDeserializeException ex) {
-            Logger.getLogger(MainWindowController.class.getName()).log(Level.SEVERE, null, ex);
-            ExceptionDialog.get(ex).showAndWait();
-        }
     }
 }
