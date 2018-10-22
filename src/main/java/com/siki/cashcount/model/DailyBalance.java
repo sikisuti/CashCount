@@ -1,11 +1,5 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.siki.cashcount.model;
 
-import java.io.Serializable;
 import java.time.LocalDate;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
@@ -16,12 +10,20 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-/**
- *
- * @author tamas.siklosi
- */
 public final class DailyBalance {
     private DailyBalance prevDailyBalance;
+    private final ObjectProperty date;
+    private final IntegerProperty balance;
+    private final IntegerProperty cash;
+    private final BooleanProperty predicted;
+    private final IntegerProperty totalMoney;
+    private final BooleanProperty reviewed;
+    private final IntegerProperty dailySpend;
+
+    private ObservableList<Saving> savings;
+    private ObservableList<Correction> corrections;
+    private ObservableList<AccountTransaction> transactions;
+
     public void setPrevDailyBalance(DailyBalance prevDailyBalance) { 
         this.prevDailyBalance = prevDailyBalance; 
         if (getPrevDailyBalance() != null) {
@@ -31,36 +33,31 @@ public final class DailyBalance {
         }
     }
     public DailyBalance getPrevDailyBalance() { return prevDailyBalance; }
-    
-    private final ObjectProperty date;
+
     public LocalDate getDate() { return (LocalDate)date.get(); }
     public void setDate(LocalDate date) { this.date.set(date); }
     public ObjectProperty dateProperty() { return date; }
-    
-    private final IntegerProperty balance;
+
     public Integer getBalance() { return balance.get(); }
     public void setBalance(Integer balance) { 
         this.balance.set(balance); 
         this.setTotalMoney(getBalance() + getCash());
     }
     public IntegerProperty balanceProperty() { return balance; }
-    
-    private final IntegerProperty cash;
+
     public Integer getCash() { return cash.get(); }
     public void setCash(Integer cash) { 
         this.cash.set(cash); 
         this.setTotalMoney(getBalance() + getCash());
     }
     public IntegerProperty cashProperty() { return cash; }
-    
-    private final BooleanProperty predicted;
+
     public Boolean isPredicted() { return predicted.get(); }
     public void setPredicted(Boolean predicted) { 
         this.predicted.set(predicted); 
     }
     public BooleanProperty predictedProperty() { return predicted; }
-    
-    private final IntegerProperty totalMoney;
+
     public Integer getTotalMoney() { return totalMoney.get(); }
     public void setTotalMoney(Integer value) { 
         totalMoneyProperty().set(value); 
@@ -71,13 +68,11 @@ public final class DailyBalance {
         }
     }
     public IntegerProperty totalMoneyProperty() { return totalMoney; }
-    
-    private final BooleanProperty reviewed;
+
     public Boolean isReviewed() { return reviewed.get(); }
     public void setReviewed(Boolean reviewed) { this.reviewed.set(reviewed); }
     public BooleanProperty reviewedProperty() { return reviewed; }
-    
-    private final IntegerProperty dailySpend;
+
     public Integer getDailySpend() { return dailySpend.get(); }
     public void setDailySpend(Integer value) { this.dailySpend.set(value); }
     public IntegerProperty dailySpendProperty() { return dailySpend; }
@@ -86,10 +81,6 @@ public final class DailyBalance {
 //    public Integer getAverageDailySpend() { return averageDailySpend.get(); }
 //    public void setAverageDailySpend(Integer averageDailySpend) { this.averageDailySpend.set(averageDailySpend); }
 //    public IntegerProperty averageDailySpendProperty() { return averageDailySpend; }
-    
-    ObservableList<Saving> savings;
-    ObservableList<Correction> corrections;
-    ObservableList<AccountTransaction> transactions;
 
     public DailyBalance() {
         this.date = new SimpleObjectProperty();

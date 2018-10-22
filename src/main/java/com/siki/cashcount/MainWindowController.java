@@ -307,48 +307,50 @@ public class MainWindowController implements Initializable {
     @FXML
     private void refreshStatistics(Event event) {
         if (((Tab)(event.getSource())).isSelected()) {
-            refreshStatistics();
+            try {
+                refreshStatistics();
+            } catch (Exception e) {
+                LOGGER.error("", e);
+            }
         }        
     }
-    private void refreshStatistics() {
-        try {
-            vbStatistics.getChildren().clear();
-            
-            TreeMap<LocalDate, TreeMap<String, Entry<Integer, String>>> data = new TreeMap<>();
-            List<String> keys = new ArrayList<>();
-                        
-            for (Node node : dailyBalancesPH.getChildren()) {
-                if (node.getClass() != DailyBalancesTitledPane.class) continue;
-                DailyBalancesTitledPane entry = (DailyBalancesTitledPane)node;
-                
-                TreeMap<String, Entry<Integer, String>> monthCorrectionData = DataManager.getInstance().getStatisticsFromCorrections(entry.getPeriod().getYear(), entry.getPeriod().getMonth());
-                TreeMap<String, Entry<Integer, String>> monthTransactionData = DataManager.getInstance().getStatisticsFromTransactions(entry.getPeriod().getYear(), entry.getPeriod().getMonth());
-                Integer allTransactionAmount = 0;
-                for (String key : monthTransactionData.keySet()) {
-                    allTransactionAmount += monthTransactionData.get(key).getKey();
-                }
-                if (monthCorrectionData.containsKey(DataManager.GENERAL_TEXT) && LocalDate.of(entry.getPeriod().getYear(), entry.getPeriod().getMonthValue(), 1).isBefore(LocalDate.now().withDayOfMonth(1))) {
-                    Integer cashSpent = monthCorrectionData.get(DataManager.GENERAL_TEXT).getKey() - allTransactionAmount;
-                    if (cashSpent != 0)
-                        monthTransactionData.put("  -- Készpénzköltés", new AbstractMap.SimpleEntry<>(cashSpent, "Költés készpénzből"));
-                }
-                monthCorrectionData.putAll(monthTransactionData);
-                data.put(entry.getPeriod(), monthCorrectionData);
-                for (String key : monthCorrectionData.keySet()) {
-                    if (!keys.contains(key)) {
-                        keys.add(key);
-                    }
+    private void refreshStatistics() throws Exception {
+        vbStatistics.getChildren().clear();
+
+        TreeMap<LocalDate, TreeMap<String, Entry<Integer, String>>> data = new TreeMap<>();
+        List<String> keys = new ArrayList<>();
+
+        for (Node node : dailyBalancesPH.getChildren()) {
+            if (node.getClass() != DailyBalancesTitledPane.class) continue;
+            DailyBalancesTitledPane entry = (DailyBalancesTitledPane)node;
+
+            TreeMap<String, Entry<Integer, String>> monthCorrectionData = DataManager.getInstance().getStatisticsFromCorrections(entry.getPeriod().getYear(), entry.getPeriod().getMonth());
+            TreeMap<String, Entry<Integer, String>> monthTransactionData = DataManager.getInstance().getStatisticsFromTransactions(entry.getPeriod().getYear(), entry.getPeriod().getMonth());
+            Integer allTransactionAmount = 0;
+            for (Entry<String, Entry<Integer, String>> transactionEntry : monthTransactionData.entrySet()) {
+                allTransactionAmount += transactionEntry.getValue().getKey();
+            }
+
+            if (monthCorrectionData.containsKey(DataManager.GENERAL_TEXT) && LocalDate.of(entry.getPeriod().getYear(), entry.getPeriod().getMonthValue(), 1).isBefore(LocalDate.now().withDayOfMonth(1))) {
+                Integer cashSpent = monthCorrectionData.get(DataManager.GENERAL_TEXT).getKey() - allTransactionAmount;
+                if (cashSpent != 0)
+                    monthTransactionData.put("  -- Készpénzköltés", new AbstractMap.SimpleEntry<>(cashSpent, "Költés készpénzből"));
+            }
+
+            monthCorrectionData.putAll(monthTransactionData);
+            data.put(entry.getPeriod(), monthCorrectionData);
+            for (String key : monthCorrectionData.keySet()) {
+                if (!keys.contains(key)) {
+                    keys.add(key);
                 }
             }
-            
-            GridPane gpStatFromCorrections = new GridPane();
-            gpStatFromCorrections.setPadding(new Insets(20, 10, 20, 10));
-            buildStatGrid(gpStatFromCorrections, data, keys);
-            
-            vbStatistics.getChildren().addAll(gpStatFromCorrections);
-        } catch (Exception ex) {
-            LOGGER.error("", ex);
         }
+
+        GridPane gpStatFromCorrections = new GridPane();
+        gpStatFromCorrections.setPadding(new Insets(20, 10, 20, 10));
+        buildStatGrid(gpStatFromCorrections, data, keys);
+
+        vbStatistics.getChildren().addAll(gpStatFromCorrections);
     }
     
     private void buildStatGrid( GridPane grid, TreeMap<LocalDate, TreeMap<String, Entry<Integer, String>>> data, List<String> keys) {
@@ -356,8 +358,9 @@ public class MainWindowController implements Initializable {
         
         TreeMap<String, Integer> averages = calculateAverages(data);
         
-        for (LocalDate date : data.keySet()) {
+        for (Entry<LocalDate, TreeMap<String, Entry<Integer, String>>> entry : data.entrySet()) {
             colCnt++;
+            LocalDate date = entry.getKey();
 
             GridPane headerBg = new GridPane();
             headerBg.setPrefSize(100, 30);
