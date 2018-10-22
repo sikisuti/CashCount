@@ -629,14 +629,14 @@ public class DataManager {
         
         List<DailyBalance> dailyBalancesOfMonth = dailyBalanceCache.stream().filter(db -> db.getDate().getYear() == year && db.getDate().getMonth() == month).collect(Collectors.toList());
         
-        Map<String, List<Correction>> cList = dailyBalancesOfMonth.stream().flatMap(db -> db.getCorrections().stream()).collect(Collectors.groupingBy(c -> c.getType()));
+        Map<String, List<Correction>> cList = dailyBalancesOfMonth.stream().flatMap(db -> db.getCorrections().stream()).collect(Collectors.groupingBy(Correction::getType));
         
-        for (String key : cList.keySet()) {
-            List<String> comments = cList.get(key).stream().map(c -> c.getComment()).distinct().collect(Collectors.toList());
-            rtn.put(key, new AbstractMap.SimpleEntry<>(cList.get(key).stream().mapToInt(c -> c.getAmount()).sum(), String.join("\n", comments)));
+        for (Entry<String, List<Correction>> entry : cList.entrySet()) {
+            List<String> comments = entry.getValue().stream().map(Correction::getComment).distinct().collect(Collectors.toList());
+            rtn.put(entry.getKey(), new AbstractMap.SimpleEntry<>(entry.getValue().stream().mapToInt(Correction::getAmount).sum(), String.join("\n", comments)));
         }
         
-        Integer allCorrections = rtn.values().stream().mapToInt(i -> i.getKey()).sum();
+        int allCorrections = rtn.values().stream().mapToInt(Entry::getKey).sum();
         if (previousBalance != null)
             rtn.put(DataManager.GENERAL_TEXT, 
                     new AbstractMap.SimpleEntry<>(dailyBalancesOfMonth.get(dailyBalancesOfMonth.size() - 1).getTotalMoney() - previousBalance - allCorrections, 

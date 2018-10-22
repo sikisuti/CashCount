@@ -332,7 +332,7 @@ public class MainWindowController implements Initializable {
             }
 
             if (monthCorrectionData.containsKey(DataManager.GENERAL_TEXT) && LocalDate.of(entry.getPeriod().getYear(), entry.getPeriod().getMonthValue(), 1).isBefore(LocalDate.now().withDayOfMonth(1))) {
-                Integer cashSpent = monthCorrectionData.get(DataManager.GENERAL_TEXT).getKey() - allTransactionAmount;
+                int cashSpent = monthCorrectionData.get(DataManager.GENERAL_TEXT).getKey() - allTransactionAmount;
                 if (cashSpent != 0)
                     monthTransactionData.put("  -- Készpénzköltés", new AbstractMap.SimpleEntry<>(cashSpent, "Költés készpénzből"));
             }
@@ -387,6 +387,7 @@ public class MainWindowController implements Initializable {
                 } catch (NumberFormatException ex) {
                     continue;
                 }
+
                 if (colCnt == 1) {
                     Label rowHeader = new Label(category);
                     rowHeader.setMinWidth(150);
@@ -412,6 +413,7 @@ public class MainWindowController implements Initializable {
                     value = 0;
                     lblValue = new Label();
                 }
+
                 if (date.isEqual(LocalDate.now().withDayOfMonth(1))) {
                     cell.setBorder(new Border(new BorderStroke(Color.TRANSPARENT, Color.GRAY, Color.TRANSPARENT, Color.BLACK, 
                             BorderStrokeStyle.NONE, BorderStrokeStyle.SOLID, BorderStrokeStyle.NONE, BorderStrokeStyle.SOLID, 
@@ -431,8 +433,8 @@ public class MainWindowController implements Initializable {
                 */
                 double diffBound = ConfigManager.getDoubleProperty("DifferenceDecoratorBound");
                 
-                Integer avgValue = averages.containsKey(category) ? averages.get(category) : 0;
-                Integer diff = value - avgValue;
+                Integer avgValue = averages.getOrDefault(category, 0);
+                int diff = value - avgValue;
                 opacity = Math.abs(diff / diffBound);
                 if (opacity > 1) { opacity = 1; }
                 bgColor = diff > 0 ? Color.rgb(0, 200, 0, opacity) : Color.rgb(230, 0, 0, opacity);

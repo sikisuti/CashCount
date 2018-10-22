@@ -26,13 +26,12 @@ public final class DailyBalance {
 
     public void setPrevDailyBalance(DailyBalance prevDailyBalance) { 
         this.prevDailyBalance = prevDailyBalance; 
-        if (getPrevDailyBalance() != null) {
-            setDailySpend(getTotalMoney() - getPrevDailyBalance().getTotalMoney() - getTotalCorrections());
+        if (prevDailyBalance != null) {
+            setDailySpend(getTotalMoney() - prevDailyBalance.getTotalMoney() - getTotalCorrections());
         } else {
             setDailySpend(0);
         }
     }
-    public DailyBalance getPrevDailyBalance() { return prevDailyBalance; }
 
     public LocalDate getDate() { return (LocalDate)date.get(); }
     public void setDate(LocalDate date) { this.date.set(date); }
@@ -59,10 +58,10 @@ public final class DailyBalance {
     public BooleanProperty predictedProperty() { return predicted; }
 
     public Integer getTotalMoney() { return totalMoney.get(); }
-    public void setTotalMoney(Integer value) { 
+    private void setTotalMoney(Integer value) {
         totalMoneyProperty().set(value); 
-        if (getPrevDailyBalance() != null) {
-            setDailySpend(getTotalMoney() - getPrevDailyBalance().getTotalMoney() - getTotalCorrections());
+        if (prevDailyBalance != null) {
+            setDailySpend(getTotalMoney() - prevDailyBalance.getTotalMoney() - getTotalCorrections());
         } else {
             setDailySpend(0);
         }
@@ -74,7 +73,7 @@ public final class DailyBalance {
     public BooleanProperty reviewedProperty() { return reviewed; }
 
     public Integer getDailySpend() { return dailySpend.get(); }
-    public void setDailySpend(Integer value) { this.dailySpend.set(value); }
+    private void setDailySpend(Integer value) { this.dailySpend.set(value); }
     public IntegerProperty dailySpendProperty() { return dailySpend; }
     
 //    private final IntegerProperty averageDailySpend;
@@ -94,13 +93,6 @@ public final class DailyBalance {
         savings = FXCollections.observableArrayList();
         corrections = FXCollections.observableArrayList();
         transactions = FXCollections.observableArrayList();
-    }
-
-    public DailyBalance(LocalDate date, Integer balance, Boolean predicted) {
-        this();
-        setDate(date);
-        setBalance(balance);
-        setPredicted(predicted);
     }
     
     private DailyBalance(Builder builder) {
@@ -127,8 +119,8 @@ public final class DailyBalance {
     
     public void addCorrection(Correction correction) {
         corrections.add(correction);
-        if (getPrevDailyBalance() != null) {
-            setDailySpend(getTotalMoney() - getPrevDailyBalance().getTotalMoney() - getTotalCorrections());
+        if (prevDailyBalance != null) {
+            setDailySpend(getTotalMoney() - prevDailyBalance.getTotalMoney() - getTotalCorrections());
         } else {
             setDailySpend(0);
         }
@@ -136,8 +128,8 @@ public final class DailyBalance {
     
     public void removeCorrection(Correction correction) {
         corrections.remove(correction);
-        if (getPrevDailyBalance() != null) {
-            setDailySpend(getTotalMoney() - getPrevDailyBalance().getTotalMoney() - getTotalCorrections());
+        if (prevDailyBalance != null) {
+            setDailySpend(getTotalMoney() - prevDailyBalance.getTotalMoney() - getTotalCorrections());
         } else {
             setDailySpend(0);
         }
