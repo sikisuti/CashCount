@@ -83,8 +83,6 @@ public class MainWindowController implements Initializable {
 
                     date = db.getDate();
                     tp = new DailyBalancesTitledPane(date);
-                    if (i != 0)
-                        tp.setLastMonthEndBalance(DataManager.getInstance().getAllDailyBalances().get(i - 1).getTotalMoney());
                     dailyBalancesPH.getChildren().add(tp);
                 }
 

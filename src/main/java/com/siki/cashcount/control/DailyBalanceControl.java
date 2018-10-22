@@ -13,11 +13,9 @@ import com.siki.cashcount.model.AccountTransaction;
 import com.siki.cashcount.model.Correction;
 import com.siki.cashcount.model.DailyBalance;
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.time.DayOfWeek;
 import java.time.format.DateTimeFormatter;
-import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.beans.property.StringProperty;
@@ -50,11 +48,6 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
-/**
- * FXML Controller class
- *
- * @author tamas.siklosi
- */
 public final class DailyBalanceControl extends VBox {
     private DailyBalancesTitledPane parent;
     
@@ -62,7 +55,6 @@ public final class DailyBalanceControl extends VBox {
     private Label txtBalance;
     private TextField tfCash;
     private Label txtDailySpend;
-//    private Label txtAverageDailySpend;
     private CheckBox chkReviewed;
     private HBox corrections;
     private HBox hbLine;
@@ -77,11 +69,7 @@ public final class DailyBalanceControl extends VBox {
         return dailyBalance;
     }
 
-    /**
-     * Initializes the controller class.
-     * @param dailyBalance
-     */
-    public DailyBalanceControl(DailyBalance dailyBalance, DailyBalancesTitledPane parent) { 
+    DailyBalanceControl(DailyBalance dailyBalance, DailyBalancesTitledPane parent) {
         this.dailyBalance = dailyBalance;
         this.parent = parent;
         
@@ -94,7 +82,6 @@ public final class DailyBalanceControl extends VBox {
         chkReviewed.visibleProperty().bind(dailyBalance.predictedProperty().not());
         tfCash.visibleProperty().bind(dailyBalance.predictedProperty().not());
 
-        //tfCash.disableProperty().bind(dailyBalance.predictedProperty());
         txtBalance.disableProperty().bind(dailyBalance.predictedProperty());
         txtDate.disableProperty().bind(dailyBalance.predictedProperty());
         

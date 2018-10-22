@@ -16,7 +16,6 @@ import java.util.TreeMap;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.TitledPane;
@@ -30,18 +29,11 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 
-/**
- *
- * @author tamas.siklosi
- */
 public class DailyBalancesTitledPane extends TitledPane {
     private LocalDate period;
     private ObservableList<DailyBalance> dailyBalances = FXCollections.observableArrayList();
-    private Integer lastMonthEndBalance;
     private VBox vbDailyBalances = new VBox();
     private GridPane gpStatistics = new GridPane();
-    
-    public void setLastMonthEndBalance(Integer lastMonthEndBalance) { this.lastMonthEndBalance = lastMonthEndBalance; }
     
     public LocalDate getPeriod() { return period; }
 
@@ -54,13 +46,8 @@ public class DailyBalancesTitledPane extends TitledPane {
     public DailyBalancesTitledPane(LocalDate period) {
         super(period.format(DateTimeFormatter.ofPattern("uuuu. MMMM")), new GridPane());
         GridPane gpRoot = (GridPane)this.getContent();
-//        GridPane gpStatisticsBg = new GridPane();
-//        gpStatisticsBg.getChildren().add(gpStatistics);
-//        gpStatisticsBg.setAlignment(Pos.CENTER);
-//        gpStatisticsBg.setPadding(new Insets(20));
         
         GridPane.setColumnIndex(vbDailyBalances, 0);
-//        GridPane.setColumnIndex(gpStatisticsBg, 1);
         
         gpRoot.getChildren().addAll(vbDailyBalances/*, gpStatisticsBg*/);
         
@@ -68,11 +55,9 @@ public class DailyBalancesTitledPane extends TitledPane {
         this.setExpanded(isAroundToday(period));
         
         this.expandedProperty().addListener((ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) -> {
-                        if (newValue) {
-                            if (vbDailyBalances.getChildren().isEmpty()) {
-                                for (DailyBalance db : dailyBalances) {
-                                    vbDailyBalances.getChildren().add(new DailyBalanceControl(db, this));
-                                }
+                        if (newValue && vbDailyBalances.getChildren().isEmpty()) {
+                            for (DailyBalance db : dailyBalances) {
+                                vbDailyBalances.getChildren().add(new DailyBalanceControl(db, this));
                             }
                         }
                     });
