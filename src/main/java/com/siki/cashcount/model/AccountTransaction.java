@@ -9,6 +9,8 @@ import com.siki.cashcount.data.DataManager;
 import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+
 import javafx.beans.property.*;
 
 public final class AccountTransaction {
@@ -83,10 +85,10 @@ public final class AccountTransaction {
         if (pairedCorrections.contains(correction)) {
             pairedCorrections.remove(correction);
         }
-        if (pairedCorrections.size() == 0) setPaired(false);
+        if (pairedCorrections.isEmpty()) setPaired(false);
     }
     public Integer getNotPairedAmount() {
-        return getAmount() - pairedCorrections.stream().mapToInt(pc -> pc.getAmount()).sum();
+        return getAmount() - pairedCorrections.stream().mapToInt(Correction::getAmount).sum();
     }
 
     public AccountTransaction() {
@@ -194,9 +196,13 @@ public final class AccountTransaction {
 
     @Override
     public boolean equals(Object obj) {
+        if (obj == null || this.getClass() != obj.getClass()) {
+            return false;
+        }
+
         AccountTransaction other = (AccountTransaction)obj;
         
-        boolean rtn = 
+        return
                 this.getId().equals(other.getId()) &&
                 this.getTransactionType().equals(other.getTransactionType()) &&
                 this.getAmount().equals(other.getAmount()) &&
@@ -204,23 +210,13 @@ public final class AccountTransaction {
                 this.getAccountNumber().equals(other.getAccountNumber()) &&
                 this.getOwner().equals(other.getOwner()) &&
                 this.getComment().equals(other.getComment()) &&
-                this.getCounter().equals(other.getCounter());
-        if (!rtn) return false;
-        
-        if (this.getCategory() == null) {
-            if (other.getCategory() != null) return false;
-        } else {
-            if (!this.getCategory().equals(other.getCategory())) {
-                return false;
-            }
-        }
-        if (this.getSubCategory() == null) {
-            if (other.getSubCategory() != null) return false;
-        } else {
-            if (!this.getSubCategory().equals(other.getSubCategory())) {
-                return false;
-            }
-        }
-        return true;
+                this.getCounter().equals(other.getCounter()) &&
+                this.getCategory().equals(other.getCategory()) &&
+                this.getSubCategory().equals(other.getSubCategory());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, transactionType, date, amount, balance, accountNumber, owner, comment, counter, category, subCategory, paired, pairedCorrections);
     }
 }

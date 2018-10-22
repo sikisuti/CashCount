@@ -87,16 +87,16 @@ public class DailyBalancesTitledPane extends TitledPane {
         TreeMap<String, Entry<Integer, String>> statistics = DataManager.getInstance().getStatisticsFromCorrections(period.getYear(), period.getMonth());
         
         int rowCnt = -1;
-        for (String key : statistics.keySet()) {
+        for (Entry<String, Entry<Integer, String>> entry : statistics.entrySet()) {
             rowCnt++;
-            Label label = new Label(key + ": ");
+            Label label = new Label(entry.getKey() + ": ");
             GridPane.setColumnIndex(label, 0);
             GridPane.setRowIndex(label, rowCnt);
             
             GridPane gpValueBg = new GridPane();
             gpValueBg.setAlignment(Pos.CENTER_RIGHT);
-            Label value = new Label(NumberFormat.getCurrencyInstance().format(statistics.get(key).getKey()));
-            value.setTooltip(new Tooltip(statistics.get(key).getValue()));
+            Label value = new Label(NumberFormat.getCurrencyInstance().format(entry.getValue().getKey()));
+            value.setTooltip(new Tooltip(entry.getValue().getValue()));
             gpValueBg.getChildren().add(value);
             GridPane.setColumnIndex(gpValueBg, 1);
             GridPane.setRowIndex(gpValueBg, rowCnt);

@@ -5,6 +5,7 @@
  */
 package com.siki.cashcount.model;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
