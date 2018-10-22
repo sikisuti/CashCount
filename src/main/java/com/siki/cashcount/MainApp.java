@@ -7,6 +7,7 @@ import com.siki.cashcount.helper.Notification;
 import com.siki.cashcount.helper.StopWatch;
 import com.siki.cashcount.helper.ToolTipFixer;
 import java.io.IOException;
+import java.util.Locale;
 import java.util.Optional;
 
 import javafx.application.Application;
@@ -48,6 +49,7 @@ public class MainApp extends Application {
     private void initConfig() {
         try {
             ConfigManager.initProperties();
+            Locale.setDefault(Locale.forLanguageTag("hu-HU"));
         } catch (IOException ex) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Hiba");

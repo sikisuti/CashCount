@@ -54,15 +54,15 @@ public class DailyBalancesTitledPane extends TitledPane {
     public DailyBalancesTitledPane(LocalDate period) {
         super(period.format(DateTimeFormatter.ofPattern("uuuu. MMMM")), new GridPane());
         GridPane gpRoot = (GridPane)this.getContent();
-        GridPane gpStatisticsBg = new GridPane();
-        gpStatisticsBg.getChildren().add(gpStatistics);
-        gpStatisticsBg.setAlignment(Pos.CENTER);
-        gpStatisticsBg.setPadding(new Insets(20));
+//        GridPane gpStatisticsBg = new GridPane();
+//        gpStatisticsBg.getChildren().add(gpStatistics);
+//        gpStatisticsBg.setAlignment(Pos.CENTER);
+//        gpStatisticsBg.setPadding(new Insets(20));
         
         GridPane.setColumnIndex(vbDailyBalances, 0);
-        GridPane.setColumnIndex(gpStatisticsBg, 1);
+//        GridPane.setColumnIndex(gpStatisticsBg, 1);
         
-        gpRoot.getChildren().addAll(vbDailyBalances, gpStatisticsBg);
+        gpRoot.getChildren().addAll(vbDailyBalances/*, gpStatisticsBg*/);
         
         this.period = period.withDayOfMonth(1);
         this.setExpanded(isAroundToday(period));
