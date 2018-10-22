@@ -11,6 +11,7 @@ import com.siki.cashcount.model.DailyBalance;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 import javafx.beans.value.ObservableValue;
@@ -41,6 +42,10 @@ public class DailyBalancesTitledPane extends TitledPane {
         dailyBalances.add(db);
         if (isAroundToday(period))
             vbDailyBalances.getChildren().add(new DailyBalanceControl(db, this));
+    }
+
+    public List<DailyBalance> getDailyBalances() {
+        return dailyBalances;
     }
     
     public DailyBalancesTitledPane(LocalDate period) {
