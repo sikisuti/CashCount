@@ -1,45 +1,63 @@
 package com.siki.cashcount.statistics;
 
-import com.siki.cashcount.control.DailyBalancesTitledPane;
 import com.siki.cashcount.data.DataManager;
+import com.siki.cashcount.exception.JsonDeserializeException;
 import com.siki.cashcount.model.Correction;
 import com.siki.cashcount.model.DailyBalance;
-import javafx.scene.Node;
-import javafx.scene.layout.Pane;
 
+import java.io.IOException;
 import java.time.LocalDate;
-import java.time.Month;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class StatisticsController {
-    public static List<StatisticsModel> getStatistics(Pane monthlyGrouppedDailyBalances) {
-        List<StatisticsModel> statisticsModels = new ArrayList<>();
+    private SortedMap<LocalDate, Map<String, StatisticsModel>> statisticsModels = new TreeMap<>();
+    Set<String> allCorrectionTypes = new HashSet<>();
+    private int lastTotalAmount;
 
-        /*for (Node node : monthlyGrouppedDailyBalances.getChildren()) {
-            if (node.getClass() != DailyBalancesTitledPane.class) {
-                continue;
-            }
-
-            DailyBalancesTitledPane entry = (DailyBalancesTitledPane)node;
-
-            TreeMap<String, Map.Entry<Integer, String>> monthCorrectionData = getStatisticsFromCorrections(entry.getPeriod().getYear(), entry.getPeriod().getMonth());
-            TreeMap<String, Map.Entry<Integer, String>> monthTransactionData = DataManager.getInstance().getStatisticsFromTransactions(entry.getPeriod().getYear(), entry.getPeriod().getMonth());
-            Integer allTransactionAmount = 0;
-            for (Map.Entry<String, Map.Entry<Integer, String>> transactionEntry : monthTransactionData.entrySet()) {
-                allTransactionAmount += transactionEntry.getValue().getKey();
-            }
-
-            if (monthCorrectionData.containsKey(DataManager.GENERAL_TEXT) && LocalDate.of(entry.getPeriod().getYear(), entry.getPeriod().getMonthValue(), 1).isBefore(LocalDate.now().withDayOfMonth(1))) {
-                int cashSpent = monthCorrectionData.get(DataManager.GENERAL_TEXT).getKey() - allTransactionAmount;
-                if (cashSpent != 0)
-                    monthTransactionData.put("  -- Készpénzköltés", new AbstractMap.SimpleEntry<>(cashSpent, "Költés készpénzből"));
-            }
-
-            monthCorrectionData.putAll(monthTransactionData);
-            data.put(entry.getPeriod(), monthCorrectionData);
-        }*/
+    public SortedMap<LocalDate, Map<String, StatisticsModel>> getStatistics() throws IOException, JsonDeserializeException {
+        List<DailyBalance> dailyBalances =  DataManager.getInstance().getAllDailyBalances();
+        for (DailyBalance dailyBalance : dailyBalances) {
+            parseDailyBalance(dailyBalance);
+        }
 
         return statisticsModels;
+    }
+
+    private void parseDailyBalance(DailyBalance dailyBalance) {
+        Map<String, StatisticsModel> monthStatistics = getMonthStatistics(dailyBalance.getDate());
+        List<Correction> corrections = dailyBalance.getCorrections();
+        for (Correction correction : corrections) {
+            parseCorrection(correction, monthStatistics);
+        }
+    }
+
+    private Map<String, StatisticsModel> getMonthStatistics(LocalDate date) {
+        if (!statisticsModels.containsKey(date)) {
+            Map<String, StatisticsModel> monthStatistics = new HashMap<>();
+            for (String correctionType : allCorrectionTypes) {
+                monthStatistics.put(correctionType, new StatisticsModel());
+            }
+
+            statisticsModels.put(date, monthStatistics);
+        }
+
+        return statisticsModels.get(date);
+    }
+
+    private void parseCorrection(Correction correction, Map<String, StatisticsModel> monthStatistics) {
+        StatisticsModel statisticsModel = getStatisticModel(correction.getType(), monthStatistics);
+        statisticsModel.putCorrection(correction);
+    }
+
+    private StatisticsModel getStatisticModel(String correctionType, Map<String, StatisticsModel> currentMonthStatistics) {
+        if (!currentMonthStatistics.containsKey(correctionType)) {
+            for (Map.Entry<LocalDate, Map<String, StatisticsModel>> monthStatisticsEntry : statisticsModels.entrySet()) {
+                monthStatisticsEntry.getValue().put(correctionType, new StatisticsModel());
+            }
+
+            allCorrectionTypes.add(correctionType);
+        }
+
+        return currentMonthStatistics.get(correctionType);
     }
 }

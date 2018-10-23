@@ -16,6 +16,8 @@ import java.util.*;
 import java.util.Map.Entry;
 //import java.util.logging.*;
 import java.util.stream.Collectors;
+
+import com.siki.cashcount.statistics.StatisticsController;
 import javafx.collections.ObservableList;
 import javafx.event.*;
 import javafx.fxml.*;
@@ -308,7 +310,8 @@ public class MainWindowController implements Initializable {
     private void refreshStatistics(Event event) {
         if (((Tab)(event.getSource())).isSelected()) {
             try {
-                refreshStatistics();
+//                refreshStatistics();
+                new StatisticsController().getStatistics();
             } catch (Exception e) {
                 LOGGER.error("", e);
             }
