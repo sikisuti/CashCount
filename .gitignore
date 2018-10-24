@@ -3,3 +3,6 @@
 .idea
 *.iml
 averates.csv
+.classpath
+.project
+/bin/
