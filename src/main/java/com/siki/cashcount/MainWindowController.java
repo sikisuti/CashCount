@@ -18,6 +18,9 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import com.siki.cashcount.statistics.StatisticsController;
+import com.siki.cashcount.statistics.StatisticsModel;
+import com.siki.cashcount.statistics.StatisticsViewBuilder;
+
 import javafx.collections.ObservableList;
 import javafx.event.*;
 import javafx.fxml.*;
@@ -311,7 +314,11 @@ public class MainWindowController implements Initializable {
         if (((Tab)(event.getSource())).isSelected()) {
             try {
 //                refreshStatistics();
-                new StatisticsController().getStatistics();
+            	vbStatistics.getChildren().clear();
+            	SortedMap<LocalDate, Map<String, StatisticsModel>> statistics = new StatisticsController().getStatistics();
+            	Node statisticsView = new StatisticsViewBuilder().getStatisticsView(statistics);
+            	vbStatistics.getChildren().addAll(statisticsView);
+            	
             } catch (Exception e) {
                 LOGGER.error("", e);
             }
