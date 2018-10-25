@@ -8,8 +8,13 @@ import com.siki.cashcount.model.DailyBalance;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class StatisticsController {
+	private static final int AVERAGE_OF_MONTHS = 12;
+	
     private SortedMap<LocalDate, Map<String, StatisticsModel>> statisticsModels = new TreeMap<>();
     Set<String> allCorrectionTypes = new HashSet<>();
     private int lastTotalAmount;
@@ -19,12 +24,14 @@ public class StatisticsController {
         for (DailyBalance dailyBalance : dailyBalances) {
             parseDailyBalance(dailyBalance);
         }
+        
+        calculateAverages();
 
         return statisticsModels;
     }
 
     private void parseDailyBalance(DailyBalance dailyBalance) {
-        Map<String, StatisticsModel> monthStatistics = getMonthStatistics(dailyBalance.getDate());
+        Map<String, StatisticsModel> monthStatistics = getMonthStatistics(dailyBalance.getDate().withDayOfMonth(1));
         List<Correction> corrections = dailyBalance.getCorrections();
         for (Correction correction : corrections) {
             parseCorrection(correction, monthStatistics);
@@ -59,5 +66,21 @@ public class StatisticsController {
         }
 
         return currentMonthStatistics.get(correctionType);
+    }
+    
+    private void calculateAverages() {
+    	Map<LocalDate, Map<String, StatisticsModel>> filteredMonthStatistics = 
+    			statisticsModels.entrySet().stream().filter(e -> e.getKey().plusMonths(AVERAGE_OF_MONTHS).isAfter(LocalDate.now().withDayOfMonth(1)) && !e.getKey().isAfter(LocalDate.now().withDayOfMonth(1)))
+    			.collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+    	for (Entry<LocalDate, Map<String, StatisticsModel>> monthStatisticsEntry : filteredMonthStatistics.entrySet()) {    	
+    		for (Entry<String, StatisticsModel> statisticsEntry : monthStatisticsEntry.getValue().entrySet()) {
+	    		int average = statisticsModels.entrySet().stream().filter(e -> e.getKey().plusMonths(AVERAGE_OF_MONTHS).isAfter(monthStatisticsEntry.getKey()) && !e.getKey().isAfter(monthStatisticsEntry.getKey()))
+	    			.map(e -> e.getValue())
+	    			.filter(i -> ((Entry<LocalDate, Map<String, StatisticsModel>>) i).getKey().equals(statisticsEntry.getKey()))
+	    			.mapToInt(e -> ((Entry<String, StatisticsModel>) e).getValue().getAmount())
+	    			.sum();
+	    		statisticsEntry.getValue().setAverage(average);
+    		}
+    	}
     }
 }

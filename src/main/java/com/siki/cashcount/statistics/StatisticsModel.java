@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 public class StatisticsModel {
     private Set<Correction> corrections = new HashSet<>();
+    private int average;
 
     public void putCorrection(Correction correction) {
         corrections.add(correction);
@@ -19,5 +20,13 @@ public class StatisticsModel {
     
     public String getDetails() {
     	return corrections.stream().map(Correction::getComment).collect(Collectors.joining("\n"));
+    }
+    
+    public void setAverage(int average) {
+    	this.average = average;
+    }
+    
+    public int getAverage() {
+    	return average;
     }
 }
