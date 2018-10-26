@@ -27,9 +27,7 @@ public class StatisticsViewBuilder {
         GridPane grid = new GridPane();
 
         int colCnt = 0;
-        
-        //TreeMap<String, Integer> averages = calculateAverages(data);
-        
+
         for (Entry<LocalDate, Map<String, StatisticsModel>> monthEntry : statisticsModels.entrySet()) {
             colCnt++;
             LocalDate date = monthEntry.getKey();
@@ -54,6 +52,7 @@ public class StatisticsViewBuilder {
 
             for (Entry<String, StatisticsModel> categoryEntry : monthEntry.getValue().entrySet()) {
             	String category = categoryEntry.getKey();
+            	StatisticsModel actStatisticModel = categoryEntry.getValue();
                 int rowNo = 0;
                 try {
                     rowNo = ConfigManager.getIntegerProperty(category);
@@ -100,23 +99,17 @@ public class StatisticsViewBuilder {
                 double outUpperBound = ConfigManager.getDoubleProperty("OutcomeDecoratorUpperBound");
                 */
                 double diffBound = ConfigManager.getDoubleProperty("DifferenceDecoratorBound");
-                
-                int diff = value - avgValue;
-                opacity = Math.abs(diff / diffBound);
-                if (opacity > 1) { opacity = 1; }
-                bgColor = diff > 0 ? Color.rgb(0, 200, 0, opacity) : Color.rgb(230, 0, 0, opacity);
-                
-                /*
-                if (value < 0) {
-                    opacity = ((value + outUpperBound) <= 0 ? (value + outUpperBound) : 0) / (outLowerBound + outUpperBound);
-                    if (opacity > 1d) opacity = 1;
-                    bgColor = Color.rgb(230, 0, 0, opacity);
-                } else {
-                    opacity = ((value - inLowerBound) >= 0 ? (value - inLowerBound) : 0) / (inUpperBound - inLowerBound);
-                    if (opacity > 1d) opacity = 1;
-                    bgColor = Color.rgb(0, 200, 0, opacity);
-                }*/
-                //cell.setBackground(new Background(new BackgroundFill(bgColor, CornerRadii.EMPTY, Insets.EMPTY)));
+
+                if (actStatisticModel.getPreviousStatisticsModel() != null) {
+                    int diff = actStatisticModel.getAverage() - actStatisticModel.getPreviousStatisticsModel().getAverage();
+                    opacity = Math.abs(diff / diffBound);
+                    if (opacity > 1) {
+                        opacity = 1;
+                    }
+
+                    bgColor = diff > 0 ? Color.rgb(0, 200, 0, opacity) : Color.rgb(230, 0, 0, opacity);
+                    cell.setBackground(new Background(new BackgroundFill(bgColor, CornerRadii.EMPTY, Insets.EMPTY)));
+                }
                 GridPane.setColumnIndex(cell, colCnt);
                 GridPane.setRowIndex(cell, rowNo);
                 grid.getChildren().add(cell);

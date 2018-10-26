@@ -12,6 +12,7 @@ import com.siki.cashcount.exception.JsonDeserializeException;
 import javafx.collections.FXCollections;
 
 import java.io.IOException;
+import java.util.*;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -40,4 +41,13 @@ public class StatisticsControllerTest {
 		Assert.assertEquals(true, true);
 	}
 
+	/*@Test
+	public void statisticsDeltaExperiment() {
+		List<Double> amount = Arrays.asList(new Double[]{3d,3d,3d,3d,3d,3d,3d,3d,3d,3d,3d,6d,5d,5d,5d,5d,5d,5d,5d,5d,3d,5d,5d,10d,7d,7d,7d,7d,7d,7d,7d,7d,7d,12d});
+		Map<String, List<Double>> serials = new HashMap<>();
+		serials.put("amount", amount);
+
+		List<Double> averages = new ArrayList<>();
+		for (Dou)
+	}*/
 }

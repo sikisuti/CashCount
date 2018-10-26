@@ -15,7 +15,7 @@ public class StatisticsController {
 	private static final int AVERAGE_OF_MONTHS = 12;
 	
     private SortedMap<LocalDate, Map<String, StatisticsModel>> statisticsModels = new TreeMap<>();
-    Set<String> allCorrectionTypes = new HashSet<>();
+    private Set<String> allCorrectionTypes = new HashSet<>();
     private int lastTotalAmount;
 
     public SortedMap<LocalDate, Map<String, StatisticsModel>> getStatistics() throws IOException, JsonDeserializeException {
@@ -23,7 +23,8 @@ public class StatisticsController {
         for (DailyBalance dailyBalance : dailyBalances) {
             parseDailyBalance(dailyBalance);
         }
-        
+
+        setBackwardReferences();
         calculateAverages();
 
         return statisticsModels;
@@ -70,24 +71,51 @@ public class StatisticsController {
     private void calculateAverages() {
     	Map<LocalDate, Map<String, StatisticsModel>> filteredMonthStatistics = 
     			statisticsModels.entrySet().stream().filter(e -> e.getKey().plusMonths(AVERAGE_OF_MONTHS).isAfter(LocalDate.now().withDayOfMonth(1)))
-    			.collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+    			.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (v1,v2) ->{ throw new RuntimeException(String.format("Duplicate key for values %s and %s", v1, v2));}, TreeMap::new));
     	for (Entry<LocalDate, Map<String, StatisticsModel>> monthStatisticsEntry : filteredMonthStatistics.entrySet()) {    	
-    		for (Entry<String, StatisticsModel> statisticsEntry : monthStatisticsEntry.getValue().entrySet()) {
-	    		Double averageDbl = statisticsModels.entrySet().stream().filter(e -> e.getKey().plusMonths(AVERAGE_OF_MONTHS).isAfter(monthStatisticsEntry.getKey()) && !e.getKey().isAfter(monthStatisticsEntry.getKey()))
-	    			.map(e -> e.getValue().entrySet()).flatMap(Collection::stream)
-	    			.filter(e -> e.getKey().equals(statisticsEntry.getKey()))
-	    			.mapToInt(e -> e.getValue().getAmount())
-	    			.average().orElse(0);
-	    		
-	    		statisticsEntry.getValue().setAverage(averageDbl.intValue());
-    		}
+    		calculateMonthAverages(monthStatisticsEntry);
     	}
+    }
+
+    private void calculateMonthAverages(Entry<LocalDate, Map<String, StatisticsModel>> monthStatisticsEntry) {
+        for (Entry<String, StatisticsModel> statisticsEntry : monthStatisticsEntry.getValue().entrySet()) {
+            List<Integer> amounts = statisticsModels.entrySet().stream().filter(e -> e.getKey().plusMonths(AVERAGE_OF_MONTHS).isAfter(monthStatisticsEntry.getKey()) && !e.getKey().isAfter(monthStatisticsEntry.getKey()))
+                    .map(e -> e.getValue().entrySet()).flatMap(Collection::stream)
+                    .filter(e -> e.getKey().equals(statisticsEntry.getKey()))
+                    .mapToInt(e -> {
+                        // Smooth amount peaks
+                        Integer amount = e.getValue().getAmount();
+                        int previousAverage = e.getValue().getPreviousStatisticsModel() == null || e.getValue().getPreviousStatisticsModel().getAverage() == 0  ?
+                                amount : e.getValue().getPreviousStatisticsModel().getAverage();
+                        Integer diffFromAverage = amount - previousAverage;
+                        return amount - (int) (diffFromAverage * 0.5);
+                    }).boxed().collect(Collectors.toList());
+
+            // calculate weighted average
+            Double amountSum = 0d;
+            Double divider = 0d;
+            for (int i = 0; i < amounts.size(); i++) {
+                amountSum += amounts.get(i) * (i + 1);
+                divider += (i + 1);
+            }
+
+            Double averageDbl = divider != 0 ? (amountSum / divider) : 0;
+            statisticsEntry.getValue().setAverage(averageDbl.intValue());
+        }
     }
     
     private void setBackwardReferences() {
-    	Set<LocalDate> keys = statisticsModels.keySet();
-    	for (int i = 1; i < keys.size(); i++) {
-    		statisticsModels.g
-    	}
+    	for (Entry<LocalDate, Map<String, StatisticsModel>> monthEntry : statisticsModels.entrySet()) {
+    	    if (!statisticsModels.containsKey(monthEntry.getKey().minusMonths(1))) {
+    	        continue;
+            }
+
+    	    for (Entry<String, StatisticsModel> categoryEntry : monthEntry.getValue().entrySet()) {
+    	        StatisticsModel previousStatisticsModel =
+                        statisticsModels.get(monthEntry.getKey().minusMonths(1))
+                            .get(categoryEntry.getKey());
+    	        categoryEntry.getValue().setPreviousStatisticsModel(previousStatisticsModel);
+            }
+        }
     }
 }
