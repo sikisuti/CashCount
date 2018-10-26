@@ -71,13 +71,13 @@ public class StatisticsController {
     private void calculateAverages() {
     	Map<LocalDate, Map<String, StatisticsModel>> filteredMonthStatistics = 
     			statisticsModels.entrySet().stream().filter(e -> e.getKey().plusMonths(AVERAGE_OF_MONTHS).isAfter(LocalDate.now().withDayOfMonth(1)) && !e.getKey().isAfter(LocalDate.now().withDayOfMonth(1)))
-    			.collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+    			.collect(Collectors.toMap(Entry::getKey, Entry::getValue));
     	for (Entry<LocalDate, Map<String, StatisticsModel>> monthStatisticsEntry : filteredMonthStatistics.entrySet()) {    	
     		for (Entry<String, StatisticsModel> statisticsEntry : monthStatisticsEntry.getValue().entrySet()) {
 	    		int average = statisticsModels.entrySet().stream().filter(e -> e.getKey().plusMonths(AVERAGE_OF_MONTHS).isAfter(monthStatisticsEntry.getKey()) && !e.getKey().isAfter(monthStatisticsEntry.getKey()))
-	    			.map(e -> e.getValue())
-	    			.filter(i -> ((Entry<LocalDate, Map<String, StatisticsModel>>) i).getKey().equals(statisticsEntry.getKey()))
-	    			.mapToInt(e -> ((Entry<String, StatisticsModel>) e).getValue().getAmount())
+	    			.map(e -> e.getValue().entrySet()).flatMap(Collection::stream)
+	    			.filter(e -> e.getKey().equals(statisticsEntry.getKey()))
+	    			.mapToInt(e -> e.getValue().getAmount())
 	    			.sum();
 	    		statisticsEntry.getValue().setAverage(average);
     		}
