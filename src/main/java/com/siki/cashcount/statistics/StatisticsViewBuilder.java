@@ -79,7 +79,7 @@ public class StatisticsViewBuilder {
                 Label lblValue;
                 value = categoryEntry.getValue().getAmount();
                 lblValue = new Label(NumberFormat.getCurrencyInstance().format(value));
-                Tooltip tt = new Tooltip(categoryEntry.getValue().getDetails());
+                Tooltip tt = new Tooltip(categoryEntry.getValue().getDetails() + "\nÉves átlag: " + NumberFormat.getCurrencyInstance().format(categoryEntry.getValue().getAverage()));
                 lblValue.setTooltip(tt);
 
                 if (date.isEqual(LocalDate.now().withDayOfMonth(1))) {
@@ -101,11 +101,10 @@ public class StatisticsViewBuilder {
                 */
                 double diffBound = ConfigManager.getDoubleProperty("DifferenceDecoratorBound");
                 
-                /*Integer avgValue = averages.getOrDefault(category, 0);
                 int diff = value - avgValue;
                 opacity = Math.abs(diff / diffBound);
                 if (opacity > 1) { opacity = 1; }
-                bgColor = diff > 0 ? Color.rgb(0, 200, 0, opacity) : Color.rgb(230, 0, 0, opacity);*/
+                bgColor = diff > 0 ? Color.rgb(0, 200, 0, opacity) : Color.rgb(230, 0, 0, opacity);
                 
                 /*
                 if (value < 0) {

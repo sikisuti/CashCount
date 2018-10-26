@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 public class StatisticsModel {
     private Set<Correction> corrections = new HashSet<>();
     private int average;
+    private StatisticsModel previousStatisticsModel;
 
     public void putCorrection(Correction correction) {
         corrections.add(correction);
@@ -28,5 +29,13 @@ public class StatisticsModel {
     
     public int getAverage() {
     	return average;
+    }
+    
+    public void setPreviousStatisticsModel(StatisticsModel statisticsModel) {
+    	this.previousStatisticsModel = statisticsModel;
+    }
+    
+    public StatisticsModel getPreviousStatisticsModel() {
+    	return previousStatisticsModel;
     }
 }

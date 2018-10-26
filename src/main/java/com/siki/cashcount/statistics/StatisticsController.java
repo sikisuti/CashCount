@@ -10,7 +10,6 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class StatisticsController {
 	private static final int AVERAGE_OF_MONTHS = 12;
@@ -70,17 +69,25 @@ public class StatisticsController {
     
     private void calculateAverages() {
     	Map<LocalDate, Map<String, StatisticsModel>> filteredMonthStatistics = 
-    			statisticsModels.entrySet().stream().filter(e -> e.getKey().plusMonths(AVERAGE_OF_MONTHS).isAfter(LocalDate.now().withDayOfMonth(1)) && !e.getKey().isAfter(LocalDate.now().withDayOfMonth(1)))
+    			statisticsModels.entrySet().stream().filter(e -> e.getKey().plusMonths(AVERAGE_OF_MONTHS).isAfter(LocalDate.now().withDayOfMonth(1)))
     			.collect(Collectors.toMap(Entry::getKey, Entry::getValue));
     	for (Entry<LocalDate, Map<String, StatisticsModel>> monthStatisticsEntry : filteredMonthStatistics.entrySet()) {    	
     		for (Entry<String, StatisticsModel> statisticsEntry : monthStatisticsEntry.getValue().entrySet()) {
-	    		int average = statisticsModels.entrySet().stream().filter(e -> e.getKey().plusMonths(AVERAGE_OF_MONTHS).isAfter(monthStatisticsEntry.getKey()) && !e.getKey().isAfter(monthStatisticsEntry.getKey()))
+	    		Double averageDbl = statisticsModels.entrySet().stream().filter(e -> e.getKey().plusMonths(AVERAGE_OF_MONTHS).isAfter(monthStatisticsEntry.getKey()) && !e.getKey().isAfter(monthStatisticsEntry.getKey()))
 	    			.map(e -> e.getValue().entrySet()).flatMap(Collection::stream)
 	    			.filter(e -> e.getKey().equals(statisticsEntry.getKey()))
 	    			.mapToInt(e -> e.getValue().getAmount())
-	    			.sum();
-	    		statisticsEntry.getValue().setAverage(average);
+	    			.average().orElse(0);
+	    		
+	    		statisticsEntry.getValue().setAverage(averageDbl.intValue());
     		}
+    	}
+    }
+    
+    private void setBackwardReferences() {
+    	Set<LocalDate> keys = statisticsModels.keySet();
+    	for (int i = 1; i < keys.size(); i++) {
+    		statisticsModels.g
     	}
     }
 }
