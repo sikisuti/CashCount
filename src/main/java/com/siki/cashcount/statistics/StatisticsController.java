@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 
 public class StatisticsController {
 	private static final int AVERAGE_OF_MONTHS = 12;
-	private static final double SMOOTH_ROOT_BASE = 0.99;
+	private static final double SMOOTH_ROOT_BASE = 0.9;
 	
     private SortedMap<LocalDate, Map<String, StatisticsModel>> statisticsModels = new TreeMap<>();
     private Set<String> allCorrectionTypes = new HashSet<>();
