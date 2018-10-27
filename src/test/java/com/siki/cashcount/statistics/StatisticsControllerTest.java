@@ -17,8 +17,11 @@ import java.util.*;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class StatisticsControllerTest {
+	private static final Logger LOGGER = LoggerFactory.getLogger(StatisticsControllerTest.class);
 	
 	StatisticsController statisticsController;
 
@@ -39,15 +42,29 @@ public class StatisticsControllerTest {
 	public void getStatisticsTest() throws IOException, JsonDeserializeException {
 		//statisticsController.getStatistics();
 		Assert.assertEquals(true, true);
+
+		double n = 0.5;
+		LOGGER.info("1: " + Math.pow(1, n));
+		LOGGER.info("10: " + Math.pow(10, n));
+		LOGGER.info("100: " + Math.pow(100, n));
+		LOGGER.info("1 000: " + Math.pow(1000, n));
+		LOGGER.info("10 000: " + Math.pow(10000, n));
+		LOGGER.info("100 000: " + Math.pow(100000, n));
+
+        n = 0.7;
+        LOGGER.info("1: " + Math.pow(1, n));
+        LOGGER.info("10: " + Math.pow(10, n));
+        LOGGER.info("100: " + Math.pow(100, n));
+        LOGGER.info("1 000: " + Math.pow(1000, n));
+        LOGGER.info("10 000: " + Math.pow(10000, n));
+        LOGGER.info("100 000: " + Math.pow(100000, n));
+
+        n = 0.9;
+        LOGGER.info("1: " + Math.pow(1, n));
+        LOGGER.info("10: " + Math.pow(10, n));
+        LOGGER.info("100: " + Math.pow(100, n));
+        LOGGER.info("1 000: " + Math.pow(1000, n));
+        LOGGER.info("10 000: " + Math.pow(10000, n));
+        LOGGER.info("100 000: " + Math.pow(100000, n));
 	}
-
-	/*@Test
-	public void statisticsDeltaExperiment() {
-		List<Double> amount = Arrays.asList(new Double[]{3d,3d,3d,3d,3d,3d,3d,3d,3d,3d,3d,6d,5d,5d,5d,5d,5d,5d,5d,5d,3d,5d,5d,10d,7d,7d,7d,7d,7d,7d,7d,7d,7d,12d});
-		Map<String, List<Double>> serials = new HashMap<>();
-		serials.put("amount", amount);
-
-		List<Double> averages = new ArrayList<>();
-		for (Dou)
-	}*/
 }

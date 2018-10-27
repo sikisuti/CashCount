@@ -2,6 +2,7 @@ package com.siki.cashcount.statistics;
 
 import com.siki.cashcount.data.DataManager;
 import com.siki.cashcount.exception.JsonDeserializeException;
+import com.siki.cashcount.helper.DebugWriter;
 import com.siki.cashcount.model.Correction;
 import com.siki.cashcount.model.DailyBalance;
 
@@ -13,6 +14,7 @@ import java.util.stream.Collectors;
 
 public class StatisticsController {
 	private static final int AVERAGE_OF_MONTHS = 12;
+	private static final double SMOOTH_ROOT_BASE = 0.99;
 	
     private SortedMap<LocalDate, Map<String, StatisticsModel>> statisticsModels = new TreeMap<>();
     private Set<String> allCorrectionTypes = new HashSet<>();
@@ -79,6 +81,8 @@ public class StatisticsController {
 
     private void calculateMonthAverages(Entry<LocalDate, Map<String, StatisticsModel>> monthStatisticsEntry) {
         for (Entry<String, StatisticsModel> statisticsEntry : monthStatisticsEntry.getValue().entrySet()) {
+            DebugWriter debugWriter = new DebugWriter();
+            debugWriter.insertLine("Amount", "PreviousAverage", "diffFromAverage", "SmoothedAmount");
             List<Integer> amounts = statisticsModels.entrySet().stream().filter(e -> e.getKey().plusMonths(AVERAGE_OF_MONTHS).isAfter(monthStatisticsEntry.getKey()) && !e.getKey().isAfter(monthStatisticsEntry.getKey()))
                     .map(e -> e.getValue().entrySet()).flatMap(Collection::stream)
                     .filter(e -> e.getKey().equals(statisticsEntry.getKey()))
@@ -88,9 +92,18 @@ public class StatisticsController {
                         int previousAverage = e.getValue().getPreviousStatisticsModel() == null || e.getValue().getPreviousStatisticsModel().getAverage() == 0  ?
                                 amount : e.getValue().getPreviousStatisticsModel().getAverage();
                         Integer diffFromAverage = amount - previousAverage;
-                        return amount - (int) (diffFromAverage * 0.5);
+                        int smoothedAmount;
+                        if (diffFromAverage < 0) {
+                            smoothedAmount = previousAverage - (int) (Math.pow(Math.abs(diffFromAverage), SMOOTH_ROOT_BASE));
+                        } else {
+                            smoothedAmount = previousAverage + (int) (Math.pow(diffFromAverage, SMOOTH_ROOT_BASE));
+                        }
+
+                        debugWriter.insertLine(String.valueOf(amount), String.valueOf(previousAverage), String.valueOf(diffFromAverage), String.valueOf(smoothedAmount));
+                        return smoothedAmount;
                     }).boxed().collect(Collectors.toList());
 
+            debugWriter.writeToFile(monthStatisticsEntry.getKey() + statisticsEntry.getKey() + String.valueOf(SMOOTH_ROOT_BASE) + ".csv");
             // calculate weighted average
             Double amountSum = 0d;
             Double divider = 0d;
