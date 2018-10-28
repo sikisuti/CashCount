@@ -29,12 +29,12 @@ public class StatisticsViewBuilder {
         int colCnt = 0;
 
         for (Entry<LocalDate, Map<String, StatisticsModel>> monthEntry : statisticsModels.entrySet()) {
-            colCnt++;
             LocalDate date = monthEntry.getKey();
             if (date.plusYears(1).isBefore(LocalDate.now().withDayOfMonth(1))) {
                 continue;
             }
 
+            colCnt++;
             GridPane headerBg = new GridPane();
             headerBg.setPrefSize(100, 30);
             headerBg.setAlignment(Pos.CENTER);
