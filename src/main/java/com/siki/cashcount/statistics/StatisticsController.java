@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class StatisticsController {
 	private static final int AVERAGE_OF_MONTHS = 12;
@@ -72,7 +73,7 @@ public class StatisticsController {
     
     private void calculateAverages() {
     	Map<LocalDate, Map<String, StatisticsModel>> filteredMonthStatistics = 
-    			statisticsModels.entrySet().stream().filter(e -> e.getKey().plusMonths(AVERAGE_OF_MONTHS).isAfter(LocalDate.now().withDayOfMonth(1)))
+    			statisticsModels.entrySet().stream().filter(e -> e.getKey().plusMonths(AVERAGE_OF_MONTHS).isAfter(LocalDate.now().withDayOfMonth(1).minusMonths(3)))
     			.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (v1,v2) ->{ throw new RuntimeException(String.format("Duplicate key for values %s and %s", v1, v2));}, TreeMap::new));
     	for (Entry<LocalDate, Map<String, StatisticsModel>> monthStatisticsEntry : filteredMonthStatistics.entrySet()) {    	
     		calculateMonthAverages(monthStatisticsEntry);
@@ -119,7 +120,12 @@ public class StatisticsController {
 
     private void calculateMonthAverages(Entry<LocalDate, Map<String, StatisticsModel>> monthStatisticsEntry) {
         for (Entry<String, StatisticsModel> statisticsEntry : monthStatisticsEntry.getValue().entrySet()) {
-            List<Integer> amounts = statisticsModels.entrySet().stream().filter(e -> e.getKey().plusMonths(AVERAGE_OF_MONTHS).isAfter(monthStatisticsEntry.getKey()) && !e.getKey().isAfter(monthStatisticsEntry.getKey()))
+            long monthCount = statisticsModels.entrySet().stream().filter(e -> e.getKey().plusMonths(AVERAGE_OF_MONTHS).isAfter(monthStatisticsEntry.getKey()) && !e.getKey().isAfter(monthStatisticsEntry.getKey())).count();
+            if (monthCount != AVERAGE_OF_MONTHS) {
+                return;
+            }
+
+            List<Integer> amounts = statisticsModels.entrySet().stream().filter(e -> e.getKey().plusMonths(AVERAGE_OF_MONTHS + 5).isAfter(monthStatisticsEntry.getKey()) && !e.getKey().isAfter(monthStatisticsEntry.getKey()))
                     .map(e -> e.getValue().entrySet()).flatMap(Collection::stream)
                     .filter(e -> e.getKey().equals(statisticsEntry.getKey()))
                     .mapToInt(e -> e.getValue().getAmount()).boxed().collect(Collectors.toList());

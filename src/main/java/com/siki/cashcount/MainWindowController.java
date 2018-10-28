@@ -80,6 +80,10 @@ public class MainWindowController implements Initializable {
             // 4. validate DailyBalancesTitledPane
             for (int i = 0; i < DataManager.getInstance().getAllDailyBalances().size(); i++) {
                 DailyBalance db = DataManager.getInstance().getAllDailyBalances().get(i);
+                if (db.getDate().plusYears(1).isBefore(LocalDate.now().withDayOfMonth(1))) {
+                    continue;
+                }
+
                 if (date == null || !db.getDate().getMonth().equals(date.getMonth())) {
                     if (tp != null) {
                         tp.validate();
@@ -126,7 +130,8 @@ public class MainWindowController implements Initializable {
     private void refreshChart(Event event) {
         if (((Tab)(event.getSource())).isSelected()) {
             try {
-                ObservableList<DailyBalance> series = DataManager.getInstance().getAllDailyBalances();
+                List<DailyBalance> series = DataManager.getInstance().getAllDailyBalances().stream()
+                        .filter(db -> !db.getDate().plusYears(1).isBefore(LocalDate.now().withDayOfMonth(1))).collect(Collectors.toList());
                 refreshChart(series);
             } catch (IOException | JsonDeserializeException ex) {
                 LOGGER.error("", ex);
@@ -135,43 +140,35 @@ public class MainWindowController implements Initializable {
         }
     }
     
-    private void refreshChart(ObservableList<DailyBalance> series) {
+    private void refreshChart(List<DailyBalance> series) {
         savingSeries.getData().clear();
         cashSeries.getData().clear();
         accountSeries.getData().clear();
         savingSeriesRef.getData().clear();
         cashSeriesRef.getData().clear();
         accountSeriesRef.getData().clear();
-                
-        try {
             
-            series.forEach(db -> {
-                Date date = DateHelper.toDate(db.getDate());
-                Integer yValue = db.getTotalSavings();
-                savingSeries.getData().add(new XYChart.Data(date, yValue));
-                savingSeriesRef.getData().add(new XYChart.Data(date, yValue));
-                yValue = yValue + db.getCash();
-                cashSeries.getData().add(new XYChart.Data(date, yValue));
-                cashSeriesRef.getData().add(new XYChart.Data(date, yValue));
-                yValue = yValue + db.getBalance();
-                accountSeries.getData().add(new XYChart.Data(date, yValue));  
-                accountSeriesRef.getData().add(new XYChart.Data(date, yValue));                       
-            });
-            
-            int max = accountSeries.getData().stream().mapToInt(s -> s.getYValue()).max().getAsInt();
-            int min = series.stream().filter(s -> s.isPredicted()).mapToInt(s -> s.getTotalSavings() + s.getTotalMoney()).min().getAsInt();
-            
-            flowChart.getYAxis().setUpperBound(Math.ceil(max / 100000d) * 100000);
-            flowChart.getYAxis().setLowerBound(Math.floor((min - 350000) / 100000d) * 100000);
-        
-            flowChart.getXAxis().setLowerBound(Date.from(DataManager.getInstance().getAllDailyBalances().get(0).getDate().atStartOfDay(ZoneId.systemDefault()).toInstant()));
-            flowChart.getXAxis().setUpperBound(Date.from(DataManager.getInstance().getLastDailyBalance().getDate().atStartOfDay(ZoneId.systemDefault()).toInstant()));
-        
-            
-        } catch (IOException | JsonDeserializeException ex) {
-            LOGGER.error("", ex);
-            ExceptionDialog.get(ex).showAndWait();
-        }
+        series.forEach(db -> {
+            Date date = DateHelper.toDate(db.getDate());
+            Integer yValue = db.getTotalSavings();
+            savingSeries.getData().add(new XYChart.Data(date, yValue));
+            savingSeriesRef.getData().add(new XYChart.Data(date, yValue));
+            yValue = yValue + db.getCash();
+            cashSeries.getData().add(new XYChart.Data(date, yValue));
+            cashSeriesRef.getData().add(new XYChart.Data(date, yValue));
+            yValue = yValue + db.getBalance();
+            accountSeries.getData().add(new XYChart.Data(date, yValue));
+            accountSeriesRef.getData().add(new XYChart.Data(date, yValue));
+        });
+
+        int max = accountSeries.getData().stream().mapToInt(s -> s.getYValue()).max().getAsInt();
+        int min = series.stream().filter(s -> s.isPredicted()).mapToInt(s -> s.getTotalSavings() + s.getTotalMoney()).min().getAsInt();
+
+        flowChart.getYAxis().setUpperBound(Math.ceil(max / 100000d) * 100000);
+        flowChart.getYAxis().setLowerBound(Math.floor((min - 350000) / 100000d) * 100000);
+
+        flowChart.getXAxis().setLowerBound(Date.from(series.get(0).getDate().atStartOfDay(ZoneId.systemDefault()).toInstant()));
+        flowChart.getXAxis().setUpperBound(Date.from(series.get(series.size() - 1).getDate().atStartOfDay(ZoneId.systemDefault()).toInstant()));
     }
     
     @FXML
@@ -365,7 +362,7 @@ public class MainWindowController implements Initializable {
     
     private void buildStatGrid( GridPane grid, TreeMap<LocalDate, TreeMap<String, Entry<Integer, String>>> data, List<String> keys) {
         int colCnt = 0;
-        
+
         TreeMap<String, Integer> averages = calculateAverages(data);
         
         for (Entry<LocalDate, TreeMap<String, Entry<Integer, String>>> entry : data.entrySet()) {

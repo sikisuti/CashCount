@@ -31,6 +31,9 @@ public class StatisticsViewBuilder {
         for (Entry<LocalDate, Map<String, StatisticsModel>> monthEntry : statisticsModels.entrySet()) {
             colCnt++;
             LocalDate date = monthEntry.getKey();
+            if (date.plusYears(1).isBefore(LocalDate.now().withDayOfMonth(1))) {
+                continue;
+            }
 
             GridPane headerBg = new GridPane();
             headerBg.setPrefSize(100, 30);
@@ -78,7 +81,12 @@ public class StatisticsViewBuilder {
                 Label lblValue;
                 value = categoryEntry.getValue().getAmount();
                 lblValue = new Label(NumberFormat.getCurrencyInstance().format(value));
-                Tooltip tt = new Tooltip(categoryEntry.getValue().getDetails() + "\nÉves átlag: " + NumberFormat.getCurrencyInstance().format(categoryEntry.getValue().getAverage()));
+                StringBuilder tooltipBuilder = new StringBuilder(categoryEntry.getValue().getDetails());
+                if (categoryEntry.getValue().getAverage() != null) {
+                    tooltipBuilder.append("\nÉves átlag: " + NumberFormat.getCurrencyInstance().format(categoryEntry.getValue().getAverage()));
+                }
+
+                Tooltip tt = new Tooltip(tooltipBuilder.toString());
                 lblValue.setTooltip(tt);
 
                 if (date.isEqual(LocalDate.now().withDayOfMonth(1))) {
@@ -100,8 +108,12 @@ public class StatisticsViewBuilder {
                 */
                 double diffBound = ConfigManager.getDoubleProperty("DifferenceDecoratorBound");
 
-                if (actStatisticModel.getPreviousStatisticsModel() != null) {
-                    int diff = actStatisticModel.getAverage() - actStatisticModel.getPreviousStatisticsModel().getAverage();
+                if (actStatisticModel.getAverage() != null &&
+                        actStatisticModel.getPreviousStatisticsModel() != null && actStatisticModel.getPreviousStatisticsModel().getAverage() != null &&
+                        actStatisticModel.getPreviousStatisticsModel().getPreviousStatisticsModel() != null && actStatisticModel.getPreviousStatisticsModel().getPreviousStatisticsModel().getAverage() != null) {
+                    int actAverageDelta = actStatisticModel.getAverage() - actStatisticModel.getPreviousStatisticsModel().getAverage();
+                    int previousAverageDelta = actStatisticModel.getPreviousStatisticsModel().getAverage() - actStatisticModel.getPreviousStatisticsModel().getPreviousStatisticsModel().getAverage();
+                    int diff = actAverageDelta - previousAverageDelta;
                     opacity = Math.abs(diff / diffBound);
                     if (opacity > 1) {
                         opacity = 1;
