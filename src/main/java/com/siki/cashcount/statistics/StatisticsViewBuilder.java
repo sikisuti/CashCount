@@ -115,7 +115,13 @@ public class StatisticsViewBuilder {
                     int previousAverageDelta = actStatisticModel.getPreviousStatisticsModel().getAverage() - actStatisticModel.getPreviousStatisticsModel().getPreviousStatisticsModel().getAverage();
                     int diff = actAverageDelta - previousAverageDelta;
                     opacity = Math.abs(diff / diffBound);
-                    if (opacity > 1) {
+                    if (opacity < 0.3) {
+                        opacity = 0;
+                    } else if (opacity < 0.6) {
+                        opacity = 0.33;
+                    } else if (opacity < 1) {
+                        opacity = 0.66;
+                    } else {
                         opacity = 1;
                     }
 
