@@ -79,7 +79,7 @@ public class StatisticsController {
     	}
     }
 
-    private void calculateMonthAverages(Entry<LocalDate, Map<String, StatisticsModel>> monthStatisticsEntry) {
+    /*private void calculateMonthAverages(Entry<LocalDate, Map<String, StatisticsModel>> monthStatisticsEntry) {
         for (Entry<String, StatisticsModel> statisticsEntry : monthStatisticsEntry.getValue().entrySet()) {
             DebugWriter debugWriter = new DebugWriter();
             debugWriter.insertLine("Amount", "PreviousAverage", "diffFromAverage", "SmoothedAmount");
@@ -104,6 +104,26 @@ public class StatisticsController {
                     }).boxed().collect(Collectors.toList());
 
             debugWriter.writeToFile(monthStatisticsEntry.getKey() + statisticsEntry.getKey() + String.valueOf(SMOOTH_ROOT_BASE) + ".csv");
+            // calculate weighted average
+            Double amountSum = 0d;
+            Double divider = 0d;
+            for (int i = 0; i < amounts.size(); i++) {
+                amountSum += amounts.get(i) * (i + 1);
+                divider += (i + 1);
+            }
+
+            Double averageDbl = divider != 0 ? (amountSum / divider) : 0;
+            statisticsEntry.getValue().setAverage(averageDbl.intValue());
+        }
+    }*/
+
+    private void calculateMonthAverages(Entry<LocalDate, Map<String, StatisticsModel>> monthStatisticsEntry) {
+        for (Entry<String, StatisticsModel> statisticsEntry : monthStatisticsEntry.getValue().entrySet()) {
+            List<Integer> amounts = statisticsModels.entrySet().stream().filter(e -> e.getKey().plusMonths(AVERAGE_OF_MONTHS).isAfter(monthStatisticsEntry.getKey()) && !e.getKey().isAfter(monthStatisticsEntry.getKey()))
+                    .map(e -> e.getValue().entrySet()).flatMap(Collection::stream)
+                    .filter(e -> e.getKey().equals(statisticsEntry.getKey()))
+                    .mapToInt(e -> e.getValue().getAmount()).boxed().collect(Collectors.toList());
+
             // calculate weighted average
             Double amountSum = 0d;
             Double divider = 0d;
