@@ -76,7 +76,7 @@ public class DailyBalancesTitledPane extends TitledPane {
     public void validate() {
         for (DailyBalance dailyBalance : dailyBalances) {
             for (AccountTransaction t : dailyBalance.getTransactions()) {
-                if (t.getCategory() == null || t.getSubCategory() == null) {
+                if (t.getCategory() == null) {
                     this.setBorder(new Border(new BorderStroke(Color.RED, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
                     return;
                 }

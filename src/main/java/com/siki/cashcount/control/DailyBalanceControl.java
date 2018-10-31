@@ -314,7 +314,7 @@ public final class DailyBalanceControl extends VBox {
     
     public void validate() {
         for (AccountTransaction t : dailyBalance.getTransactions()) {
-            if (t.getCategory() == null || t.getSubCategory() == null) {
+            if (t.getCategory() == null) {
                 this.setBorder(new Border(new BorderStroke(Color.RED, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
                 return;
             }

@@ -64,7 +64,7 @@ public class StatisticsController {
         SortedMap<LocalDate, Map<String, StatisticsModel>> dateAndTypeGroupedStatisticsModels = 
         		dateGroupedTransactions.entrySet().stream().collect(Collectors.toMap(Entry::getKey, e -> {
         			List<AccountTransaction> transactions = e.getValue();
-        			Map<String, List<AccountTransaction>> typeGroupedTransactions = transactions.stream().collect(Collectors.groupingBy(AccountTransaction::getSubCategory));
+        			Map<String, List<AccountTransaction>> typeGroupedTransactions = transactions.stream().collect(Collectors.groupingBy(AccountTransaction::getCategory));
         			return typeGroupedTransactions.entrySet().stream().collect(Collectors.toMap(en -> "  -- " + en.getKey(), en -> {
         						StatisticsModel statisticsModel = new StatisticsModel();
         						statisticsModel.putAllTransactions(en.getValue());            	        		

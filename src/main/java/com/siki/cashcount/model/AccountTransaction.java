@@ -24,7 +24,6 @@ public final class AccountTransaction {
     private final StringProperty comment;  
     private final StringProperty counter;
     private final StringProperty category;
-    private final StringProperty subCategory;
     private BooleanProperty paired;
     private List<Correction> pairedCorrections;
     private DailyBalance dailyBalance;
@@ -66,12 +65,8 @@ public final class AccountTransaction {
     public StringProperty counterProperty() { return counter; }
     
     public String getCategory() { return category.get(); }
-    public void setCategory(String category) { this.category.set(category); }
+    public void setCategory(String subCategory) { this.category.set(subCategory); }
     public StringProperty categoryProperty() { return category; }
-    
-    public String getSubCategory() { return subCategory.get(); }
-    public void setSubCategory(String subCategory) { this.subCategory.set(subCategory); }
-    public StringProperty subCategoryProperty() { return subCategory; }
         
     public Boolean isPaired() { return paired.get(); }
     public void setPaired(Boolean value) { this.paired.set(value); }
@@ -108,9 +103,8 @@ public final class AccountTransaction {
         this.accountNumber = new SimpleStringProperty();
         this.owner = new SimpleStringProperty();
         this.comment = new SimpleStringProperty();
-        this.counter = new SimpleStringProperty();     
-        this.category = new SimpleStringProperty();
-        this.subCategory = new SimpleStringProperty();   
+        this.counter = new SimpleStringProperty();   
+        this.category = new SimpleStringProperty();   
         this.pairedCorrections = new ArrayList<>();
         this.paired = new SimpleBooleanProperty();
     }
@@ -126,8 +120,7 @@ public final class AccountTransaction {
         setOwner(builder.owner);
         setComment(builder.comment);
         setCounter(builder.counter);
-        setCategory(builder.category);
-        setSubCategory(builder.subCategory);
+        setCategory(builder.subCategory);
     }
     
     public static class Builder {
@@ -220,12 +213,11 @@ public final class AccountTransaction {
                 this.getOwner().equals(other.getOwner()) &&
                 this.getComment().equals(other.getComment()) &&
                 this.getCounter().equals(other.getCounter()) &&
-                this.getCategory().equals(other.getCategory()) &&
-                this.getSubCategory().equals(other.getSubCategory());
+                this.getCategory().equals(other.getCategory());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, transactionType, date, amount, balance, accountNumber, owner, comment, counter, category, subCategory, paired, pairedCorrections);
+        return Objects.hash(id, transactionType, date, amount, balance, accountNumber, owner, comment, counter, category, paired, pairedCorrections);
     }
 }

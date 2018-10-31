@@ -48,21 +48,10 @@ public class TransactionControl extends GridPane {
             Circle isPaired = new Circle(10, new Color(0, 0, 1, 1));
             isPaired.visibleProperty().bind(t.pairedProperty());
             Label lblComment = new Label(t.getComment());
-            ComboBox cbCategory = new ComboBox();
-            cbCategory.setEditable(true);
-            cbCategory.setItems(DataManager.getInstance().getAllCategories());
-            cbCategory.valueProperty().bindBidirectional(t.categoryProperty());
-            cbCategory.setPrefWidth(200);
-            cbCategory.valueProperty().addListener(new ChangeListener<String>() {
-                @Override
-                public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-                    validate();
-                }
-            });
             ComboBox cbSubCategory = new ComboBox();
             cbSubCategory.setEditable(true);
             cbSubCategory.setItems(DataManager.getInstance().getAllSubCategories());
-            cbSubCategory.valueProperty().bindBidirectional(t.subCategoryProperty());
+            cbSubCategory.valueProperty().bindBidirectional(t.categoryProperty());
             cbSubCategory.setPrefWidth(200);
             cbSubCategory.valueProperty().addListener(new ChangeListener<String>() {
                 @Override
@@ -76,10 +65,9 @@ public class TransactionControl extends GridPane {
             GridPane.setConstraints(lblOwner, 2, rowCnt);
             GridPane.setConstraints(isPaired, 3, rowCnt);
             GridPane.setConstraints(lblComment, 4, rowCnt);
-            GridPane.setConstraints(cbCategory, 5, rowCnt);
             GridPane.setConstraints(cbSubCategory, 6, rowCnt);
         
-            this.getChildren().addAll(lblType, lblAmount, lblOwner, isPaired, lblComment, cbCategory, cbSubCategory);        
+            this.getChildren().addAll(lblType, lblAmount, lblOwner, isPaired, lblComment, cbSubCategory);        
         }
         
         this.setStyle("-fx-background-color: white;");

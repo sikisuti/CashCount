@@ -598,17 +598,13 @@ public class DataManager {
                 if (t.getCategory() == null) {
                     MatchingRule mr = findMatchingRule(t);
                     if (mr != null) {
-                        t.setCategory(mr.getCategory());
-                        t.setSubCategory(mr.getSubCategory());
+                        t.setCategory(mr.getSubCategory());
                     }
                 } 
-                if (t.getCategory() != null) {
-                    if (!categories.contains(t.getCategory())) {
-                        categories.add(t.getCategory());
-                        FXCollections.sort(categories);
-                    }
-                    if (!subCategories.contains(t.getSubCategory())) {
-                        subCategories.add(t.getSubCategory());
+                
+                if (t.getCategory() != null) {                    
+                    if (!subCategories.contains(t.getCategory())) {
+                        subCategories.add(t.getCategory());
                         FXCollections.sort(subCategories);
                     }
                 }
@@ -656,12 +652,12 @@ public class DataManager {
         List<DailyBalance> dailyBalancesOfMonth = dailyBalanceCache.stream().filter(db -> db.getDate().getYear() == year && db.getDate().getMonth() == month).collect(Collectors.toList());
         
         Map<String, List<AccountTransaction>> tList = 
-                dailyBalancesOfMonth.stream().flatMap(db -> db.getTransactions().stream()).filter(t -> (!t.isPaired() || (t.isPaired() && t.getNotPairedAmount()!= 0)) && !t.getCategory().equals("Banki költség") && !t.getCategory().equals("Készpénzfelvét")).collect(Collectors.groupingBy(t -> 
-                        (t.getSubCategory() != null ? "  -- " + t.getSubCategory() : "null")));
+                dailyBalancesOfMonth.stream().flatMap(db -> db.getTransactions().stream()).filter(t -> (!t.isPaired() || (t.isPaired() && t.getNotPairedAmount()!= 0))).collect(Collectors.groupingBy(t -> 
+                        (t.getCategory() != null ? "  -- " + t.getCategory() : "null")));
         
-        List<AccountTransaction> bankExpenses = dailyBalancesOfMonth.stream().flatMap(db -> db.getTransactions().stream()).filter(t -> t.getCategory().equals("Banki költség")).collect(Collectors.toList());
+        /*List<AccountTransaction> bankExpenses = dailyBalancesOfMonth.stream().flatMap(db -> db.getTransactions().stream()).filter(t -> t.getCategory().equals("Banki költség")).collect(Collectors.toList());
         if (bankExpenses.size() > 0)
-            tList.put("  -- Banki költség", bankExpenses);
+            tList.put("  -- Banki költség", bankExpenses);*/
         
         List<String> ConsideredCategories = Arrays.asList(ConfigManager.getStringProperty("ConsideredCategories").split(","));
         tList.put("  -- Maradék", new ArrayList<AccountTransaction>());
@@ -678,10 +674,6 @@ public class DataManager {
         for (String key : keysToDelete) {
             tList.remove(key);
         }
-//        List<AccountTransaction> remaining = dailyBalancesOfMonth.stream().flatMap(db -> db.getTransactions().stream())
-//                .filter(t -> t.getCategory().equals("Kártyás vásárlás") && !ConsideredCategories.contains(t.getSubCategory())).collect(Collectors.toList());
-//        if (remaining.size() > 0)
-//            tList.put("  -- Maradék", remaining);
         
         for (String key : tList.keySet()) {
             List<String> comments = tList.get(key).stream().map(c -> NumberFormat.getCurrencyInstance().format(c.getAmount()) + " " + c.getTransactionType() + " - " + c.getComment()).distinct().collect(Collectors.toList());
