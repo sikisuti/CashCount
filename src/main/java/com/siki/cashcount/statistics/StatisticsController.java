@@ -24,7 +24,8 @@ public class StatisticsController {
 
     public SortedMap<LocalDate, Map<String, StatisticsModel>> getStatistics() throws IOException, JsonDeserializeException {
     	List<DailyBalance> dailyBalances =  DataManager.getInstance().getAllDailyBalances();
-        getCorrections(dailyBalances);      
+        getCorrections(dailyBalances);     
+        getTransactions(dailyBalances);
 
         fillEmptyStatisticsModels();
         setBackwardReferences();
@@ -44,10 +45,7 @@ public class StatisticsController {
         			Map<String, List<Correction>> typeGroupedCorrections = corrections.stream().collect(Collectors.groupingBy(Correction::getType));
         			return typeGroupedCorrections.entrySet().stream().collect(Collectors.toMap(Entry::getKey, en -> {
         						StatisticsModel statisticsModel = new StatisticsModel();
-            	        		for (Correction correction : en.getValue()) {
-            	        			statisticsModel.putCorrection(correction);
-            	        		}
-            	        		
+        						statisticsModel.putAllCorrections(en.getValue());            	        		
             	        		return statisticsModel;
         						}));
         		}, (v1,v2) ->{ throw new RuntimeException(String.format("Duplicate key for values %s and %s", v1, v2));}, TreeMap::new));
@@ -56,23 +54,32 @@ public class StatisticsController {
     }
     
     private void getTransactions(List<DailyBalance> dailyBalances) {
-    	Stream<AccountTransaction> allTransactions = dailyBalances.stream().map(DailyBalance::getTransactions).flatMap(Collection::stream);
+    	Stream<AccountTransaction> allTransactions = dailyBalances.stream().map(DailyBalance::getTransactions).flatMap(Collection::stream).filter(t -> (!t.isPaired() || (t.isPaired() && t.getNotPairedAmount()!= 0)));
         Map<LocalDate, List<AccountTransaction>> dateGroupedTransactions = 
-        		allTransactions.collect(Collectors.groupingBy(c -> c.getDate().withDayOfMonth(1)));
+        		allTransactions.collect(Collectors.groupingBy(t -> { 
+        			LocalDate date = t.getDailyBalance().getDate().withDayOfMonth(1); 
+        			return date;
+        			}));
         
         SortedMap<LocalDate, Map<String, StatisticsModel>> dateAndTypeGroupedStatisticsModels = 
         		dateGroupedTransactions.entrySet().stream().collect(Collectors.toMap(Entry::getKey, e -> {
         			List<AccountTransaction> transactions = e.getValue();
         			Map<String, List<AccountTransaction>> typeGroupedTransactions = transactions.stream().collect(Collectors.groupingBy(AccountTransaction::getSubCategory));
-        			return typeGroupedTransactions.entrySet().stream().collect(Collectors.toMap(Entry::getKey, en -> {
+        			return typeGroupedTransactions.entrySet().stream().collect(Collectors.toMap(en -> "  -- " + en.getKey(), en -> {
         						StatisticsModel statisticsModel = new StatisticsModel();
-            	        		for (AccountTransaction transaction : en.getValue()) {
-            	        			statisticsModel.putCorrection(correction);
-            	        		}
-            	        		
+        						statisticsModel.putAllTransactions(en.getValue());            	        		
             	        		return statisticsModel;
         						}));
         		}, (v1,v2) ->{ throw new RuntimeException(String.format("Duplicate key for values %s and %s", v1, v2));}, TreeMap::new));
+        
+        for (Entry<LocalDate, Map<String, StatisticsModel>> monthEntry : dateAndTypeGroupedStatisticsModels.entrySet()) {
+        	if (statisticsModels.containsKey(monthEntry.getKey())) {
+        		statisticsModels.get(monthEntry.getKey()).putAll(monthEntry.getValue());
+        	} else {
+        		statisticsModels.put(monthEntry.getKey(), monthEntry.getValue());
+        	}
+        		
+        }
     }
     
     private void fillEmptyStatisticsModels() {

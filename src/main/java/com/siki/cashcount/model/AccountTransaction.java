@@ -16,6 +16,19 @@ import javafx.beans.property.*;
 public final class AccountTransaction {
     
     private Long id;
+    private final ObjectProperty date;
+    private final IntegerProperty amount;
+    private final IntegerProperty balance;
+    private final StringProperty accountNumber;  
+    private final StringProperty owner;  
+    private final StringProperty comment;  
+    private final StringProperty counter;
+    private final StringProperty category;
+    private final StringProperty subCategory;
+    private BooleanProperty paired;
+    private List<Correction> pairedCorrections;
+    private DailyBalance dailyBalance;
+    
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     
@@ -24,57 +37,53 @@ public final class AccountTransaction {
     public void setTransactionType(String transactionType) { this.transactionType.set(transactionType); }
     public StringProperty transactionTypeProperty() { return transactionType; }
     
-    private final ObjectProperty date;
     public LocalDate getDate() { return (LocalDate)date.get(); }
     public void setDate(LocalDate date) { this.date.set(date); }
     public ObjectProperty dateProperty() { return date; }
     
-    private final IntegerProperty amount;
     public Integer getAmount() { return amount.get(); }
     public void setAmount(Integer amount) { this.amount.set(amount); }
     public IntegerProperty amountProperty() { return amount; }
     
-    private final IntegerProperty balance;
     public Integer getBalance() { return balance.get(); }
     public void setBalance(Integer balance) { this.balance.set(balance); }
     public IntegerProperty balanceProperty() { return balance; }
-    
-    private final StringProperty accountNumber;    
+      
     public String getAccountNumber() { return accountNumber.get(); }
     public void setAccountNumber(String accountNumber) { this.accountNumber.set(accountNumber); }
     public StringProperty accountNumberProperty() { return accountNumber; }
-    
-    private final StringProperty owner;    
+      
     public String getOwner() { return owner.get(); }
     public void setOwner(String owner) { this.owner.set(owner); }
     public StringProperty ownerProperty() { return owner; }
-    
-    private final StringProperty comment;    
+      
     public String getComment() { return comment.get(); }
     public void setComment(String comment) { this.comment.set(comment); }
     public StringProperty commentProperty() { return comment; }
     
-    private final StringProperty counter;
     public String getCounter() { return counter.get(); }
     public void setCounter(String counter) { this.counter.set(counter); }
     public StringProperty counterProperty() { return counter; }
     
-    private final StringProperty category;
     public String getCategory() { return category.get(); }
     public void setCategory(String category) { this.category.set(category); }
     public StringProperty categoryProperty() { return category; }
     
-    private final StringProperty subCategory;
     public String getSubCategory() { return subCategory.get(); }
     public void setSubCategory(String subCategory) { this.subCategory.set(subCategory); }
     public StringProperty subCategoryProperty() { return subCategory; }
         
-    private BooleanProperty paired;
     public Boolean isPaired() { return paired.get(); }
     public void setPaired(Boolean value) { this.paired.set(value); }
     public BooleanProperty pairedProperty() { return paired; }
     
-    private List<Correction> pairedCorrections;
+    public void setDailyBalance(DailyBalance dailyBalance) {
+    	this.dailyBalance = dailyBalance;
+    }
+    public DailyBalance getDailyBalance() {
+    	return this.dailyBalance;
+    }
+    
     public void addPairedCorrection(Correction correction) { 
         if (!pairedCorrections.contains(correction)) {
             pairedCorrections.add(correction);

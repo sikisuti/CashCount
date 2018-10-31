@@ -161,6 +161,11 @@ public class DataManager {
                 db.getCorrections().stream().forEach((c) -> {
                     c.setDailyBalance(db);
                 });
+                
+                db.getTransactions().stream().forEach(t -> {
+                	t.setDailyBalance(db);
+                });
+                
                 if (prevDailyBalance != null) { db.setPrevDailyBalance(prevDailyBalance); }
                 rtnList.add(db);
                 prevDailyBalance = db;
