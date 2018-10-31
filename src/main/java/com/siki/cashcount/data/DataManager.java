@@ -598,7 +598,7 @@ public class DataManager {
                 if (t.getCategory() == null) {
                     MatchingRule mr = findMatchingRule(t);
                     if (mr != null) {
-                        t.setCategory(mr.getSubCategory());
+                        t.setCategory(mr.getCategory());
                     }
                 } 
                 

@@ -21,23 +21,17 @@ public class MatchingRule {
     private String category;
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }
-    
-    private String subCategory;
-    public String getSubCategory() { return subCategory; }
-    public void setSubCategory(String subCategory) { this.subCategory = subCategory; }
 
     private MatchingRule(Builder builder) {
         this.field = builder.filed;
         this.pattern = builder.pattern;
         this.category = builder.category;
-        this.subCategory = builder.subCategory;
     }
     
     public static class Builder {
         private String filed;
         private String pattern;
         private String category;
-        private String subCategory;
         
         public Builder setField(String field) {
             this.filed = field;
@@ -54,11 +48,6 @@ public class MatchingRule {
             return this;
         }
         
-        public Builder setSubCategory(String subCategory) {
-            this.subCategory = subCategory;
-            return this;
-        }
-        
         public MatchingRule build() {
             return new MatchingRule(this);
         }
@@ -66,7 +55,7 @@ public class MatchingRule {
 
     @Override
     public String toString() {
-        return "MatchingRule{" + "field=" + field + ", pattern=" + pattern + ", category=" + category + ", subCategory=" + subCategory + '}';
+        return "MatchingRule{" + "field=" + field + ", pattern=" + pattern + ", category=" + category + '}';
     }
     
     

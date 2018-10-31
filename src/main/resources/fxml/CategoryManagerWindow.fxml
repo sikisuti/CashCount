@@ -34,9 +34,7 @@
                 <Label text="Minta" GridPane.columnIndex="0" GridPane.rowIndex="1" />
                 <TextField fx:id="tfPattern" GridPane.columnIndex="1" GridPane.rowIndex="1" prefWidth="200" />  
                 <Label text="Kategória" GridPane.columnIndex="0" GridPane.rowIndex="2" />    
-                <ComboBox fx:id="cbCategory" GridPane.columnIndex="1" GridPane.rowIndex="2" prefWidth="200" editable="true"  />  
-                <Label  text="Alkategória" GridPane.columnIndex="0" GridPane.rowIndex="3" />
-                <ComboBox fx:id="cbSubCategory" GridPane.columnIndex="1" GridPane.rowIndex="3" prefWidth="200" editable="true"  />     
+                <ComboBox fx:id="cbCategory" GridPane.columnIndex="1" GridPane.rowIndex="2" prefWidth="200" editable="true"  />      
             </children>
         </GridPane>
         <Button text="Hozzáad" onAction="#add" />  

@@ -36,7 +36,6 @@ public class CategoryManagerWindowController implements Initializable {
     @FXML private ComboBox cbField;
     @FXML private TextField tfPattern;
     @FXML private ComboBox cbCategory;
-    @FXML private ComboBox cbSubCategory;
     @FXML private HBox hbCategories;
     
     private TreeMap<String, ObservableList<String>> categories = new TreeMap<>();
@@ -50,7 +49,6 @@ public class CategoryManagerWindowController implements Initializable {
             cbField.getItems().addAll(DataManager.TRANSACTION_COMMENT_NAME, DataManager.TRANSACTION_TYPE_NAME, DataManager.TRANSACTION_OWNER_NAME);
             cbField.setValue(DataManager.TRANSACTION_COMMENT_NAME);
             cbCategory.setItems(DataManager.getInstance().getAllCategories());
-            cbSubCategory.setItems(DataManager.getInstance().getAllSubCategories());
             for (MatchingRule rule : DataManager.getInstance().getAllMatchingRules()) {
                 addRule(rule);
             }
@@ -84,14 +82,13 @@ public class CategoryManagerWindowController implements Initializable {
     @FXML
     private void add(ActionEvent event) {
         try {
-            if (cbField.getValue() == null || tfPattern.getText() == null || cbCategory.getValue() == null || cbSubCategory.getValue() == null)
+            if (cbField.getValue() == null || tfPattern.getText() == null || cbCategory.getValue() == null)
                 return;
             
             MatchingRule mr = new MatchingRule.Builder()
                     .setField(cbField.getValue().toString())
                     .setPattern(tfPattern.getText())
                     .setCategory(cbCategory.getValue().toString())
-                    .setSubCategory(cbSubCategory.getValue().toString())
                     .build();
             DataManager.getInstance().addMatchingRule(mr);
             if (!categories.containsKey(mr.getCategory())) {                
