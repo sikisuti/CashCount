@@ -9,11 +9,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class StatisticsModel {
+public class StatisticsCellModel {
     private Set<Correction> corrections = new HashSet<>();
     private Set<AccountTransaction> transactions = new HashSet<>();
     private Integer average;
-    private StatisticsModel previousStatisticsModel;
+    private StatisticsCellModel previousStatisticsModel;
 
     public void putCorrection(Correction correction) {
         corrections.add(correction);
@@ -23,6 +23,10 @@ public class StatisticsModel {
     	for (Correction correction : corrections) {
     		this.corrections.add(correction);
     	}
+    }
+    
+    public void putTransaction(AccountTransaction transaction) {
+    	transactions.add(transaction);
     }
     
     public void putAllTransactions(List<AccountTransaction> transactions) {
@@ -61,11 +65,11 @@ public class StatisticsModel {
     	return average;
     }
     
-    public void setPreviousStatisticsModel(StatisticsModel statisticsModel) {
+    public void setPreviousStatisticsModel(StatisticsCellModel statisticsModel) {
     	this.previousStatisticsModel = statisticsModel;
     }
     
-    public StatisticsModel getPreviousStatisticsModel() {
+    public StatisticsCellModel getPreviousStatisticsModel() {
     	return previousStatisticsModel;
     }
 }

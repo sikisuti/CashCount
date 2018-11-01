@@ -1,5 +1,6 @@
 package com.siki.cashcount.statistics;
 
+import com.siki.cashcount.config.ConfigManager;
 import com.siki.cashcount.data.DataManager;
 import com.siki.cashcount.exception.JsonDeserializeException;
 import com.siki.cashcount.helper.DebugWriter;
@@ -19,19 +20,21 @@ import java.util.stream.Stream;
 public class StatisticsController {
 	private static final int AVERAGE_OF_MONTHS = 12;
 	
-    private SortedMap<LocalDate, Map<String, StatisticsModel>> statisticsModels = new TreeMap<>();
-    private int lastTotalAmount;
+    private SortedMap<LocalDate, StatisticsMonthModel> statisticsMonthModels = new TreeMap<>();
+    List<String> consideredCategories;
 
-    public SortedMap<LocalDate, Map<String, StatisticsModel>> getStatistics() throws IOException, JsonDeserializeException {
+    public SortedMap<LocalDate, StatisticsMonthModel> getStatistics() throws IOException, JsonDeserializeException {
     	List<DailyBalance> dailyBalances =  DataManager.getInstance().getAllDailyBalances();
         getCorrections(dailyBalances);     
-        getTransactions(dailyBalances);
+        consideredCategories = Arrays.asList(ConfigManager.getStringProperty("ConsideredCategories").split(","));
+        getConsideredTransactions(dailyBalances);
+        getRestTransactions(dailyBalances);
 
         fillEmptyStatisticsModels();
         setBackwardReferences();
         calculateAverages();
 
-        return statisticsModels;
+        return statisticsMonthModels;
     }
     
     private void getCorrections(List<DailyBalance> dailyBalances) {
@@ -39,95 +42,121 @@ public class StatisticsController {
         Map<LocalDate, List<Correction>> dateGroupedCorrections = 
         		allCorrections.collect(Collectors.groupingBy(c -> c.getDailyBalance().getDate().withDayOfMonth(1)));
         
-        SortedMap<LocalDate, Map<String, StatisticsModel>> dateAndTypeGroupedStatisticsModels = 
+        SortedMap<LocalDate, StatisticsMonthModel> dateAndTypeGroupedStatisticsModels = 
         		dateGroupedCorrections.entrySet().stream().collect(Collectors.toMap(Entry::getKey, e -> {
         			List<Correction> corrections = e.getValue();
         			Map<String, List<Correction>> typeGroupedCorrections = corrections.stream().collect(Collectors.groupingBy(Correction::getType));
-        			return typeGroupedCorrections.entrySet().stream().collect(Collectors.toMap(Entry::getKey, en -> {
-        						StatisticsModel statisticsModel = new StatisticsModel();
+        			Map<String, StatisticsCellModel> dateAndTypeGroupedCorrections = typeGroupedCorrections.entrySet().stream().collect(Collectors.toMap(Entry::getKey, en -> {
+        				StatisticsCellModel statisticsModel = new StatisticsCellModel();
         						statisticsModel.putAllCorrections(en.getValue());            	        		
             	        		return statisticsModel;
         						}));
+        			StatisticsMonthModel monthModel = new StatisticsMonthModel();
+        			monthModel.addAllCellModels(dateAndTypeGroupedCorrections);
+        			return monthModel;
         		}, (v1,v2) ->{ throw new RuntimeException(String.format("Duplicate key for values %s and %s", v1, v2));}, TreeMap::new));
         
-        statisticsModels.putAll(dateAndTypeGroupedStatisticsModels);  
+        statisticsMonthModels.putAll(dateAndTypeGroupedStatisticsModels);  
     }
     
-    private void getTransactions(List<DailyBalance> dailyBalances) {
-    	Stream<AccountTransaction> allTransactions = dailyBalances.stream().map(DailyBalance::getTransactions).flatMap(Collection::stream).filter(t -> (!t.isPaired() || (t.isPaired() && t.getNotPairedAmount()!= 0)));
+    private void getConsideredTransactions(List<DailyBalance> dailyBalances) {
+    	Stream<AccountTransaction> allTransactions = dailyBalances.stream().map(DailyBalance::getTransactions).flatMap(Collection::stream)
+    			.filter(t -> consideredCategories.contains(t.getCategory()) && (!t.isPaired() || (t.isPaired() && t.getNotPairedAmount() != 0)));
         Map<LocalDate, List<AccountTransaction>> dateGroupedTransactions = 
         		allTransactions.collect(Collectors.groupingBy(t -> { 
         			LocalDate date = t.getDailyBalance().getDate().withDayOfMonth(1); 
         			return date;
         			}));
         
-        SortedMap<LocalDate, Map<String, StatisticsModel>> dateAndTypeGroupedStatisticsModels = 
+        SortedMap<LocalDate, StatisticsMonthModel> dateAndTypeGroupedStatisticsModels = 
         		dateGroupedTransactions.entrySet().stream().collect(Collectors.toMap(Entry::getKey, e -> {
         			List<AccountTransaction> transactions = e.getValue();
         			Map<String, List<AccountTransaction>> typeGroupedTransactions = transactions.stream().collect(Collectors.groupingBy(AccountTransaction::getCategory));
-        			return typeGroupedTransactions.entrySet().stream().collect(Collectors.toMap(en -> "  -- " + en.getKey(), en -> {
-        						StatisticsModel statisticsModel = new StatisticsModel();
+        			Map<String, StatisticsCellModel> dateAndTypeGroupedTransactions = typeGroupedTransactions.entrySet().stream().collect(Collectors.toMap(en -> "  -- " + en.getKey(), en -> {
+        				StatisticsCellModel statisticsModel = new StatisticsCellModel();
         						statisticsModel.putAllTransactions(en.getValue());            	        		
             	        		return statisticsModel;
         						}));
+        			StatisticsMonthModel monthModel = new StatisticsMonthModel();
+        			monthModel.addAllCellModels(dateAndTypeGroupedTransactions);
+        			return monthModel;
         		}, (v1,v2) ->{ throw new RuntimeException(String.format("Duplicate key for values %s and %s", v1, v2));}, TreeMap::new));
         
-        for (Entry<LocalDate, Map<String, StatisticsModel>> monthEntry : dateAndTypeGroupedStatisticsModels.entrySet()) {
-        	if (statisticsModels.containsKey(monthEntry.getKey())) {
-        		statisticsModels.get(monthEntry.getKey()).putAll(monthEntry.getValue());
+        for (Entry<LocalDate, StatisticsMonthModel> monthEntry : dateAndTypeGroupedStatisticsModels.entrySet()) {
+        	if (statisticsMonthModels.containsKey(monthEntry.getKey())) {
+        		statisticsMonthModels.get(monthEntry.getKey()).addAllCellModels(monthEntry.getValue().getCellModels());
         	} else {
-        		statisticsModels.put(monthEntry.getKey(), monthEntry.getValue());
+        		statisticsMonthModels.put(monthEntry.getKey(), monthEntry.getValue());
         	}
         		
         }
     }
     
+    private void getRestTransactions(List<DailyBalance> dailyBalances) {
+    	Stream<AccountTransaction> allTransactions = dailyBalances.stream().map(DailyBalance::getTransactions).flatMap(Collection::stream)
+    			.filter(t -> !consideredCategories.contains(t.getCategory()) && (!t.isPaired() || (t.isPaired() && t.getNotPairedAmount() != 0)));
+        Map<LocalDate, List<AccountTransaction>> dateGroupedTransactions = 
+        		allTransactions.collect(Collectors.groupingBy(t -> { 
+        			LocalDate date = t.getDailyBalance().getDate().withDayOfMonth(1); 
+        			return date;
+        			}));
+        
+        for (Entry<LocalDate, List<AccountTransaction>> monthTransactions : dateGroupedTransactions.entrySet()) {
+        	int restMonthSum = monthTransactions.getValue().stream().mapToInt(AccountTransaction::getAmount).sum();
+        	AccountTransaction transaction = new AccountTransaction();
+        	transaction.setAmount(restMonthSum);
+        	StatisticsCellModel cellModel = new StatisticsCellModel();
+        	cellModel.putTransaction(transaction);
+        	statisticsMonthModels.get(monthTransactions.getKey()).addCellModel("  -- Maradék", cellModel);
+        }
+    }
+    
     private void fillEmptyStatisticsModels() {
-        Set<String> allCorrectionTypes = statisticsModels.entrySet().stream().map(e -> e.getValue().entrySet()).flatMap(Collection::stream).map(e -> e.getKey()).distinct().collect(Collectors.toSet());
+        Set<String> allCorrectionTypes = statisticsMonthModels.entrySet().stream().map(e -> e.getValue().getCellModels().entrySet()).flatMap(Collection::stream).map(e -> e.getKey()).distinct().collect(Collectors.toSet());
         
         for (String type : allCorrectionTypes) {
-        	for (Entry<LocalDate, Map<String, StatisticsModel>> monthEntry : statisticsModels.entrySet()) {
-        		Map<String, StatisticsModel> monthTypes = monthEntry.getValue();
+        	for (Entry<LocalDate, StatisticsMonthModel> monthEntry : statisticsMonthModels.entrySet()) {
+        		Map<String, StatisticsCellModel> monthTypes = monthEntry.getValue().getCellModels();
         		if (!monthTypes.containsKey(type)) {
-        			monthTypes.put(type, new StatisticsModel());
+        			monthTypes.put(type, new StatisticsCellModel());
         		}
         	}
         }
     }
     
     private void setBackwardReferences() {
-    	for (Entry<LocalDate, Map<String, StatisticsModel>> monthEntry : statisticsModels.entrySet()) {
-    	    if (!statisticsModels.containsKey(monthEntry.getKey().minusMonths(1))) {
+    	for (Entry<LocalDate, StatisticsMonthModel> monthEntry : statisticsMonthModels.entrySet()) {
+    	    if (!statisticsMonthModels.containsKey(monthEntry.getKey().minusMonths(1))) {
     	        continue;
             }
 
-    	    for (Entry<String, StatisticsModel> categoryEntry : monthEntry.getValue().entrySet()) {
-    	        StatisticsModel previousStatisticsModel =
-                        statisticsModels.get(monthEntry.getKey().minusMonths(1))
+    	    for (Entry<String, StatisticsCellModel> categoryEntry : monthEntry.getValue().getCellModels().entrySet()) {
+    	    	StatisticsCellModel previousStatisticsCellModel =
+                        statisticsMonthModels.get(monthEntry.getKey().minusMonths(1)).getCellModels()
                             .get(categoryEntry.getKey());
-    	        categoryEntry.getValue().setPreviousStatisticsModel(previousStatisticsModel);
+    	        categoryEntry.getValue().setPreviousStatisticsModel(previousStatisticsCellModel);
             }
         }
     }
     
     private void calculateAverages() {
-    	Map<LocalDate, Map<String, StatisticsModel>> filteredMonthStatistics = 
-    			statisticsModels.entrySet().stream().filter(e -> e.getKey().plusMonths(AVERAGE_OF_MONTHS).isAfter(LocalDate.now().withDayOfMonth(1).minusMonths(3)))
+    	Map<LocalDate, StatisticsMonthModel> filteredMonthStatistics = 
+    			statisticsMonthModels.entrySet().stream().filter(e -> e.getKey().plusMonths(AVERAGE_OF_MONTHS).isAfter(LocalDate.now().withDayOfMonth(1).minusMonths(3)))
     			.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (v1,v2) ->{ throw new RuntimeException(String.format("Duplicate key for values %s and %s", v1, v2));}, TreeMap::new));
-    	for (Entry<LocalDate, Map<String, StatisticsModel>> monthStatisticsEntry : filteredMonthStatistics.entrySet()) {    	
+    	for (Entry<LocalDate, StatisticsMonthModel> monthStatisticsEntry : filteredMonthStatistics.entrySet()) {    	
     		calculateMonthAverages(monthStatisticsEntry);
     	}
     }
 
-    private void calculateMonthAverages(Entry<LocalDate, Map<String, StatisticsModel>> monthStatisticsEntry) {
-        for (Entry<String, StatisticsModel> statisticsEntry : monthStatisticsEntry.getValue().entrySet()) {
-            long monthCount = statisticsModels.entrySet().stream().filter(e -> e.getKey().plusMonths(AVERAGE_OF_MONTHS).isAfter(monthStatisticsEntry.getKey()) && !e.getKey().isAfter(monthStatisticsEntry.getKey())).count();
+    private void calculateMonthAverages(Entry<LocalDate, StatisticsMonthModel> monthStatisticsEntry) {
+        for (Entry<String, StatisticsCellModel> statisticsEntry : monthStatisticsEntry.getValue().getCellModels().entrySet()) {
+            long monthCount = statisticsMonthModels.entrySet().stream().filter(e -> e.getKey().plusMonths(AVERAGE_OF_MONTHS).isAfter(monthStatisticsEntry.getKey()) && !e.getKey().isAfter(monthStatisticsEntry.getKey())).count();
             if (monthCount != AVERAGE_OF_MONTHS) {
                 return;
             }
 
-            List<Integer> amounts = statisticsModels.entrySet().stream().filter(e -> e.getKey().plusMonths(AVERAGE_OF_MONTHS + 5).isAfter(monthStatisticsEntry.getKey()) && !e.getKey().isAfter(monthStatisticsEntry.getKey()))
-                    .map(e -> e.getValue().entrySet()).flatMap(Collection::stream)
+            List<Integer> amounts = statisticsMonthModels.entrySet().stream().filter(e -> e.getKey().plusMonths(AVERAGE_OF_MONTHS + 5).isAfter(monthStatisticsEntry.getKey()) && !e.getKey().isAfter(monthStatisticsEntry.getKey()))
+                    .map(e -> e.getValue().getCellModels().entrySet()).flatMap(Collection::stream)
                     .filter(e -> e.getKey().equals(statisticsEntry.getKey()))
                     .mapToInt(e -> e.getValue().getAmount()).boxed().collect(Collectors.toList());
 

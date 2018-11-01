@@ -25,12 +25,12 @@ import com.siki.cashcount.config.ConfigManager;
 public class StatisticsViewBuilder {
 	private static final String HEADER_STYLE = "-fx-font-weight: bold;";
 	
-    public GridPane getStatisticsView(SortedMap<LocalDate, Map<String, StatisticsModel>> statisticsModels) {
+    public GridPane getStatisticsView(SortedMap<LocalDate, StatisticsMonthModel> statisticsModels) {
         GridPane grid = new GridPane();
 
         int colCnt = 0;
 
-        for (Entry<LocalDate, Map<String, StatisticsModel>> monthEntry : statisticsModels.entrySet()) {
+        for (Entry<LocalDate, StatisticsMonthModel> monthEntry : statisticsModels.entrySet()) {
             LocalDate date = monthEntry.getKey();
             if (date.plusYears(1).isBefore(LocalDate.now().withDayOfMonth(1))) {
                 continue;
@@ -43,12 +43,12 @@ public class StatisticsViewBuilder {
         return grid;
     }
     
-    private void buildMonthEntry(Entry<LocalDate, Map<String, StatisticsModel>> monthEntry, GridPane grid, int colCnt) {
+    private void buildMonthEntry(Entry<LocalDate, StatisticsMonthModel> monthEntry, GridPane grid, int colCnt) {
     	LocalDate date = monthEntry.getKey();
         
     	addMonthHeader(date, grid, colCnt);
 
-        for (Entry<String, StatisticsModel> categoryEntry : monthEntry.getValue().entrySet()) {
+        for (Entry<String, StatisticsCellModel> categoryEntry : monthEntry.getValue().getCellModels().entrySet()) {
         	addCategory(categoryEntry, grid, date, colCnt);
         }
     }
@@ -73,7 +73,7 @@ public class StatisticsViewBuilder {
         grid.getChildren().add(headerBg);
     }
     
-    private void addCategory(Entry<String, StatisticsModel> categoryEntry, GridPane grid, LocalDate date, int colCnt) {
+    private void addCategory(Entry<String, StatisticsCellModel> categoryEntry, GridPane grid, LocalDate date, int colCnt) {
     	String category = categoryEntry.getKey();
     	try {
     		int rowNo = ConfigManager.getIntegerProperty(category);
@@ -98,8 +98,8 @@ public class StatisticsViewBuilder {
         grid.getChildren().add(rowHeader);
     }
     
-    private void addStatisticsCell(Entry<String, StatisticsModel> categoryEntry, LocalDate date, GridPane grid, int colCnt, int rowNo) {
-    	StatisticsModel actStatisticModel = categoryEntry.getValue();
+    private void addStatisticsCell(Entry<String, StatisticsCellModel> categoryEntry, LocalDate date, GridPane grid, int colCnt, int rowNo) {
+    	StatisticsCellModel actStatisticModel = categoryEntry.getValue();
     	GridPane cell = new GridPane();
         Integer value;
         Label lblValue;
@@ -129,7 +129,7 @@ public class StatisticsViewBuilder {
         }
     }
     
-    private void addToolTip(Entry<String, StatisticsModel> categoryEntry, Label lblValue) {
+    private void addToolTip(Entry<String, StatisticsCellModel> categoryEntry, Label lblValue) {
     	StringBuilder tooltipBuilder = new StringBuilder(categoryEntry.getValue().getDetails());
         if (categoryEntry.getValue().getAverage() != null) {
             tooltipBuilder.append("\nÉves átlag: " + NumberFormat.getCurrencyInstance().format(categoryEntry.getValue().getAverage()));
@@ -139,7 +139,7 @@ public class StatisticsViewBuilder {
         lblValue.setTooltip(tt);
     }
     
-    private void setCellColoring(StatisticsModel actStatisticModel, GridPane cell) {
+    private void setCellColoring(StatisticsCellModel actStatisticModel, GridPane cell) {
     	double opacity;
         Color bgColor;
         double diffBound = ConfigManager.getDoubleProperty("DifferenceDecoratorBound");

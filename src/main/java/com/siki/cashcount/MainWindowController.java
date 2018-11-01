@@ -17,8 +17,9 @@ import java.util.Map.Entry;
 //import java.util.logging.*;
 import java.util.stream.Collectors;
 
+import com.siki.cashcount.statistics.StatisticsCellModel;
 import com.siki.cashcount.statistics.StatisticsController;
-import com.siki.cashcount.statistics.StatisticsModel;
+import com.siki.cashcount.statistics.StatisticsMonthModel;
 import com.siki.cashcount.statistics.StatisticsViewBuilder;
 
 import javafx.collections.ObservableList;
@@ -312,7 +313,7 @@ public class MainWindowController implements Initializable {
             try {
 //                refreshStatistics();
             	vbStatistics.getChildren().clear();
-            	SortedMap<LocalDate, Map<String, StatisticsModel>> statistics = new StatisticsController().getStatistics();
+            	SortedMap<LocalDate, StatisticsMonthModel> statistics = new StatisticsController().getStatistics();
             	Node statisticsView = new StatisticsViewBuilder().getStatisticsView(statistics);
             	vbStatistics.getChildren().addAll(statisticsView);
             	
