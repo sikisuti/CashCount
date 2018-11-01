@@ -22,4 +22,20 @@ public class StatisticsMonthModel {
 	public Map<String, StatisticsCellModel> getCellModels() {
 		return statisticsCellModels;
 	}
+	
+	public void setEndBalance(int endBalance) {
+		this.monthEndBalance = endBalance;
+	}
+	
+	public Integer getEndBalance() {
+		return monthEndBalance;
+	}
+	
+	public void setPreviousMonthModel(StatisticsMonthModel previousMonthModel) {
+		this.previousMonthModel = previousMonthModel;
+	}
+	
+	public StatisticsMonthModel getPreviousMonthModel() {
+		return previousMonthModel;
+	}
 }

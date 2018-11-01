@@ -29,9 +29,9 @@ public class StatisticsController {
         consideredCategories = Arrays.asList(ConfigManager.getStringProperty("ConsideredCategories").split(","));
         getConsideredTransactions(dailyBalances);
         getRestTransactions(dailyBalances);
-
-        fillEmptyStatisticsModels();
         setBackwardReferences();
+        setCashSpent(dailyBalances);
+        fillEmptyStatisticsModels();
         calculateAverages();
 
         return statisticsMonthModels;
@@ -94,7 +94,7 @@ public class StatisticsController {
     
     private void getRestTransactions(List<DailyBalance> dailyBalances) {
     	Stream<AccountTransaction> allTransactions = dailyBalances.stream().map(DailyBalance::getTransactions).flatMap(Collection::stream)
-    			.filter(t -> !consideredCategories.contains(t.getCategory()) && (!t.isPaired() || (t.isPaired() && t.getNotPairedAmount() != 0)));
+    			.filter(t -> !consideredCategories.contains(t.getCategory()) && !"Készpénzfelvét".equalsIgnoreCase(t.getCategory()) && (!t.isPaired() || (t.isPaired() && t.getNotPairedAmount() != 0)));
         Map<LocalDate, List<AccountTransaction>> dateGroupedTransactions = 
         		allTransactions.collect(Collectors.groupingBy(t -> { 
         			LocalDate date = t.getDailyBalance().getDate().withDayOfMonth(1); 
@@ -102,13 +102,35 @@ public class StatisticsController {
         			}));
         
         for (Entry<LocalDate, List<AccountTransaction>> monthTransactions : dateGroupedTransactions.entrySet()) {
-        	int restMonthSum = monthTransactions.getValue().stream().mapToInt(AccountTransaction::getAmount).sum();
-        	AccountTransaction transaction = new AccountTransaction();
-        	transaction.setAmount(restMonthSum);
         	StatisticsCellModel cellModel = new StatisticsCellModel();
-        	cellModel.putTransaction(transaction);
+        	cellModel.putAllTransactions(monthTransactions.getValue());
         	statisticsMonthModels.get(monthTransactions.getKey()).addCellModel("  -- Maradék", cellModel);
         }
+    }
+    
+    private void setCashSpent(List<DailyBalance> dailyBalances) {
+    	Map<LocalDate, List<DailyBalance>> dateGroupedDailyBalances = dailyBalances.stream().collect(Collectors.groupingBy(db -> db.getDate().withDayOfMonth(1)));
+    	for (Entry<LocalDate, List<DailyBalance>> monthDailyBalances : dateGroupedDailyBalances.entrySet()) {
+    		int lastMonthBalance = monthDailyBalances.getValue().get(monthDailyBalances.getValue().size() - 1).getBalance();
+    		statisticsMonthModels.get(monthDailyBalances.getKey()).setEndBalance(lastMonthBalance);
+    	}
+    	
+    	for (Entry<LocalDate, StatisticsMonthModel> monthEntry : statisticsMonthModels.entrySet()) {
+    		if (monthEntry.getValue().getPreviousMonthModel() == null) {
+    			continue;
+    		}
+    		
+    		int balanceDifference = monthEntry.getValue().getEndBalance() - monthEntry.getValue().getPreviousMonthModel().getEndBalance();
+    		int allCorrections = monthEntry.getValue().getCellModels().entrySet().stream().flatMap(e -> e.getValue().getCorrections().stream()).mapToInt(c -> c.getAmount()).sum();
+    		int allTransactions = monthEntry.getValue().getCellModels().entrySet().stream().flatMap(e -> e.getValue().getTransactions().stream()).mapToInt(t -> t.getAmount()).sum();
+    		int cashSpent = balanceDifference - allCorrections - allTransactions;
+    		StatisticsCellModel cellModel = new StatisticsCellModel();
+    		cellModel.putCorrection(new Correction.Builder()
+    				.setAmount(cashSpent)
+    				.setComment("Készpénzköltés")
+    				.build());
+    		monthEntry.getValue().addCellModel("  -- Készpénzköltés", cellModel);
+    	}
     }
     
     private void fillEmptyStatisticsModels() {
@@ -129,6 +151,8 @@ public class StatisticsController {
     	    if (!statisticsMonthModels.containsKey(monthEntry.getKey().minusMonths(1))) {
     	        continue;
             }
+    	    
+    	    monthEntry.getValue().setPreviousMonthModel(statisticsMonthModels.get(monthEntry.getKey().minusMonths(1)));
 
     	    for (Entry<String, StatisticsCellModel> categoryEntry : monthEntry.getValue().getCellModels().entrySet()) {
     	    	StatisticsCellModel previousStatisticsCellModel =

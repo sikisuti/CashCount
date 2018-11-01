@@ -3,6 +3,7 @@ package com.siki.cashcount.statistics;
 import com.siki.cashcount.model.AccountTransaction;
 import com.siki.cashcount.model.Correction;
 
+import java.text.NumberFormat;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -25,6 +26,10 @@ public class StatisticsCellModel {
     	}
     }
     
+    public Set<Correction> getCorrections() {
+    	return corrections;
+    }
+    
     public void putTransaction(AccountTransaction transaction) {
     	transactions.add(transaction);
     }
@@ -33,6 +38,10 @@ public class StatisticsCellModel {
     	for (AccountTransaction transaction : transactions) {
     		this.transactions.add(transaction);
     	}
+    }
+    
+    public Set<AccountTransaction> getTransactions() {
+    	return transactions;
     }
     
     public Integer getAmount() {
@@ -49,9 +58,9 @@ public class StatisticsCellModel {
     public String getDetails() {
     	String details = "";
     	if (!corrections.isEmpty()) {
-    		details = corrections.stream().map(Correction::getComment).collect(Collectors.joining("\n"));
+    		details = corrections.stream().map(c -> c.getComment() + "\t" + NumberFormat.getCurrencyInstance().format(c.getAmount())).collect(Collectors.joining("\n"));
     	} else if (!transactions.isEmpty()) {
-    		details = transactions.stream().map(AccountTransaction::getComment).collect(Collectors.joining("\n"));
+    		details = transactions.stream().map(t -> t.getTransactionType() + "\t" + t.getComment() + "\t" + NumberFormat.getCurrencyInstance().format(t.getAmount())).collect(Collectors.joining("\n"));
     	}
     	
     	return details;

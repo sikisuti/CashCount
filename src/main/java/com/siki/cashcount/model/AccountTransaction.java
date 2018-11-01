@@ -16,6 +16,7 @@ import javafx.beans.property.*;
 public final class AccountTransaction {
     
     private Long id;
+    private final StringProperty transactionType; 
     private final ObjectProperty date;
     private final IntegerProperty amount;
     private final IntegerProperty balance;
@@ -30,8 +31,7 @@ public final class AccountTransaction {
     
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-    
-    private final StringProperty transactionType;    
+       
     public String getTransactionType() { return transactionType.get(); }
     public void setTransactionType(String transactionType) { this.transactionType.set(transactionType); }
     public StringProperty transactionTypeProperty() { return transactionType; }
