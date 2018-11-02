@@ -88,7 +88,6 @@ public class MainWindowController implements Initializable {
                 if (date == null || !db.getDate().getMonth().equals(date.getMonth())) {
                     if (tp != null) {
                         tp.validate();
-                        tp.refreshStatistics();
                     }
 
                     date = db.getDate();
@@ -311,178 +310,13 @@ public class MainWindowController implements Initializable {
     private void refreshStatistics(Event event) {
         if (((Tab)(event.getSource())).isSelected()) {
             try {
-//                refreshStatistics();
             	vbStatistics.getChildren().clear();
             	SortedMap<LocalDate, StatisticsMonthModel> statistics = new StatisticsController().getStatistics();
             	Node statisticsView = new StatisticsViewBuilder().getStatisticsView(statistics);
-            	vbStatistics.getChildren().addAll(statisticsView);
-            	
+            	vbStatistics.getChildren().addAll(statisticsView);            	
             } catch (Exception e) {
                 LOGGER.error("", e);
             }
         }        
-    }
-    private void refreshStatistics() throws Exception {
-        vbStatistics.getChildren().clear();
-
-        TreeMap<LocalDate, TreeMap<String, Entry<Integer, String>>> data = new TreeMap<>();
-        List<String> keys = new ArrayList<>();
-
-        for (Node node : dailyBalancesPH.getChildren()) {
-            if (node.getClass() != DailyBalancesTitledPane.class) continue;
-            DailyBalancesTitledPane entry = (DailyBalancesTitledPane)node;
-
-            TreeMap<String, Entry<Integer, String>> monthCorrectionData = DataManager.getInstance().getStatisticsFromCorrections(entry.getPeriod().getYear(), entry.getPeriod().getMonth());
-            TreeMap<String, Entry<Integer, String>> monthTransactionData = DataManager.getInstance().getStatisticsFromTransactions(entry.getPeriod().getYear(), entry.getPeriod().getMonth());
-            Integer allTransactionAmount = 0;
-            for (Entry<String, Entry<Integer, String>> transactionEntry : monthTransactionData.entrySet()) {
-                allTransactionAmount += transactionEntry.getValue().getKey();
-            }
-
-            if (monthCorrectionData.containsKey(DataManager.GENERAL_TEXT) && LocalDate.of(entry.getPeriod().getYear(), entry.getPeriod().getMonthValue(), 1).isBefore(LocalDate.now().withDayOfMonth(1))) {
-                int cashSpent = monthCorrectionData.get(DataManager.GENERAL_TEXT).getKey() - allTransactionAmount;
-                if (cashSpent != 0)
-                    monthTransactionData.put("  -- Készpénzköltés", new AbstractMap.SimpleEntry<>(cashSpent, "Költés készpénzből"));
-            }
-
-            monthCorrectionData.putAll(monthTransactionData);
-            data.put(entry.getPeriod(), monthCorrectionData);
-            for (String key : monthCorrectionData.keySet()) {
-                if (!keys.contains(key)) {
-                    keys.add(key);
-                }
-            }
-        }
-
-        GridPane gpStatFromCorrections = new GridPane();
-        gpStatFromCorrections.setPadding(new Insets(20, 10, 20, 10));
-        buildStatGrid(gpStatFromCorrections, data, keys);
-
-        vbStatistics.getChildren().addAll(gpStatFromCorrections);
-    }
-    
-    private void buildStatGrid( GridPane grid, TreeMap<LocalDate, TreeMap<String, Entry<Integer, String>>> data, List<String> keys) {
-        int colCnt = 0;
-
-        TreeMap<String, Integer> averages = calculateAverages(data);
-        
-        for (Entry<LocalDate, TreeMap<String, Entry<Integer, String>>> entry : data.entrySet()) {
-            colCnt++;
-            LocalDate date = entry.getKey();
-
-            GridPane headerBg = new GridPane();
-            headerBg.setPrefSize(100, 30);
-            headerBg.setAlignment(Pos.CENTER);
-            Label colHeader = new Label(date.getYear() + "." + date.getMonthValue() + ".");
-            colHeader.setStyle("-fx-font-weight: bold;");
-            if (date.isEqual(LocalDate.now().withDayOfMonth(1))) {
-                headerBg.setBorder(new Border(new BorderStroke(Color.BLACK, Color.GRAY, Color.TRANSPARENT, Color.BLACK, 
-                        BorderStrokeStyle.SOLID, BorderStrokeStyle.SOLID, BorderStrokeStyle.NONE, BorderStrokeStyle.SOLID, 
-                        CornerRadii.EMPTY, new BorderWidths(1, 2, 0, 1), Insets.EMPTY)));
-                headerBg.setAlignment(Pos.TOP_CENTER);                        
-                headerBg.setBackground(new Background(new BackgroundFill(Color.LIGHTGRAY, CornerRadii.EMPTY, Insets.EMPTY)));
-            }
-
-            headerBg.getChildren().add(colHeader);
-            GridPane.setColumnIndex(headerBg, colCnt);
-            GridPane.setRowIndex(headerBg, 0);
-            grid.getChildren().add(headerBg);
-
-            for (String category : keys) {
-                int rowNo = 0;
-                try {
-                    rowNo = ConfigManager.getIntegerProperty(category);
-                } catch (NumberFormatException ex) {
-                    continue;
-                }
-
-                if (colCnt == 1) {
-                    Label rowHeader = new Label(category);
-                    rowHeader.setMinWidth(150);
-                    rowHeader.setPrefWidth(150);
-                    rowHeader.setMaxWidth(150);
-                    if (!category.startsWith("  -- ")) rowHeader.setStyle("-fx-font-weight: bold;");
-                    GridPane.setColumnIndex(rowHeader, colCnt - 1);
-                    GridPane.setRowIndex(rowHeader, rowNo);
-                    grid.getChildren().add(rowHeader);
-                }
-
-                GridPane cell = new GridPane();
-                cell.setPrefSize(100, 30);
-                cell.setAlignment(Pos.CENTER_RIGHT);
-                Integer value;
-                Label lblValue;
-                if (data.get(date).containsKey(category)) {
-                    value = data.get(date).get(category).getKey();
-                    lblValue = new Label(NumberFormat.getCurrencyInstance().format(value));
-                    Tooltip tt = new Tooltip(data.get(date).get(category).getValue());
-                    lblValue.setTooltip(tt);
-                } else {
-                    value = 0;
-                    lblValue = new Label();
-                }
-
-                if (date.isEqual(LocalDate.now().withDayOfMonth(1))) {
-                    cell.setBorder(new Border(new BorderStroke(Color.TRANSPARENT, Color.GRAY, Color.TRANSPARENT, Color.BLACK, 
-                            BorderStrokeStyle.NONE, BorderStrokeStyle.SOLID, BorderStrokeStyle.NONE, BorderStrokeStyle.SOLID, 
-                            CornerRadii.EMPTY, new BorderWidths(0, 2, 0, 1), Insets.EMPTY)));
-                    cell.setAlignment(Pos.TOP_RIGHT);                        
-                    lblValue.setStyle("-fx-font-weight: bold;");
-                }
-                cell.getChildren().add(lblValue);
-                double opacity;
-                Color bgColor;
-                // Instead of considering the diff between value and 0 I consider the diff between value and average
-                /*
-                double inLowerBound = ConfigManager.getDoubleProperty("IncomeDecoratorLowerBound");
-                double inUpperBound = ConfigManager.getDoubleProperty("IncomeDecoratorUpperBound");
-                double outLowerBound = ConfigManager.getDoubleProperty("OutcomeDecoratorLowerBound");
-                double outUpperBound = ConfigManager.getDoubleProperty("OutcomeDecoratorUpperBound");
-                */
-                double diffBound = ConfigManager.getDoubleProperty("DifferenceDecoratorBound");
-                
-                Integer avgValue = averages.getOrDefault(category, 0);
-                int diff = value - avgValue;
-                opacity = Math.abs(diff / diffBound);
-                if (opacity > 1) { opacity = 1; }
-                bgColor = diff > 0 ? Color.rgb(0, 200, 0, opacity) : Color.rgb(230, 0, 0, opacity);
-                
-                /*
-                if (value < 0) {
-                    opacity = ((value + outUpperBound) <= 0 ? (value + outUpperBound) : 0) / (outLowerBound + outUpperBound);
-                    if (opacity > 1d) opacity = 1;
-                    bgColor = Color.rgb(230, 0, 0, opacity);
-                } else {
-                    opacity = ((value - inLowerBound) >= 0 ? (value - inLowerBound) : 0) / (inUpperBound - inLowerBound);
-                    if (opacity > 1d) opacity = 1;
-                    bgColor = Color.rgb(0, 200, 0, opacity);
-                }
-*/
-                cell.setBackground(new Background(new BackgroundFill(bgColor, CornerRadii.EMPTY, Insets.EMPTY)));
-                GridPane.setColumnIndex(cell, colCnt);
-                GridPane.setRowIndex(cell, rowNo);
-                grid.getChildren().add(cell);
-            }
-        }
-    }
-    
-    private TreeMap<String, Integer> calculateAverages(TreeMap<LocalDate, TreeMap<String, Entry<Integer, String>>> data) {
-        
-        TreeMap<String, Integer> averages = new TreeMap<>();
-            
-        for (LocalDate date : data.keySet().stream().filter(d -> d.isBefore(LocalDate.now().withDayOfMonth(1))).collect(Collectors.toList())) {
-            for (String category : data.get(date).keySet()){
-                if (!averages.containsKey(category)) { averages.put(category, 0); }
-                
-                averages.replace(category, averages.get(category) + data.get(date).get(category).getKey());
-            }
-        }
-        
-        Integer divider = Math.toIntExact(data.keySet().stream().filter(d -> d.isBefore(LocalDate.now().withDayOfMonth(1))).count());
-        for (String category : averages.keySet()){
-            averages.replace(category, averages.get(category) / divider);
-        }
-        
-        return averages;
     }
 }

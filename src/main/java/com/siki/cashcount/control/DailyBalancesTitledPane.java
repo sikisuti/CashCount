@@ -5,22 +5,15 @@
  */
 package com.siki.cashcount.control;
 
-import com.siki.cashcount.data.DataManager;
 import com.siki.cashcount.model.AccountTransaction;
 import com.siki.cashcount.model.DailyBalance;
-import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Map.Entry;
-import java.util.TreeMap;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.Pos;
-import javafx.scene.control.Label;
 import javafx.scene.control.TitledPane;
-import javafx.scene.control.Tooltip;
 import javafx.scene.layout.Border;
 import javafx.scene.layout.BorderStroke;
 import javafx.scene.layout.BorderStrokeStyle;
@@ -34,7 +27,6 @@ public class DailyBalancesTitledPane extends TitledPane {
     private LocalDate period;
     private ObservableList<DailyBalance> dailyBalances = FXCollections.observableArrayList();
     private VBox vbDailyBalances = new VBox();
-    private GridPane gpStatistics = new GridPane();
     
     public LocalDate getPeriod() { return period; }
 
@@ -84,29 +76,5 @@ public class DailyBalancesTitledPane extends TitledPane {
         }
         this.setBorder(new Border(new BorderStroke(Color.TRANSPARENT, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
         
-    }
-    
-    public void refreshStatistics() throws Exception {
-        gpStatistics.getChildren().clear();
-        
-        TreeMap<String, Entry<Integer, String>> statistics = DataManager.getInstance().getStatisticsFromCorrections(period.getYear(), period.getMonth());
-        
-        int rowCnt = -1;
-        for (Entry<String, Entry<Integer, String>> entry : statistics.entrySet()) {
-            rowCnt++;
-            Label label = new Label(entry.getKey() + ": ");
-            GridPane.setColumnIndex(label, 0);
-            GridPane.setRowIndex(label, rowCnt);
-            
-            GridPane gpValueBg = new GridPane();
-            gpValueBg.setAlignment(Pos.CENTER_RIGHT);
-            Label value = new Label(NumberFormat.getCurrencyInstance().format(entry.getValue().getKey()));
-            value.setTooltip(new Tooltip(entry.getValue().getValue()));
-            gpValueBg.getChildren().add(value);
-            GridPane.setColumnIndex(gpValueBg, 1);
-            GridPane.setRowIndex(gpValueBg, rowCnt);
-            
-            gpStatistics.getChildren().addAll(label, gpValueBg);
-        }
     }
 }
