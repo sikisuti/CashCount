@@ -26,10 +26,13 @@ public class StatisticsController {
     public SortedMap<LocalDate, StatisticsMonthModel> getStatistics() throws IOException, JsonDeserializeException {
     	List<DailyBalance> dailyBalances =  DataManager.getInstance().getAllDailyBalances();
         getCorrections(dailyBalances);     
+        setBackwardMonthReferences();
+        setEndBalances(dailyBalances);
+        setGeneralSpent();
         consideredCategories = Arrays.asList(ConfigManager.getStringProperty("ConsideredCategories").split(","));
         getConsideredTransactions(dailyBalances);
         getRestTransactions(dailyBalances);
-        setBackwardReferences();
+        setBackwardCellReferences();
         setCashSpent(dailyBalances);
         fillEmptyStatisticsModels();
         calculateAverages();
@@ -57,6 +60,23 @@ public class StatisticsController {
         		}, (v1,v2) ->{ throw new RuntimeException(String.format("Duplicate key for values %s and %s", v1, v2));}, TreeMap::new));
         
         statisticsMonthModels.putAll(dateAndTypeGroupedStatisticsModels);  
+    }
+    
+    private void setGeneralSpent() {
+    	for (Entry<LocalDate, StatisticsMonthModel> monthModelEntry : statisticsMonthModels.entrySet()) {
+    		if (monthModelEntry.getValue().getPreviousMonthModel() == null) {
+    			continue;
+    		}
+    		
+    		int allCorrections = monthModelEntry.getValue().getCellModels().entrySet().stream().mapToInt(c -> c.getValue().getAmount()).sum();
+    		StatisticsCellModel cellModel = new StatisticsCellModel();
+    		cellModel.putCorrection(new Correction.Builder()
+    				.setAmount(monthModelEntry.getValue().getEndBalance() - monthModelEntry.getValue().getPreviousMonthModel().getEndBalance() - allCorrections)
+    				.setComment("Máshová nem sorolható elemek")
+    				.build());
+    		monthModelEntry.getValue().addCellModel("Általános", cellModel);
+    		
+    	}
     }
     
     private void getConsideredTransactions(List<DailyBalance> dailyBalances) {
@@ -108,13 +128,15 @@ public class StatisticsController {
         }
     }
     
-    private void setCashSpent(List<DailyBalance> dailyBalances) {
+    private void setEndBalances(List<DailyBalance> dailyBalances) {
     	Map<LocalDate, List<DailyBalance>> dateGroupedDailyBalances = dailyBalances.stream().collect(Collectors.groupingBy(db -> db.getDate().withDayOfMonth(1)));
     	for (Entry<LocalDate, List<DailyBalance>> monthDailyBalances : dateGroupedDailyBalances.entrySet()) {
     		int lastMonthBalance = monthDailyBalances.getValue().get(monthDailyBalances.getValue().size() - 1).getBalance();
     		statisticsMonthModels.get(monthDailyBalances.getKey()).setEndBalance(lastMonthBalance);
     	}
-    	
+    }
+    
+    private void setCashSpent(List<DailyBalance> dailyBalances) {  	
     	for (Entry<LocalDate, StatisticsMonthModel> monthEntry : statisticsMonthModels.entrySet()) {
     		if (monthEntry.getValue().getPreviousMonthModel() == null) {
     			continue;
@@ -146,13 +168,11 @@ public class StatisticsController {
         }
     }
     
-    private void setBackwardReferences() {
+    private void setBackwardCellReferences() {
     	for (Entry<LocalDate, StatisticsMonthModel> monthEntry : statisticsMonthModels.entrySet()) {
     	    if (!statisticsMonthModels.containsKey(monthEntry.getKey().minusMonths(1))) {
     	        continue;
             }
-    	    
-    	    monthEntry.getValue().setPreviousMonthModel(statisticsMonthModels.get(monthEntry.getKey().minusMonths(1)));
 
     	    for (Entry<String, StatisticsCellModel> categoryEntry : monthEntry.getValue().getCellModels().entrySet()) {
     	    	StatisticsCellModel previousStatisticsCellModel =
@@ -160,6 +180,16 @@ public class StatisticsController {
                             .get(categoryEntry.getKey());
     	        categoryEntry.getValue().setPreviousStatisticsModel(previousStatisticsCellModel);
             }
+        }
+    }
+    
+    private void setBackwardMonthReferences() {
+    	for (Entry<LocalDate, StatisticsMonthModel> monthEntry : statisticsMonthModels.entrySet()) {
+    	    if (!statisticsMonthModels.containsKey(monthEntry.getKey().minusMonths(1))) {
+    	        continue;
+            }
+    	    
+    	    monthEntry.getValue().setPreviousMonthModel(statisticsMonthModels.get(monthEntry.getKey().minusMonths(1)));
         }
     }
     
