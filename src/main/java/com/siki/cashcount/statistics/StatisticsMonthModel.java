@@ -9,6 +9,10 @@ public class StatisticsMonthModel {
 	private Integer monthEndBalance;
 	private StatisticsMonthModel previousMonthModel;
 	
+	public StatisticsMonthModel(StatisticsMonthModel previousMonthModel) {
+		this.previousMonthModel = previousMonthModel;
+	}
+	
 	public void addCellModel(String type, StatisticsCellModel cellModel) {
 		statisticsCellModels.put(type, cellModel);
 	}

@@ -49,7 +49,7 @@ public class StatisticsCellModel {
     	if (!corrections.isEmpty()) {
     		amount = corrections.stream().mapToInt(Correction::getAmount).sum();
     	} else if (!transactions.isEmpty()) {
-    		amount = transactions.stream().mapToInt(AccountTransaction::getAmount).sum();
+    		amount = transactions.stream().mapToInt(AccountTransaction::getNotPairedAmount).sum();
     	}
     	
     	return amount;
