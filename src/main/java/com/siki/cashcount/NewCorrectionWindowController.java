@@ -151,7 +151,7 @@ public class NewCorrectionWindowController implements Initializable {
     
     @FXML
     protected void doSave(ActionEvent event) {
-        correction.setAmount(Integer.parseInt(tfAmount.getText().replace(",", "")));
+        correction.setAmount(Integer.parseInt(tfAmount.getText().replaceAll("[^0-9\\-]", "")));
         correction.setType(cbType.getValue());
         correction.setComment(tfComment.getText());
         
