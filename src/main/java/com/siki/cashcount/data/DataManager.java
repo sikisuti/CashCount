@@ -853,10 +853,14 @@ public class DataManager {
         String dataPath = ConfigManager.getStringProperty("DataPath");
         ObservableList<DailyBalance> original = loadDailyBalances(dataPath);
         
-        if (original.size() != dailyBalanceCache.size()) return true;
+        if (original.size() != dailyBalanceCache.size()) {
+            return true;
+        }
         
         for (int i = 0; i < original.size(); i++) {
-            if (!original.get(i).equals(dailyBalanceCache.get(i))) return true;
+            if (!original.get(i).equals(dailyBalanceCache.get(i))) {
+                return true;
+            }
         }
         
         return false;

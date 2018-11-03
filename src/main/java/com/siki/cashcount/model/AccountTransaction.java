@@ -203,6 +203,16 @@ public final class AccountTransaction {
         }
 
         AccountTransaction other = (AccountTransaction)obj;
+
+        if (this.getCategory() == null) {
+            if (other.getCategory() != null) {
+                return false;
+            }
+        } else {
+            if (!this.getCategory().equalsIgnoreCase(other.getCategory())) {
+                return false;
+            }
+        }
         
         return
                 this.getId().equals(other.getId()) &&
@@ -212,8 +222,7 @@ public final class AccountTransaction {
                 this.getAccountNumber().equals(other.getAccountNumber()) &&
                 this.getOwner().equals(other.getOwner()) &&
                 this.getComment().equals(other.getComment()) &&
-                this.getCounter().equals(other.getCounter()) &&
-                this.getCategory().equals(other.getCategory());
+                this.getCounter().equals(other.getCounter());
     }
 
     @Override

@@ -206,30 +206,49 @@ public final class DailyBalance {
                 this.isPredicted().equals(other.isPredicted()) &&
                 this.isReviewed().equals(other.isReviewed());
         
-        if (!rtn) return false;
+        if (!rtn) {
+            return false;
+        }
         
-        if (this.getSavings().size() != other.getSavings().size()) return false;
-        if (this.getCorrections().size() != other.getCorrections().size()) return false;
-        if (this.getTransactions().size() != other.getTransactions().size()) return false;
+        if (this.getSavings().size() != other.getSavings().size()) {
+            return false;
+        }
+
+        if (this.getCorrections().size() != other.getCorrections().size()) {
+            return false;
+        }
+
+        if (this.getTransactions().size() != other.getTransactions().size()) {
+            return false;
+        }
         
         int i = 0;
         while (i < this.getSavings().size()) {
             rtn = this.getSavings().get(i).equals(other.getSavings().get(i));
-            if (!rtn) return false;
+            if (!rtn) {
+                return false;
+            }
+
             i++;
         }
         
         i = 0;
         while (i < this.getCorrections().size()) {
             rtn = this.getCorrections().get(i).equals(other.getCorrections().get(i));
-            if (!rtn) return false;
+            if (!rtn) {
+                return false;
+            }
+
             i++;
         }
         
         i = 0;
         while (i < this.getTransactions().size()) {
             rtn = this.getTransactions().get(i).equals(other.getTransactions().get(i));
-            if (!rtn) return false;
+            if (!rtn) {
+                return false;
+            }
+
             i++;
         }
         
