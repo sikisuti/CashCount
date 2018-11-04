@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.TreeMap;
-import java.util.logging.Level;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -28,15 +27,9 @@ import javafx.scene.layout.VBox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * FXML Controller class
- *
- * @author tamas.siklosi
- */
 public class CategoryManagerWindowController implements Initializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(CategoryManagerWindowController.class);
 
-    @FXML private ComboBox cbField;
     @FXML private TextField tfPattern;
     @FXML private ComboBox cbCategory;
     @FXML private HBox hbCategories;
@@ -46,8 +39,6 @@ public class CategoryManagerWindowController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         try {
-            cbField.getItems().addAll(DataManager.TRANSACTION_COMMENT_NAME, DataManager.TRANSACTION_TYPE_NAME, DataManager.TRANSACTION_OWNER_NAME);
-            cbField.setValue(DataManager.TRANSACTION_COMMENT_NAME);
             cbCategory.setItems(DataManager.getInstance().getAllCategories());
             for (MatchingRule rule : DataManager.getInstance().getAllMatchingRules()) {
                 addRule(rule);
@@ -84,11 +75,11 @@ public class CategoryManagerWindowController implements Initializable {
     @FXML
     private void add(ActionEvent event) {
         try {
-            if (cbField.getValue() == null || tfPattern.getText() == null || cbCategory.getValue() == null)
+            if (tfPattern.getText() == null || cbCategory.getValue() == null) {
                 return;
+            }
             
             MatchingRule mr = new MatchingRule.Builder()
-                    .setField(cbField.getValue().toString())
                     .setPattern(tfPattern.getText())
                     .setCategory(cbCategory.getValue().toString())
                     .build();

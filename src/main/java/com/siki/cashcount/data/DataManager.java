@@ -564,12 +564,13 @@ public class DataManager {
     }
     private MatchingRule findMatchingRule(AccountTransaction transaction) throws IOException, JsonDeserializeException {
         for (MatchingRule mr : getAllMatchingRules()) {
-            if ((mr.getField().equals(TRANSACTION_COMMENT_NAME) && transaction.getComment().toLowerCase().contains(mr.getPattern().toLowerCase())) ||
-                    (mr.getField().equals(TRANSACTION_TYPE_NAME) && transaction.getTransactionType().toLowerCase().contains(mr.getPattern().toLowerCase())) ||
-                    (mr.getField().equals(TRANSACTION_OWNER_NAME) && transaction.getOwner().toLowerCase().contains(mr.getPattern().toLowerCase()))) {
+            if (transaction.getComment().toLowerCase().contains(mr.getPattern().toLowerCase()) ||
+                    transaction.getTransactionType().toLowerCase().contains(mr.getPattern().toLowerCase()) ||
+                    transaction.getOwner().toLowerCase().contains(mr.getPattern().toLowerCase())) {
                 return mr;
             }
         }
+
         return null;
     }
     public void addMatchingRule(MatchingRule matchingRule) throws IOException, JsonDeserializeException {

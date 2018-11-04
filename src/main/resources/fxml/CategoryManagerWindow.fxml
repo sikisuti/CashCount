@@ -1,12 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
 <?import java.net.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.collections.*?>
 
 <GridPane id="AnchorPane" prefHeight="400.0" prefWidth="1000.0" styleClass="mainFxmlClass" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.siki.cashcount.CategoryManagerWindowController">
     <columnConstraints>
@@ -29,8 +25,6 @@
                 <RowConstraints />
             </rowConstraints>
             <children>
-                <Label text="Mező" GridPane.columnIndex="0" GridPane.rowIndex="0" />   
-                <ComboBox fx:id="cbField" GridPane.columnIndex="1" GridPane.rowIndex="0" prefWidth="200"   />
                 <Label text="Minta" GridPane.columnIndex="0" GridPane.rowIndex="1" />
                 <TextField fx:id="tfPattern" GridPane.columnIndex="1" GridPane.rowIndex="1" prefWidth="200" />  
                 <Label text="Kategória" GridPane.columnIndex="0" GridPane.rowIndex="2" />    
