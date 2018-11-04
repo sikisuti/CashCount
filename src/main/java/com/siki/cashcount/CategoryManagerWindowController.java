@@ -14,7 +14,6 @@ import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.TreeMap;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -26,6 +25,8 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * FXML Controller class
@@ -33,6 +34,8 @@ import javafx.scene.layout.VBox;
  * @author tamas.siklosi
  */
 public class CategoryManagerWindowController implements Initializable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CategoryManagerWindowController.class);
+
     @FXML private ComboBox cbField;
     @FXML private TextField tfPattern;
     @FXML private ComboBox cbCategory;
@@ -40,9 +43,6 @@ public class CategoryManagerWindowController implements Initializable {
     
     private TreeMap<String, ObservableList<String>> categories = new TreeMap<>();
 
-    /**
-     * Initializes the controller class.
-     */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         try {
@@ -52,11 +52,13 @@ public class CategoryManagerWindowController implements Initializable {
             for (MatchingRule rule : DataManager.getInstance().getAllMatchingRules()) {
                 addRule(rule);
             }
+
             for (String key : categories.keySet()) {
                 addCategory(key);
             }
+
         } catch (IOException | JsonDeserializeException ex) {
-            Logger.getLogger(CategoryManagerWindowController.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.error("", ex);
             ExceptionDialog.get(ex).showAndWait();
         }
     }    
@@ -98,7 +100,7 @@ public class CategoryManagerWindowController implements Initializable {
                 addRule(mr);
             }
         } catch (IOException | JsonDeserializeException ex) {
-            Logger.getLogger(CategoryManagerWindowController.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.error("", ex);
             ExceptionDialog.get(ex).showAndWait();
         }
     }

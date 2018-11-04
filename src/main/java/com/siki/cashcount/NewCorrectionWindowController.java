@@ -36,8 +36,8 @@ import javafx.util.converter.NumberStringConverter;
  * @author tamas.siklosi
  */
 public class NewCorrectionWindowController implements Initializable {
-    Correction correction;
-    DailyBalanceControl dailyBalanceControl;
+    private Correction correction;
+    private DailyBalanceControl dailyBalanceControl;
 //    AccountTransaction pairedTransaction;
     
     private Stage dialogStage;
@@ -48,11 +48,6 @@ public class NewCorrectionWindowController implements Initializable {
     @FXML TextField tfComment;
     @FXML TableView tblTransactions;
 
-    /**
-     * Initializes the controller class.
-     * @param url
-     * @param rb
-     */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         tfAmount.setTextFormatter(new TextFormatter<>(new NumberStringConverter()));

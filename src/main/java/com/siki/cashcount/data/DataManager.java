@@ -99,7 +99,6 @@ public class DataManager {
     private TreeMap<LocalDate, LinkedHashMap<String, Integer>> pastDifferences;
     private ObservableList<MatchingRule> matchingRules;
     private ObservableList<String> categories = FXCollections.observableArrayList();
-    private ObservableList<String> subCategories = FXCollections.observableArrayList();
     private ObservableList<String> correctionTypes = FXCollections.observableArrayList();
     
     Gson gsonDeserializer;
@@ -586,9 +585,6 @@ public class DataManager {
     public ObservableList<String> getAllCategories() {
         return categories;
     }
-    public ObservableList<String> getAllSubCategories() {
-        return subCategories;
-    }
     public ObservableList<String> getAllCorrectionTypes() {
         return correctionTypes;
     }
@@ -603,9 +599,9 @@ public class DataManager {
                 } 
                 
                 if (t.getCategory() != null) {                    
-                    if (!subCategories.contains(t.getCategory())) {
-                        subCategories.add(t.getCategory());
-                        FXCollections.sort(subCategories);
+                    if (!categories.contains(t.getCategory())) {
+                        categories.add(t.getCategory());
+                        FXCollections.sort(categories);
                     }
                 }
             }

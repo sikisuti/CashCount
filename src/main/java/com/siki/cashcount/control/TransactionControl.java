@@ -23,10 +23,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
-/**
- *
- * @author tamas.siklosi
- */
 public class TransactionControl extends GridPane {
     private ObservableList<AccountTransaction> transactions;
     private DailyBalanceControl parent;
@@ -50,7 +46,7 @@ public class TransactionControl extends GridPane {
             Label lblComment = new Label(t.getComment());
             ComboBox cbSubCategory = new ComboBox();
             cbSubCategory.setEditable(true);
-            cbSubCategory.setItems(DataManager.getInstance().getAllSubCategories());
+            cbSubCategory.setItems(DataManager.getInstance().getAllCategories());
             cbSubCategory.valueProperty().bindBidirectional(t.categoryProperty());
             cbSubCategory.setPrefWidth(200);
             cbSubCategory.valueProperty().addListener(new ChangeListener<String>() {
