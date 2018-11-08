@@ -28,6 +28,6 @@ public class StopWatch {
         long stop = System.currentTimeMillis();
         long start = ROUNDS.get(name);
         ROUNDS.remove(name);
-        LOGGER.info("{} time: {}s", name, (stop - start) / 1000d);
+        LOGGER.debug("{} time: {}s", name, (stop - start) / 1000d);
     }
 }

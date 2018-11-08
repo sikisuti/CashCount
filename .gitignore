@@ -7,3 +7,4 @@ averates.csv
 .project
 /bin/
 /debug/
+*.log
