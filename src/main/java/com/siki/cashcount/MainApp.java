@@ -27,6 +27,7 @@ public class MainApp extends Application {
     private static final String LOG_PERFORMANCE = "LogPerformance";
 
     public static void main(String[] args) {
+        LOGGER.info("App started");
         launch(args);
     }
 
