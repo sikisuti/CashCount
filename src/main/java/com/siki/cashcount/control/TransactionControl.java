@@ -44,31 +44,40 @@ public class TransactionControl extends GridPane {
             Circle isPaired = new Circle(10, new Color(0, 0, 1, 1));
             isPaired.visibleProperty().bind(t.pairedProperty());
             Label lblComment = new Label(t.getComment());
-            ComboBox cbSubCategory = new ComboBox();
-            cbSubCategory.setEditable(true);
-            cbSubCategory.setItems(DataManager.getInstance().getAllCategories());
-            cbSubCategory.valueProperty().bindBidirectional(t.categoryProperty());
-            cbSubCategory.setPrefWidth(200);
-            cbSubCategory.valueProperty().addListener(new ChangeListener<String>() {
-                @Override
-                public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-                    validate();
-                }
-            });
         
             GridPane.setConstraints(lblType, 0, rowCnt);
             GridPane.setConstraints(lblAmount, 1, rowCnt);
             GridPane.setConstraints(lblOwner, 2, rowCnt);
             GridPane.setConstraints(isPaired, 3, rowCnt);
             GridPane.setConstraints(lblComment, 4, rowCnt);
-            GridPane.setConstraints(cbSubCategory, 6, rowCnt);
         
-            this.getChildren().addAll(lblType, lblAmount, lblOwner, isPaired, lblComment, cbSubCategory);        
+            this.getChildren().addAll(lblType, lblAmount, lblOwner, isPaired, lblComment);
+            addCategoryPicker(t, rowCnt);
         }
         
         this.setStyle("-fx-background-color: white;");
         this.setHgap(20);
         validate();
+    }
+
+    private void addCategoryPicker(AccountTransaction transaction, int rowCnt) {
+        ComboBox cbCategory = null;
+        if (transaction.getNotPairedAmount() != 0) {
+            cbCategory = new ComboBox();
+            cbCategory.setEditable(true);
+            cbCategory.setItems(DataManager.getInstance().getAllCategories());
+            cbCategory.valueProperty().bindBidirectional(transaction.categoryProperty());
+            cbCategory.setPrefWidth(200);
+            cbCategory.valueProperty().addListener(new ChangeListener<String>() {
+                @Override
+                public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                    validate();
+                }
+            });
+
+            GridPane.setConstraints(cbCategory, 6, rowCnt);
+            this.getChildren().add(cbCategory);
+        }
     }
     
     private void validate() {
