@@ -26,13 +26,12 @@ public class ChartController {
     private static LineChart.Series<Date, Integer> accountSeries = new LineChart.Series<>();
 
     private static Double upperBound;
-    private static Double lowerBound;
+    private static Double YDistance;
 
     static {
         savingSeries.setName("Lekötések");
         cashSeries.setName("Készpénz");
         accountSeries.setName("Számla");
-        flowChart.getData().addAll(savingSeries, cashSeries, accountSeries);
     }
 
     public static void refreshChart() {
@@ -45,6 +44,7 @@ public class ChartController {
             return;
         }
 
+        flowChart.getData().clear();
         savingSeries.getData().clear();
         cashSeries.getData().clear();
         accountSeries.getData().clear();
@@ -62,21 +62,39 @@ public class ChartController {
         int max = accountSeries.getData().stream().mapToInt(s -> s.getYValue()).max().getAsInt();
         int min = series.stream().filter(s -> s.isPredicted()).mapToInt(s -> s.getTotalSavings() + s.getTotalMoney()).min().getAsInt();
 
-        if (upperBound == null) {
-            upperBound = Math.ceil(max / 100000d) * 100000;
-            lowerBound = Math.floor((min - 350000) / 100000d) * 100000;
-        }
+        upperBound = Math.ceil(max / 100000d) * 100000;
+        double lowerBound = Math.floor((min - 350000) / 100000d) * 100000;
+        YDistance = upperBound - lowerBound;
 
         flowChart.getYAxis().setUpperBound(upperBound);
         flowChart.getYAxis().setLowerBound(lowerBound);
 
         flowChart.getXAxis().setLowerBound(Date.from(series.get(0).getDate().atStartOfDay(ZoneId.systemDefault()).toInstant()));
         flowChart.getXAxis().setUpperBound(Date.from(series.get(series.size() - 1).getDate().atStartOfDay(ZoneId.systemDefault()).toInstant()));
+
+        flowChart.getData().addAll(savingSeries, cashSeries, accountSeries);
     }
 
     public static void scroll(double amount) {
-        upperBound += amount;
-        lowerBound += amount;
-        refreshChart();
+        double min = flowChart.getYAxis().getLowerBound();
+        double max = flowChart.getYAxis().getUpperBound();
+        if (amount < 0) {
+            min += amount;
+            if (min < 0) {
+                min = 0;
+            }
+
+            max = min + YDistance;
+        } else {
+            max += amount;
+            if (max > upperBound) {
+                max = upperBound;
+            }
+
+            min = max - YDistance;
+        }
+
+        flowChart.getYAxis().setLowerBound(min);
+        flowChart.getYAxis().setUpperBound(max);
     }
 }

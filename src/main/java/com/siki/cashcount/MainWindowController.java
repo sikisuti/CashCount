@@ -114,7 +114,7 @@ public class MainWindowController implements Initializable {
     @FXML
     private void scrollChart(Event event) {
         ScrollEvent scrollEvent = (ScrollEvent) event;
-        ChartController.scroll(scrollEvent.getDeltaY());
+        ChartController.scroll(scrollEvent.getDeltaY() * 1000);
     }
     
     @FXML

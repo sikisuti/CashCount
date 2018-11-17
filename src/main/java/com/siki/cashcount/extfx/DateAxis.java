@@ -160,7 +160,7 @@ public final class DateAxis extends Axis<Date> {
 
     private Object currentAnimationID;
 
-    private Interval actualInterval = Interval.DECADE;
+    private Interval actualInterval = Interval.MONTH_1;
 
     /**
      * Default constructor. By default the lower and upper bound are calculated by the data.
@@ -357,7 +357,7 @@ public final class DateAxis extends Axis<Date> {
         Calendar calendar = Calendar.getInstance();
 
         // The preferred gap which should be between two tick marks.
-        double averageTickGap = 100;
+        double averageTickGap = 30;
         double averageTicks = v / averageTickGap;
 
         List<Date> previousDateList = new ArrayList<Date>();
