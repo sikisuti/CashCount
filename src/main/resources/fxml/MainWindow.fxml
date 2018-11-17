@@ -37,7 +37,7 @@
                 </GridPane>
             </Tab> 
             <Tab fx:id="tabCashFlow" text="Flow chart" closable="false" onSelectionChanged="#refreshChart"  >
-                <VBox fx:id="vbCashFlow" alignment="CENTER"  >
+                <VBox fx:id="vbCashFlow" alignment="CENTER"  onScroll="#scrollChart">
                      
                 </VBox>
             </Tab> 

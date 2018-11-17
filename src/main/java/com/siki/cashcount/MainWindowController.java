@@ -1,7 +1,8 @@
 package com.siki.cashcount;
 
+import com.siki.cashcount.chart.CashFlowChart;
+import com.siki.cashcount.chart.ChartController;
 import com.siki.cashcount.config.ConfigManager;
-import com.siki.cashcount.constant.CashFlowSeriesEnum;
 import com.siki.cashcount.control.*;
 import com.siki.cashcount.data.DataManager;
 import com.siki.cashcount.exception.*;
@@ -9,29 +10,23 @@ import com.siki.cashcount.helper.StopWatch;
 import com.siki.cashcount.model.*;
 import java.io.*;
 import java.net.URL;
-import java.text.NumberFormat;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.Map.Entry;
-//import java.util.logging.*;
 import java.util.stream.Collectors;
 
-import com.siki.cashcount.statistics.StatisticsCellModel;
 import com.siki.cashcount.statistics.StatisticsController;
 import com.siki.cashcount.statistics.StatisticsMonthModel;
 import com.siki.cashcount.statistics.StatisticsViewBuilder;
 
-import javafx.collections.ObservableList;
 import javafx.event.*;
 import javafx.fxml.*;
-import javafx.geometry.*;
 import javafx.scene.*;
 import javafx.scene.chart.*;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.stage.*;
 import javafx.stage.FileChooser.ExtensionFilter;
 import org.slf4j.Logger;
@@ -46,26 +41,9 @@ public class MainWindowController implements Initializable {
     @FXML VBox vbCashFlow;
     @FXML VBox vbStatistics;
 
-    private CashFlowChart flowChart = new CashFlowChart();
-
-    private LineChart.Series<Date, Integer> savingSeries = new LineChart.Series<>();
-    private LineChart.Series<Date, Integer> cashSeries = new LineChart.Series<>();
-    private LineChart.Series<Date, Integer> accountSeries = new LineChart.Series<>();
-
-    private LineChart.Series<Date, Integer> savingSeriesRef = new LineChart.Series<>();
-    private LineChart.Series<Date, Integer> cashSeriesRef = new LineChart.Series<>();
-    private LineChart.Series<Date, Integer> accountSeriesRef = new LineChart.Series<>();
-
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        
-        // Chart layout
-        vbCashFlow.getChildren().add(flowChart);
-        savingSeries.setName("Lekötések");
-        cashSeries.setName("Készpénz");
-        accountSeries.setName("Számla");  
-        flowChart.getData().addAll(savingSeriesRef, cashSeriesRef, accountSeriesRef, savingSeries, cashSeries, accountSeries);
-        
+        vbCashFlow.getChildren().add(ChartController.flowChart);
         prepareDailyBalances();
     }
 
@@ -129,46 +107,14 @@ public class MainWindowController implements Initializable {
     @FXML
     private void refreshChart(Event event) {
         if (((Tab)(event.getSource())).isSelected()) {
-            try {
-                List<DailyBalance> series = DataManager.getInstance().getAllDailyBalances().stream()
-                        .filter(db -> !db.getDate().plusYears(1).isBefore(LocalDate.now().withDayOfMonth(1))).collect(Collectors.toList());
-                refreshChart(series);
-            } catch (IOException | JsonDeserializeException ex) {
-                LOGGER.error("", ex);
-                ExceptionDialog.get(ex).showAndWait();
-            }
+            ChartController.refreshChart();
         }
     }
-    
-    private void refreshChart(List<DailyBalance> series) {
-        savingSeries.getData().clear();
-        cashSeries.getData().clear();
-        accountSeries.getData().clear();
-        savingSeriesRef.getData().clear();
-        cashSeriesRef.getData().clear();
-        accountSeriesRef.getData().clear();
-            
-        series.forEach(db -> {
-            Date date = DateHelper.toDate(db.getDate());
-            Integer yValue = db.getTotalSavings();
-            savingSeries.getData().add(new XYChart.Data(date, yValue));
-            savingSeriesRef.getData().add(new XYChart.Data(date, yValue));
-            yValue = yValue + db.getCash();
-            cashSeries.getData().add(new XYChart.Data(date, yValue));
-            cashSeriesRef.getData().add(new XYChart.Data(date, yValue));
-            yValue = yValue + db.getBalance();
-            accountSeries.getData().add(new XYChart.Data(date, yValue));
-            accountSeriesRef.getData().add(new XYChart.Data(date, yValue));
-        });
 
-        int max = accountSeries.getData().stream().mapToInt(s -> s.getYValue()).max().getAsInt();
-        int min = series.stream().filter(s -> s.isPredicted()).mapToInt(s -> s.getTotalSavings() + s.getTotalMoney()).min().getAsInt();
-
-        flowChart.getYAxis().setUpperBound(Math.ceil(max / 100000d) * 100000);
-        flowChart.getYAxis().setLowerBound(Math.floor((min - 350000) / 100000d) * 100000);
-
-        flowChart.getXAxis().setLowerBound(Date.from(series.get(0).getDate().atStartOfDay(ZoneId.systemDefault()).toInstant()));
-        flowChart.getXAxis().setUpperBound(Date.from(series.get(series.size() - 1).getDate().atStartOfDay(ZoneId.systemDefault()).toInstant()));
+    @FXML
+    private void scrollChart(Event event) {
+        ScrollEvent scrollEvent = (ScrollEvent) event;
+        ChartController.scroll(scrollEvent.getDeltaY());
     }
     
     @FXML
