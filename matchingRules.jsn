@@ -1,106 +1,112 @@
-{"field":"Közlemény","pattern":"tesco","category":"Élelmiszer"}
-{"field":"Közlemény","pattern":"dm","category":"Háztartás"}
-{"field":"Közlemény","pattern":"euronics","category":"Műszaki"}
-{"field":"Közlemény","pattern":"Gasztro-Life","category":"Élelmiszer"}
-{"field":"Közlemény","pattern":"gyógyszer","category":"Gyógyszer"}
-{"field":"Közlemény","pattern":"gyogyszer","category":"Gyógyszer"}
-{"field":"Forgalomtípus","pattern":"eseti megbízások költsége","category":"Eseti megbízás"}
-{"field":"Számlatulajdonos","pattern":"elmű","category":"Villany"}
-{"field":"Közlemény","pattern":"obi","category":"Barkács"}
-{"field":"Számlatulajdonos","pattern":"otp bank hitel","category":"OTP"}
-{"field":"Közlemény","pattern":"4839759001","category":"Gabó Fundamenta"}
-{"field":"Számlatulajdonos","pattern":"Accenture","category":"Siki"}
-{"field":"Számlatulajdonos","pattern":"Főgáz","category":"Gáz"}
-{"field":"Közlemény","pattern":"Siklósi Tamás közös költség","category":"Közös költség"}
-{"field":"Közlemény","pattern":"Decathlon","category":"Sport"}
-{"field":"Forgalomtípus","pattern":"KP.FELVÉT/-BEFIZ. DÍJA","category":"Készpénz felvét / Befizetés díja"}
-{"field":"Forgalomtípus","pattern":"Készpénzfelvét","category":"Készpénzfelvét"}
-{"field":"Közlemény","pattern":"Dunaújváros Euro","category":"Háztartás"}
-{"field":"Közlemény","pattern":"6998253001","category":"Siki Fundamenta"}
-{"field":"Közlemény","pattern":"4372331601","category":"Siki Fundamenta"}
-{"field":"Közlemény","pattern":"Reál c+c","category":"Élelmiszer"}
-{"field":"Forgalomtípus","pattern":"ÜZENETDÍJ","category":"OTPdirekt üzenetdíj"}
-{"field":"Forgalomtípus","pattern":"PÉNZÁTVEZ.","category":"Pénzátvezetés értékpapír számláról"}
-{"field":"Közlemény","pattern":"Shell","category":"Üzemanyag"}
-{"field":"Közlemény","pattern":"Percipąn","category":"Élelmiszer"}
-{"field":"Számlatulajdonos","pattern":"Vodafone","category":"Gabó telefon"}
-{"field":"Számlatulajdonos","pattern":"Dózsa Gy.út 38.THÁZ","category":"Közös költség"}
-{"field":"Számlatulajdonos","pattern":"Klebelsberg","category":"Gabó"}
-{"field":"Közlemény","pattern":"Spar","category":"Élelmiszer"}
-{"field":"Közlemény","pattern":"C\u0026A","category":"Ruha"}
-{"field":"Közlemény","pattern":"XIX.ÖNK.","category":"Gabó"}
-{"field":"Forgalomtípus","pattern":"OTTHONBIZT.EGYÉNI","category":"Biztosítás"}
-{"field":"Számlatulajdonos","pattern":"UPC","category":"TV"}
-{"field":"Forgalomtípus","pattern":"Havi zárlati díj","category":"Havi zárlati díj"}
-{"field":"Forgalomtípus","pattern":"Időszakos költségek","category":"Időszakos költségek"}
-{"field":"Közlemény","pattern":"Coop","category":"Élelmiszer"}
-{"field":"Közlemény","pattern":"OMV","category":"Üzemanyag"}
-{"field":"Számlatulajdonos","pattern":"E.ON","category":"Villany"}
-{"field":"Közlemény","pattern":"K2 Étterem","category":"Élelmiszer"}
-{"field":"Forgalomtípus","pattern":"ÉRTÉKPAPÍR SZLADÍJ","category":"Értékpapír számladíj"}
-{"field":"Közlemény","pattern":"CBA","category":"Élelmiszer"}
-{"field":"Közlemény","pattern":"Futar-Team","category":"Élelmiszer"}
-{"field":"Közlemény","pattern":"MOL","category":"Üzemanyag"}
-{"field":"Számlatulajdonos","pattern":"DVCSH","category":"Víz"}
-{"field":"Számlatulajdonos","pattern":"KLIK","category":"Gabó"}
-{"field":"Közlemény","pattern":"Genius plus","category":"Union"}
-{"field":"Számlatulajdonos","pattern":"Generali-Providencia","category":"Biztosítás"}
-{"field":"Közlemény","pattern":"JYSK","category":"Bútor"}
-{"field":"Közlemény","pattern":"Rossmann","category":"Háztartás"}
-{"field":"Közlemény","pattern":"IKEA","category":"Bútor"}
-{"field":"Közlemény","pattern":"Volanbusz","category":"Utazás"}
-{"field":"Közlemény","pattern":"UPC","category":"TV"}
-{"field":"Közlemény","pattern":"Penny","category":"Élelmiszer"}
-{"field":"Közlemény","pattern":"Burger King","category":"Élelmiszer"}
-{"field":"Közlemény","pattern":"Étterem","category":"Élelmiszer"}
-{"field":"Közlemény","pattern":"Isztambul Torok","category":"Élelmiszer"}
-{"field":"Közlemény","pattern":"Kis Vakond","category":"Egyéb"}
-{"field":"Közlemény","pattern":"R-Cafe","category":"Élelmiszer"}
-{"field":"Közlemény","pattern":"Givesta","category":"Élelmiszer"}
-{"field":"Közlemény","pattern":"Nagyi konyhaja","category":"Élelmiszer"}
-{"field":"Közlemény","pattern":"Subway","category":"Élelmiszer"}
-{"field":"Közlemény","pattern":"Lipoti pekseg","category":"Élelmiszer"}
-{"field":"Közlemény","pattern":"Zoo Kecskemét","category":"Szórakozás"}
-{"field":"Közlemény","pattern":"Kecskeméti fürdő","category":"Szórakozás"}
-{"field":"Közlemény","pattern":"Sport Hotel","category":"Szállás"}
-{"field":"Forgalomtípus","pattern":"Számlavezetési díj korr.","category":"Számlavezetési díj korrekció"}
-{"field":"Számlatulajdonos","pattern":"Pók Tímea","category":"Egyéb"}
-{"field":"Közlemény","pattern":"BKK Automata","category":"Utazás"}
-{"field":"Közlemény","pattern":"Deichmann","category":"Ruha"}
-{"field":"Közlemény","pattern":"Campus etterem","category":"Élelmiszer"}
-{"field":"Közlemény","pattern":"Patika Libra","category":"Gyógyszer"}
-{"field":"Közlemény","pattern":"Magyar Vasuttorteneti","category":"Szórakozás"}
-{"field":"Közlemény","pattern":"MCD Dunaújváros","category":"Élelmiszer"}
-{"field":"Közlemény","pattern":"Vodafone","category":"Gabó telefon"}
-{"field":"Közlemény","pattern":"Eurofamily","category":"Háztartás"}
-{"field":"Közlemény","pattern":"Takko","category":"Ruha"}
-{"field":"Közlemény","pattern":"One Euro Team","category":"Háztartás"}
-{"field":"Közlemény","pattern":"Bier-Lak","category":"Élelmiszer"}
-{"field":"Közlemény","pattern":"Tejbolt","category":"Élelmiszer"}
-{"field":"Közlemény","pattern":"TV elektronika","category":"Műszaki"}
-{"field":"Közlemény","pattern":"MCD Hengermalom","category":"Élelmiszer"}
-{"field":"Közlemény","pattern":"Alexandra konyvesbolt","category":"Egyéb"}
-{"field":"Közlemény","pattern":"Magyar Posta","category":"Egyéb"}
-{"field":"Számlatulajdonos","pattern":"Gépjárműadó","category":"Gépjárműadó"}
-{"field":"Közlemény","pattern":"Forster","category":"Élelmiszer"}
-{"field":"Közlemény","pattern":"Patika","category":"Gyógyszer"}
-{"field":"Közlemény","pattern":"Diego","category":"Bútor"}
-{"field":"Közlemény","pattern":"Festők boltja","category":"Egyéb"}
-{"field":"Közlemény","pattern":"Kemi-Ker","category":"Egyéb"}
-{"field":"Közlemény","pattern":"Díjbeszedő","category":"Víz"}
-{"field":"Számlatulajdonos","pattern":"Díjbeszedő","category":"Víz"}
-{"field":"Közlemény","pattern":"MT Tudósok","category":"Élelmiszer"}
-{"field":"Közlemény","pattern":"No1-es ","category":"Műszaki"}
-{"field":"Közlemény","pattern":"Unitel","category":"Műszaki"}
-{"field":"Közlemény","pattern":"Multikomplex","category":"Barkács"}
-{"field":"Közlemény","pattern":"Envi","category":"Üzemanyag"}
-{"field":"Közlemény","pattern":"E-Autopalyamatrica","category":"Utazás"}
-{"field":"Közlemény","pattern":"Ofotért","category":"Egyéb"}
-{"field":"Forgalomtípus","pattern":"Kamatjóváírás","category":"Kamatjóváírás"}
-{"field":"Közlemény","pattern":"Optimavill","category":"Műszaki"}
-{"field":"Közlemény","pattern":"ALDI","category":"Élelmiszer"}
-{"field":"Közlemény","pattern":"Czako Zoltan","category":"Háztartás"}
-{"field":"Közlemény","pattern":"PEPCO","category":"Háztartás"}
-{"field":"Közlemény","pattern":"Kincstár","category":"Családi pótlék"}
-{"field":"Közlemény","pattern":"WALDORF","category":"Waldorf"}
-{"field":"Közlemény","pattern":"GYED","category":"GYED"}
+{"pattern":"tesco","category":"Élelmiszer"}
+{"pattern":"dm","category":"Háztartás"}
+{"pattern":"euronics","category":"Műszaki"}
+{"pattern":"Gasztro-Life","category":"Élelmiszer"}
+{"pattern":"gyógyszer","category":"Gyógyszer"}
+{"pattern":"gyogyszer","category":"Gyógyszer"}
+{"pattern":"eseti megbízások költsége","category":"Eseti megbízás"}
+{"pattern":"elmű","category":"Villany"}
+{"pattern":"obi","category":"Barkács"}
+{"pattern":"otp bank hitel","category":"OTP"}
+{"pattern":"4839759001","category":"Gabó Fundamenta"}
+{"pattern":"Accenture","category":"Siki"}
+{"pattern":"Főgáz","category":"Gáz"}
+{"pattern":"Siklósi Tamás közös költség","category":"Közös költség"}
+{"pattern":"Decathlon","category":"Sport"}
+{"pattern":"KP.FELVÉT/-BEFIZ. DÍJA","category":"Készpénz felvét / Befizetés díja"}
+{"pattern":"Készpénzfelvét","category":"Készpénzfelvét"}
+{"pattern":"Dunaújváros Euro","category":"Háztartás"}
+{"pattern":"6998253001","category":"Siki Fundamenta"}
+{"pattern":"4372331601","category":"Siki Fundamenta"}
+{"pattern":"Reál c+c","category":"Élelmiszer"}
+{"pattern":"ÜZENETDÍJ","category":"OTPdirekt üzenetdíj"}
+{"pattern":"PÉNZÁTVEZ.","category":"Pénzátvezetés értékpapír számláról"}
+{"pattern":"Shell","category":"Üzemanyag"}
+{"pattern":"Percipąn","category":"Élelmiszer"}
+{"pattern":"Vodafone","category":"Gabó telefon"}
+{"pattern":"Dózsa Gy.út 38.THÁZ","category":"Közös költség"}
+{"pattern":"Klebelsberg","category":"Gabó"}
+{"pattern":"Spar","category":"Élelmiszer"}
+{"pattern":"C\u0026A","category":"Ruha"}
+{"pattern":"XIX.ÖNK.","category":"Gabó"}
+{"pattern":"OTTHONBIZT.EGYÉNI","category":"Biztosítás"}
+{"pattern":"UPC","category":"TV"}
+{"pattern":"Havi zárlati díj","category":"Havi zárlati díj"}
+{"pattern":"Időszakos költségek","category":"Időszakos költségek"}
+{"pattern":"Coop","category":"Élelmiszer"}
+{"pattern":"OMV","category":"Üzemanyag"}
+{"pattern":"E.ON","category":"Villany"}
+{"pattern":"K2 Étterem","category":"Élelmiszer"}
+{"pattern":"ÉRTÉKPAPÍR SZLADÍJ","category":"Értékpapír számladíj"}
+{"pattern":"CBA","category":"Élelmiszer"}
+{"pattern":"Futar-Team","category":"Élelmiszer"}
+{"pattern":"MOL","category":"Üzemanyag"}
+{"pattern":"DVCSH","category":"Víz"}
+{"pattern":"KLIK","category":"Gabó"}
+{"pattern":"Genius plus","category":"Union"}
+{"pattern":"Generali-Providencia","category":"Biztosítás"}
+{"pattern":"JYSK","category":"Bútor"}
+{"pattern":"Rossmann","category":"Háztartás"}
+{"pattern":"IKEA","category":"Bútor"}
+{"pattern":"Volanbusz","category":"Utazás"}
+{"pattern":"UPC","category":"TV"}
+{"pattern":"Penny","category":"Élelmiszer"}
+{"pattern":"Burger King","category":"Élelmiszer"}
+{"pattern":"Étterem","category":"Élelmiszer"}
+{"pattern":"Isztambul Torok","category":"Élelmiszer"}
+{"pattern":"Kis Vakond","category":"Egyéb"}
+{"pattern":"R-Cafe","category":"Élelmiszer"}
+{"pattern":"Givesta","category":"Élelmiszer"}
+{"pattern":"Nagyi konyhaja","category":"Élelmiszer"}
+{"pattern":"Subway","category":"Élelmiszer"}
+{"pattern":"Lipoti pekseg","category":"Élelmiszer"}
+{"pattern":"Zoo Kecskemét","category":"Szórakozás"}
+{"pattern":"Kecskeméti fürdő","category":"Szórakozás"}
+{"pattern":"Sport Hotel","category":"Szállás"}
+{"pattern":"Számlavezetési díj korr.","category":"Számlavezetési díj korrekció"}
+{"pattern":"Pók Tímea","category":"Egyéb"}
+{"pattern":"BKK Automata","category":"Utazás"}
+{"pattern":"Deichmann","category":"Ruha"}
+{"pattern":"Campus etterem","category":"Élelmiszer"}
+{"pattern":"Patika Libra","category":"Gyógyszer"}
+{"pattern":"Magyar Vasuttorteneti","category":"Szórakozás"}
+{"pattern":"MCD Dunaújváros","category":"Élelmiszer"}
+{"pattern":"Vodafone","category":"Gabó telefon"}
+{"pattern":"Eurofamily","category":"Háztartás"}
+{"pattern":"Takko","category":"Ruha"}
+{"pattern":"One Euro Team","category":"Háztartás"}
+{"pattern":"Bier-Lak","category":"Élelmiszer"}
+{"pattern":"Tejbolt","category":"Élelmiszer"}
+{"pattern":"TV elektronika","category":"Műszaki"}
+{"pattern":"MCD Hengermalom","category":"Élelmiszer"}
+{"pattern":"Alexandra konyvesbolt","category":"Egyéb"}
+{"pattern":"Magyar Posta","category":"Egyéb"}
+{"pattern":"Gépjárműadó","category":"Gépjárműadó"}
+{"pattern":"Forster","category":"Élelmiszer"}
+{"pattern":"Patika","category":"Gyógyszer"}
+{"pattern":"Diego","category":"Bútor"}
+{"pattern":"Festők boltja","category":"Egyéb"}
+{"pattern":"Kemi-Ker","category":"Egyéb"}
+{"pattern":"Díjbeszedő","category":"Víz"}
+{"pattern":"Díjbeszedő","category":"Víz"}
+{"pattern":"MT Tudósok","category":"Élelmiszer"}
+{"pattern":"No1-es ","category":"Műszaki"}
+{"pattern":"Unitel","category":"Műszaki"}
+{"pattern":"Multikomplex","category":"Barkács"}
+{"pattern":"Envi","category":"Üzemanyag"}
+{"pattern":"E-Autopalyamatrica","category":"Utazás"}
+{"pattern":"Ofotért","category":"Egyéb"}
+{"pattern":"Kamatjóváírás","category":"Kamatjóváírás"}
+{"pattern":"Optimavill","category":"Műszaki"}
+{"pattern":"ALDI","category":"Élelmiszer"}
+{"pattern":"Czako Zoltan","category":"Háztartás"}
+{"pattern":"PEPCO","category":"Háztartás"}
+{"pattern":"Kincstár","category":"Családi pótlék"}
+{"pattern":"WALDORF","category":"Waldorf"}
+{"pattern":"GYED","category":"GYED"}
+{"pattern":"4839759-001","category":"Gabó Fundamenta"}
+{"pattern":"CZINGER FURDOSZOBA","category":"Lakás fejújítás"}
+{"pattern":"LIDL","category":"Élelmiszer"}
+{"pattern":"H\u0026M","category":"Ruha"}
+{"pattern":"IMO Hungary kft","category":"Egyéb"}
+{"pattern":"Torok Etterem","category":"Élelmiszer"}

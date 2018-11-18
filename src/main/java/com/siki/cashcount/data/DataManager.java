@@ -237,7 +237,7 @@ public class DataManager {
         
         // Filter transactions that already exist and sort the remaining
         newTransactions = newTransactions.stream().filter(t -> t.getDate().isEqual(nextDay) || t.getDate().isAfter(nextDay)).collect(Collectors.toList());
-        newTransactions.sort((a, b) -> a.getDate().compareTo(b.getDate()));
+        newTransactions.sort(Comparator.comparing(AccountTransaction::getDate));
         
         // Group transactions by date
         TreeMap<LocalDate, List<AccountTransaction>> groupped = newTransactions.stream().collect(Collectors.groupingBy(t -> t.getDate(), TreeMap::new, Collectors.toList()));
@@ -261,6 +261,7 @@ public class DataManager {
                 
                 groupped.get(d).stream().forEach((t) -> {
                     db.addTransaction(t);
+
                 });
             }
             
