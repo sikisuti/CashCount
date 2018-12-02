@@ -25,7 +25,7 @@ public class ChartController {
     private static LineChart.Series<Date, Integer> cashSeries = new LineChart.Series<>();
     private static LineChart.Series<Date, Integer> accountSeries = new LineChart.Series<>();
 
-    private static Double upperBound;
+    private static Double maxUpperBound;
     private static Double YDistance;
 
     static {
@@ -62,8 +62,9 @@ public class ChartController {
         int max = accountSeries.getData().stream().mapToInt(s -> s.getYValue()).max().getAsInt();
         int min = series.stream().filter(s -> s.isPredicted()).mapToInt(s -> s.getTotalSavings() + s.getTotalMoney()).min().getAsInt();
 
-        upperBound = Math.ceil(max / 100000d) * 100000;
+        maxUpperBound = Math.ceil(max / 100000d) * 100000;
         double lowerBound = Math.floor((min - 350000) / 100000d) * 100000;
+        double upperBound = lowerBound + 2000000;
         YDistance = upperBound - lowerBound;
 
         flowChart.getYAxis().setUpperBound(upperBound);
@@ -87,8 +88,8 @@ public class ChartController {
             max = min + YDistance;
         } else {
             max += amount;
-            if (max > upperBound) {
-                max = upperBound;
+            if (max > maxUpperBound) {
+                max = maxUpperBound;
             }
 
             min = max - YDistance;
