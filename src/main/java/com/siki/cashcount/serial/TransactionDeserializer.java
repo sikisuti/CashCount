@@ -50,7 +50,10 @@ public class TransactionDeserializer implements JsonDeserializer<AccountTransact
                 .setCategory(category)
                 .setSubCategory(subCategory)
                 .build();
-        
+        if (jsonObject.has("possibleDuplicate") && jsonObject.get("possibleDuplicate").getAsBoolean()) {
+            tr.setPossibleDuplicate(true);
+        }
+
         return tr;
     }
     

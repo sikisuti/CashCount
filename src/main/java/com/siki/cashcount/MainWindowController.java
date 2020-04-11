@@ -138,7 +138,6 @@ public class MainWindowController implements Initializable {
                             .setId(actId++)
                             .setAmount(Integer.valueOf(elements[2]))
                             .setDate(LocalDate.parse(elements[4], formatter))
-                            .setBalance(Integer.valueOf(elements[6]))
                             .setAccountNumber(elements[7])
                             .setOwner(elements[8])
                             .setComment(elements[9] + " " + elements[11])

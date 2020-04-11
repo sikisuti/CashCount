@@ -1,17 +1,11 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.siki.cashcount.data;
-
-//<editor-fold desc="Imports" defaultstate="collapsed">
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.siki.cashcount.config.ConfigManager;
 import com.siki.cashcount.constant.CashFlowSeriesEnum;
 import com.siki.cashcount.control.DateHelper;
+import com.siki.cashcount.exception.GeneralRuntimeException;
 import com.siki.cashcount.exception.JsonDeserializeException;
 import com.siki.cashcount.exception.NotEnoughPastDataException;
 import com.siki.cashcount.exception.TransactionGapException;
@@ -39,58 +33,36 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
-import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.Month;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.chart.XYChart;
 import javafx.scene.chart.XYChart.Data;
+import org.slf4j.LoggerFactory;
 
-//</editor-fold>
-
-/**
- *
- * @author tamas.siklosi
- */
 public class DataManager {
+    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(DataManager.class);
+
     private static final DataManager INSTANCE = new DataManager();
+
     public static DataManager getInstance() { return INSTANCE; }
-    
-    //<editor-fold desc="Constants" defaultstate="collapsed">
+
     public static final String GENERAL_TEXT = "Általános";
-    public static final String TRANSACTION_COMMENT_NAME = "Közlemény";
-    public static final String TRANSACTION_TYPE_NAME = "Forgalomtípus";
-    public static final String TRANSACTION_OWNER_NAME = "Számlatulajdonos";
-    //</editor-fold>
-    
-    //<editor-fold desc="Fields" defaultstate="collapsed">
+    private static final String DATA_PATH = "DataPath";
     
     private ObservableList<DailyBalance> dailyBalanceCache;
     private HashMap<LocalDate, Integer> weeklyAverages;
@@ -98,13 +70,11 @@ public class DataManager {
     private TreeMap<LocalDate, HashMap<CashFlowSeriesEnum, ObservableList<Data<Date, Integer>>>> pastSeries;
     private TreeMap<LocalDate, LinkedHashMap<String, Integer>> pastDifferences;
     private ObservableList<MatchingRule> matchingRules;
-    private ObservableList<String> categories = FXCollections.observableArrayList();
-    private ObservableList<String> correctionTypes = FXCollections.observableArrayList();
+    private final ObservableList<String> categories = FXCollections.observableArrayList();
+    private final ObservableList<String> correctionTypes = FXCollections.observableArrayList();
     
     Gson gsonDeserializer;
     Gson gsonSerializer;
-    
-    //</editor-fold>
 
     private DataManager() {        
         GsonBuilder gsonBuilder = new GsonBuilder();
@@ -127,7 +97,7 @@ public class DataManager {
     
     public ObservableList<DailyBalance> getAllDailyBalances() throws IOException, JsonDeserializeException {
         if (dailyBalanceCache == null) {
-            String dataPath = ConfigManager.getStringProperty("DataPath");
+            String dataPath = ConfigManager.getStringProperty(DATA_PATH);
             dailyBalanceCache = loadDailyBalances(dataPath);
         
             List<Correction> cList = dailyBalanceCache.stream().flatMap(db -> db.getCorrections().stream()).collect(Collectors.toList());
@@ -149,21 +119,17 @@ public class DataManager {
         int lineCnt = 0;
         DailyBalance prevDailyBalance = null;
         
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(dataPath), "UTF-8"))) {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(dataPath), StandardCharsets.UTF_8))) {
             String line;
             while ((line = br.readLine()) != null) {
                 lineCnt++;
                 DailyBalance db = gsonDeserializer.fromJson(line, DailyBalance.class);
                 if (db.getDate().isBefore(LocalDate.now().minusYears(3).withDayOfMonth(1)))
                     continue;
-                getSavings(db.getDate()).stream().forEach(s -> db.addSaving(s));
-                db.getCorrections().stream().forEach((c) -> {
-                    c.setDailyBalance(db);
-                });
+                getSavings(db.getDate()).forEach(db::addSaving);
+                db.getCorrections().forEach(c -> c.setDailyBalance(db));
                 
-                db.getTransactions().stream().forEach(t -> {
-                	t.setDailyBalance(db);
-                });
+                db.getTransactions().forEach(t -> t.setDailyBalance(db));
                 
                 if (prevDailyBalance != null) { db.setPrevDailyBalance(prevDailyBalance); }
                 rtnList.add(db);
@@ -184,8 +150,12 @@ public class DataManager {
         return getAllDailyBalances().get(0);
     }
     private DailyBalance getOrCreateDailyBalance(LocalDate date) throws IOException, NotEnoughPastDataException, JsonDeserializeException {
-        if (dailyBalanceCache.stream().filter(d -> d.getDate().equals(date)).findFirst().isPresent())
-            return dailyBalanceCache.stream().filter(d -> d.getDate().equals(date)).findFirst().get();        
+        if (dailyBalanceCache.stream().anyMatch(d -> d.getDate().equals(date))) {
+            Optional<DailyBalance> dailyBalance = dailyBalanceCache.stream().filter(d -> d.getDate().equals(date)).findFirst();
+            if (dailyBalance.isPresent()) {
+                return dailyBalance.get();
+            }
+        }
         
         DailyBalance newDb = new DailyBalance();
         // fill the possible date gaps
@@ -205,7 +175,7 @@ public class DataManager {
         return newDb;
     }
     public void saveDailyBalances() throws IOException {                
-        String dataPath = ConfigManager.getStringProperty("DataPath");
+        String dataPath = ConfigManager.getStringProperty(DATA_PATH);
         FileTime lastModifiedTime = Files.getLastModifiedTime(Paths.get(dataPath));
         LocalDate lastModifiedDate = LocalDateTime.ofInstant(lastModifiedTime.toInstant(), ZoneId.systemDefault()).toLocalDate();
         if (!lastModifiedDate.equals(LocalDate.now())) {
@@ -213,13 +183,11 @@ public class DataManager {
             if (Files.notExists(Paths.get(backupPath))) Files.createDirectory(Paths.get(backupPath));
             Files.copy(Paths.get(dataPath), Paths.get(backupPath + "/data_" + lastModifiedDate + ".jsn"));
         }
-        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(dataPath), "UTF-8"))) {
+        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(dataPath), StandardCharsets.UTF_8))) {
             for (int i = 0; i < dailyBalanceCache.size(); i++) {
                 bw.write(gsonSerializer.toJson(dailyBalanceCache.get(i), DailyBalance.class));
                 if (i < dailyBalanceCache.size() - 1) bw.write("\n");
             }
-        } catch (IOException e) {
-            throw e;
         }
     }
     
@@ -229,51 +197,55 @@ public class DataManager {
     
     public Long getNextTransactionId() {
         List<AccountTransaction> transactions = dailyBalanceCache.stream().flatMap(db -> db.getTransactions().stream()).collect(Collectors.toList());
-        return transactions.stream().mapToLong(c -> c.getId()).max().getAsLong() + 1;
+        OptionalLong lastTxId = transactions.stream().mapToLong(AccountTransaction::getId).max();
+        if (!lastTxId.isPresent()) {
+            throw new GeneralRuntimeException("Not able to find the last transaction");
+        }
+
+        return lastTxId.getAsLong() + 1;
     }
     public Integer saveTransactions(List<AccountTransaction> newTransactions, boolean force) throws IOException, TransactionGapException, NotEnoughPastDataException, JsonDeserializeException {
-        
-        LocalDate nextDay = getAllDailyBalances().stream().filter(db -> db.isPredicted()).findFirst().get().getDate();
-        
-        // Filter transactions that already exist and sort the remaining
-        newTransactions = newTransactions.stream().filter(t -> t.getDate().isEqual(nextDay) || t.getDate().isAfter(nextDay)).collect(Collectors.toList());
+//        Optional<DailyBalance> firstPredicted = getAllDailyBalances().stream().filter(DailyBalance::isPredicted).findFirst();
+//        if (!firstPredicted.isPresent()) {
+//            throw new GeneralRuntimeException("No predicted dailybalance found");
+//        }
+
+//        LocalDate nextDay = firstPredicted.get().getDate();
+
         newTransactions.sort(Comparator.comparing(AccountTransaction::getDate));
         
         // Group transactions by date
-        TreeMap<LocalDate, List<AccountTransaction>> groupped = newTransactions.stream().collect(Collectors.groupingBy(t -> t.getDate(), TreeMap::new, Collectors.toList()));
+        TreeMap<LocalDate, List<AccountTransaction>> groupped = newTransactions.stream().collect(Collectors.groupingBy(AccountTransaction::getDate, TreeMap::new, Collectors.toList()));
         
         if (groupped.size() > 0) {        
-            LocalDate firstDay = newTransactions.get(0).getDate();
+//            LocalDate firstDay = newTransactions.get(0).getDate();
             
             // If date gap occures an exception thrown except when the force flag has been set.
-            if (!force && !nextDay.equals(firstDay)) {
-                TransactionGapException ex = new TransactionGapException();
-                int i = -1;
-                while (!nextDay.plusDays(++i).equals(firstDay))
-                    ex.addDate(nextDay.plusDays(i));
+//            if (!force && !nextDay.equals(firstDay)) {
+//                TransactionGapException ex = new TransactionGapException();
+//                int i = -1;
+//                while (!nextDay.plusDays(++i).equals(firstDay))
+//                    ex.addDate(nextDay.plusDays(i));
+//
+//                throw ex;
+//            }
 
-                throw ex;
-            }
-
-            for (LocalDate d : groupped.keySet()) {
-                DailyBalance db = getOrCreateDailyBalance(d);
+            for (Entry<LocalDate, List<AccountTransaction>> entry : groupped.entrySet()) {
+                DailyBalance db = getOrCreateDailyBalance(entry.getKey());
                 resetPredicted(db);
-                
-                groupped.get(d).stream().forEach((t) -> {
-                    db.addTransaction(t);
-
-                });
+                db.addNonExistingTransactions(entry.getValue());
+                db.calculateBalance();
             }
             
             calculatePredictions();
         }
         
-        System.out.println(newTransactions.size() + " transactions saved");
+        LOGGER.info("{} transactions saved", newTransactions.size());
         return newTransactions.size();
     }
     public AccountTransaction getTransactionById(Long id) {
         Optional<AccountTransaction> rtn = dailyBalanceCache.stream().flatMap(db -> db.getTransactions().stream()).collect(Collectors.toList()).stream().filter(t -> t.getId().equals(id)).findFirst();
-        return rtn.isPresent() ? rtn.get() : null;
+        return rtn.orElse(null);
     }
     
     //</editor-fold>
@@ -282,7 +254,12 @@ public class DataManager {
     
     public Long getNextCorrectionId() {
         List<Correction> corrections = dailyBalanceCache.stream().flatMap(db -> db.getCorrections().stream()).collect(Collectors.toList());
-        return corrections.stream().mapToLong(c -> c.getId()).max().getAsLong() + 1;
+        OptionalLong maxCorrectionId = corrections.stream().mapToLong(Correction::getId).max();
+        if (!maxCorrectionId.isPresent()) {
+            throw new GeneralRuntimeException("Unable to find max correction ID");
+        }
+
+        return maxCorrectionId.getAsLong() + 1;
     }
     private HashMap<String, Integer> collectCorrections(ObservableList<DailyBalance> dbList, LocalDate date) throws IOException, JsonDeserializeException {
         HashMap<String, Integer> rtn = new HashMap<>();
@@ -297,9 +274,7 @@ public class DataManager {
                 .filter(d -> d.getDate().isAfter(date.minusDays(1)) && d.getDate().isBefore(LocalDate.now()))
                 .collect(Collectors.toList());
         for (DailyBalance db : predictedDailyBalancesUpToNow) {
-            for (Correction c : db.getCorrections()) {
-                predictedCorrectionsUpToNow.add(c);
-            }
+            predictedCorrectionsUpToNow.addAll(db.getCorrections());
         }
         
         // List of predicted corrections after the prediction date (including the future corrections)
@@ -307,9 +282,7 @@ public class DataManager {
                 .filter(d -> d.getDate().isAfter(date.minusDays(1)))
                 .collect(Collectors.toList());
         for (DailyBalance db : predictedAllDailyBalances) {
-            for (Correction c : db.getCorrections()) {
-                predictedAllCorrections.add(c);
-            }
+            predictedAllCorrections.addAll(db.getCorrections());
         }
         
         // List of actual corrections between the prediction date and now
@@ -317,9 +290,7 @@ public class DataManager {
                 .filter(d -> d.getDate().isAfter(date.minusDays(1)) && d.getDate().isBefore(LocalDate.now()))
                 .collect(Collectors.toList());
         for (DailyBalance db : actDailyBalancesUpToNow) {
-            for (Correction c : db.getCorrections()) {
-                actCorrectionsUpToNow.add(c);
-            }
+            actCorrectionsUpToNow.addAll(db.getCorrections());
         }
         
         // List of actual corrections after the prediction date (including the future corrections)
@@ -327,9 +298,7 @@ public class DataManager {
                 .filter(d -> d.getDate().isAfter(date.minusDays(1)))
                 .collect(Collectors.toList());
         for (DailyBalance db : actAllDailyBalances) {
-            for (Correction c : db.getCorrections()) {
-                actAllCorrections.add(c);
-            }
+            actAllCorrections.addAll(db.getCorrections());
         }
         
         for (Correction predictedCorrection : predictedCorrectionsUpToNow) {
@@ -357,17 +326,26 @@ public class DataManager {
         }
         
         // Calculate General daily expense differences
-        DailyBalance predictedStartDailyBalance = dbList.stream()
+        Optional<DailyBalance> tempDb;
+        tempDb = dbList.stream()
                 .filter(d -> d.getDate().isEqual(date.minusDays(1)))
-                .findFirst()
-                .get();
-        DailyBalance predictedEndDailyBalance = dbList.stream()
+                .findFirst();
+        if (!tempDb.isPresent()) {
+            throw new GeneralRuntimeException("No previous dailyBalance found");
+        }
+
+        DailyBalance predictedStartDailyBalance = tempDb.get();
+        tempDb = dbList.stream()
                 .filter(d -> d.getDate().isEqual(LocalDate.now().minusDays(1)))
-                .findFirst()
-                .get();
+                .findFirst();
+        if (!tempDb.isPresent()) {
+            throw new GeneralRuntimeException("No dailyBalance found for yesterday");
+        }
+
+        DailyBalance predictedEndDailyBalance = tempDb.get();
         Integer predictedExpense = predictedEndDailyBalance.getTotalMoney()
                 - predictedStartDailyBalance.getTotalMoney() 
-                - predictedDailyBalancesUpToNow.stream().mapToInt(db -> db.getCorrections().stream().mapToInt(c -> c.getAmount()).sum()).sum();
+                - predictedDailyBalancesUpToNow.stream().mapToInt(db -> db.getCorrections().stream().mapToInt(Correction::getAmount).sum()).sum();
         
         DailyBalance actStartDailyBalance = getAllDailyBalances().stream()
                 .filter(d -> d.getDate().isEqual(date.minusDays(1)))
@@ -379,7 +357,7 @@ public class DataManager {
                 .get();
         Integer actExpense = actEndDailyBalance.getTotalMoney()
                 - actStartDailyBalance.getTotalMoney() 
-                - actDailyBalancesUpToNow.stream().mapToInt(db -> db.getCorrections().stream().mapToInt(c -> c.getAmount()).sum()).sum();
+                - actDailyBalancesUpToNow.stream().mapToInt(db -> db.getCorrections().stream().mapToInt(Correction::getAmount).sum()).sum();
         
         if (actExpense - predictedExpense != 0)
             rtn.put(GENERAL_TEXT, actExpense - predictedExpense);
@@ -396,7 +374,7 @@ public class DataManager {
         
         String filePath = ConfigManager.getStringProperty("SavingStorePath");
         int lineCnt = 0;
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filePath), "UTF-8"))) {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filePath), StandardCharsets.UTF_8))) {
             String line;
             while ((line = br.readLine()) != null) {
                 lineCnt++;
@@ -540,7 +518,7 @@ public class DataManager {
         
         String filePath = ConfigManager.getStringProperty("MatchingRulesPath");
         int lineCnt = 0;
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filePath), "UTF-8"))) {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filePath), StandardCharsets.UTF_8))) {
             String line;
             while ((line = br.readLine()) != null) {
                 lineCnt++;
@@ -554,7 +532,7 @@ public class DataManager {
     }
     private void saveMatchingRules() throws IOException {
         String filePath = ConfigManager.getStringProperty("MatchingRulesPath");
-        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filePath), "UTF-8"))) {
+        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filePath), StandardCharsets.UTF_8))) {
             for (int i = 0; i < matchingRules.size(); i++) {
                 bw.write(gsonSerializer.toJson(matchingRules.get(i), MatchingRule.class));
                 if (i < matchingRules.size() - 1) bw.write("\n");
@@ -625,7 +603,7 @@ public class DataManager {
         List<PredictedCorrection> pcList = new ArrayList<>();
         int lineCnt = 0;
         
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(path), "UTF-8"))) {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(path), StandardCharsets.UTF_8))) {
             String line;
             while ((line = br.readLine()) != null) {
                 lineCnt++;
@@ -751,8 +729,8 @@ public class DataManager {
         if (exportDataForDebug) {
             try {
                 String exportDataPath = ConfigManager.getStringProperty("ExportDataPath");
-                bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(exportDataPath, true), "UTF-8"));
-            } catch (UnsupportedEncodingException | FileNotFoundException ex) {
+                bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(exportDataPath, true), StandardCharsets.UTF_8));
+            } catch (FileNotFoundException ex) {
                 Logger.getLogger(DataManager.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
@@ -810,7 +788,7 @@ public class DataManager {
         String exportDataPath ="";
         if (exportDataForDebug) {
             exportDataPath = ConfigManager.getStringProperty("ExportDataPath");
-            try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(exportDataPath), "UTF-8"))) {
+            try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(exportDataPath), StandardCharsets.UTF_8))) {
                 bw.write("date;"
                         + "weekly average date -6 months;"
                         + "weekly average date -5 months;"
@@ -838,7 +816,7 @@ public class DataManager {
                     getDayAverage(LocalDate.now().plusMonths((dayUsed + 4) > dayNow ? 0 : 1).withDayOfMonth(1).plusDays(dbList.get(i).getDate().getDayOfMonth() - 1)) + 
                     dbList.get(i).getTotalCorrections());
             if (exportDataForDebug) {
-                try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(exportDataPath, true), "UTF-8"))) {
+                try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(exportDataPath, true), StandardCharsets.UTF_8))) {
                     bw.write(";;" + dbList.get(i).getBalance().toString() + "\n");
                 } catch (IOException ex) {
                     Logger.getLogger(DataManager.class.getName()).log(Level.SEVERE, null, ex);
@@ -848,7 +826,7 @@ public class DataManager {
     }
     
     public boolean needSave() throws IOException, JsonDeserializeException {
-        String dataPath = ConfigManager.getStringProperty("DataPath");
+        String dataPath = ConfigManager.getStringProperty(DATA_PATH);
         ObservableList<DailyBalance> original = loadDailyBalances(dataPath);
         
         if (original.size() != dailyBalanceCache.size()) {

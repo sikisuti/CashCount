@@ -1,6 +1,8 @@
 package com.siki.cashcount.model;
 
 import java.time.LocalDate;
+import java.util.List;
+
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
@@ -142,7 +144,28 @@ public final class DailyBalance {
     public void addTransaction(AccountTransaction transaction) {
         transaction.setDailyBalance(this);
         transactions.add(transaction);
-        setBalance(transaction.getBalance());
+    }
+
+    public void addNonExistingTransactions(List<AccountTransaction> newTransactions) {
+        findPossibleDuplicates(newTransactions);
+        if (newTransactions.stream().filter(AccountTransaction::isPossibleDuplicate).count() == transactions.size()) {
+            newTransactions.stream().filter(t -> !t.isPossibleDuplicate()).forEach(this::addTransaction);
+        } else {
+            newTransactions.forEach(this::addTransaction);
+        }
+    }
+
+    private void findPossibleDuplicates(List<AccountTransaction> newTransactions) {
+        for (AccountTransaction newTransaction : newTransactions) {
+            if (transactions.stream().anyMatch(t -> t.similar(newTransaction))) {
+                newTransaction.setPossibleDuplicate(true);
+            }
+        }
+    }
+
+    public void calculateBalance() {
+        Integer diff = transactions.stream().mapToInt(AccountTransaction::getAmount).sum();
+        setBalance(prevDailyBalance.getBalance() + diff);
     }
     
     public ObservableList<AccountTransaction> getTransactions() {
@@ -150,7 +173,7 @@ public final class DailyBalance {
     }
     
     public Integer getTotalCorrections() {
-        return corrections.stream().mapToInt(c -> c.getAmount()).sum();
+        return corrections.stream().mapToInt(Correction::getAmount).sum();
     }
     
     public static class Builder {

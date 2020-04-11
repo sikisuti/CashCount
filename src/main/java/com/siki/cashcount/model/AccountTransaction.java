@@ -25,8 +25,9 @@ public final class AccountTransaction {
     private final StringProperty comment;  
     private final StringProperty counter;
     private final StringProperty category;
-    private BooleanProperty paired;
-    private List<Correction> pairedCorrections;
+    private final BooleanProperty paired;
+    private final List<Correction> pairedCorrections;
+    private final BooleanProperty possibleDuplicate;
     private DailyBalance dailyBalance;
     
     public Long getId() { return id; }
@@ -71,6 +72,10 @@ public final class AccountTransaction {
     public Boolean isPaired() { return paired.get(); }
     public void setPaired(Boolean value) { this.paired.set(value); }
     public BooleanProperty pairedProperty() { return paired; }
+
+    public Boolean isPossibleDuplicate() { return possibleDuplicate.get(); }
+    public void setPossibleDuplicate(Boolean value) { this.possibleDuplicate.set(value); }
+    public BooleanProperty possibleDuplicateProperty() { return possibleDuplicate; }
     
     public void setDailyBalance(DailyBalance dailyBalance) {
     	this.dailyBalance = dailyBalance;
@@ -107,6 +112,7 @@ public final class AccountTransaction {
         this.category = new SimpleStringProperty();   
         this.pairedCorrections = new ArrayList<>();
         this.paired = new SimpleBooleanProperty();
+        this.possibleDuplicate = new SimpleBooleanProperty();
     }
     
     private AccountTransaction(Builder builder) {
@@ -115,7 +121,6 @@ public final class AccountTransaction {
         setTransactionType(builder.transactionType);
         setDate(builder.date);
         setAmount(builder.amount);
-        setBalance(builder.balance);
         setAccountNumber(builder.accountNumber);
         setOwner(builder.owner);
         setComment(builder.comment);
@@ -223,6 +228,18 @@ public final class AccountTransaction {
                 this.getOwner().equals(other.getOwner()) &&
                 this.getComment().equals(other.getComment()) &&
                 this.getCounter().equals(other.getCounter());
+    }
+
+    public boolean similar(Object obj) {
+        if (obj == null || this.getClass() != obj.getClass()) {
+            return false;
+        }
+
+        AccountTransaction other = (AccountTransaction)obj;
+
+        return
+            this.getTransactionType().equals(other.getTransactionType()) &&
+            this.getAmount().equals(other.getAmount());
     }
 
     @Override

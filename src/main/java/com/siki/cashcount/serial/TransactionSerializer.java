@@ -31,6 +31,9 @@ public class TransactionSerializer implements JsonSerializer<AccountTransaction>
         jsonObject.addProperty("comment", t.getComment());
         jsonObject.addProperty("counter", t.getCounter());
         jsonObject.addProperty("subCategory", t.getCategory());
+        if (t.isPossibleDuplicate()) {
+            jsonObject.addProperty("possibleDuplicate", true);
+        }
         
         return jsonObject;
     }

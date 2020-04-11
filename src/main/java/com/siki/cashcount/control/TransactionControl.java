@@ -12,14 +12,10 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
-import javafx.scene.layout.Border;
-import javafx.scene.layout.BorderStroke;
-import javafx.scene.layout.BorderStrokeStyle;
-import javafx.scene.layout.BorderWidths;
-import javafx.scene.layout.CornerRadii;
-import javafx.scene.layout.GridPane;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
@@ -50,6 +46,15 @@ public class TransactionControl extends GridPane {
             GridPane.setConstraints(lblOwner, 2, rowCnt);
             GridPane.setConstraints(isPaired, 3, rowCnt);
             GridPane.setConstraints(lblComment, 4, rowCnt);
+
+            if (t.isPossibleDuplicate()) {
+                HBox duplicateHandler = new HBox();
+                Button removeDuplicateButton = new Button("töröl");
+                Button notDuplicateButton = new Button("hozzáad");
+                duplicateHandler.getChildren().addAll(removeDuplicateButton, notDuplicateButton);
+                GridPane.setConstraints(duplicateHandler, 5, rowCnt);
+                this.getChildren().add(duplicateHandler);
+            }
         
             this.getChildren().addAll(lblType, lblAmount, lblOwner, isPaired, lblComment);
             addCategoryPicker(t, rowCnt);
@@ -84,7 +89,7 @@ public class TransactionControl extends GridPane {
         for (Node n : this.getChildren()) {
             if (n.getClass() == ComboBox.class) {
                 ComboBox cb = (ComboBox)n;
-                if (cb.getValue() == null) {
+                if (cb.getValue() == null || transactions.stream().anyMatch(AccountTransaction::isPossibleDuplicate)) {
                     cb.setBorder(new Border(new BorderStroke(Color.RED, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
                 } else {
                     cb.setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
