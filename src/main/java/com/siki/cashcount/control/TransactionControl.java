@@ -31,6 +31,7 @@ public class TransactionControl extends GridPane {
     }
     
     private void buildLayout() {
+        this.getChildren().clear();
         int rowCnt = -1;
         for (AccountTransaction t : transactions) {
             rowCnt++;
@@ -50,7 +51,15 @@ public class TransactionControl extends GridPane {
             if (t.isPossibleDuplicate()) {
                 HBox duplicateHandler = new HBox();
                 Button removeDuplicateButton = new Button("töröl");
+                removeDuplicateButton.setOnAction(event -> {
+                    this.transactions.remove(t);
+                    buildLayout();
+                });
                 Button notDuplicateButton = new Button("hozzáad");
+                notDuplicateButton.setOnAction(event -> {
+                    t.setPossibleDuplicate(false);
+                    buildLayout();
+                });
                 duplicateHandler.getChildren().addAll(removeDuplicateButton, notDuplicateButton);
                 GridPane.setConstraints(duplicateHandler, 5, rowCnt);
                 this.getChildren().add(duplicateHandler);
@@ -84,18 +93,19 @@ public class TransactionControl extends GridPane {
             this.getChildren().add(cbCategory);
         }
     }
-    
+
     private void validate() {
-        for (Node n : this.getChildren()) {
-            if (n.getClass() == ComboBox.class) {
-                ComboBox cb = (ComboBox)n;
-                if (cb.getValue() == null || transactions.stream().anyMatch(AccountTransaction::isPossibleDuplicate)) {
-                    cb.setBorder(new Border(new BorderStroke(Color.RED, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
-                } else {
-                    cb.setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
-                }
-            }
+        this.isValid();
+        this.parent.validate();
+    }
+
+    public void isValid() {
+        boolean isValid = transactions.stream().allMatch(AccountTransaction::isValid);
+
+        if (!isValid) {
+            this.setBorder(new Border(new BorderStroke(Color.RED, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
+        } else {
+            this.setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
         }
-        parent.validate();
     }
 }

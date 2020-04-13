@@ -27,6 +27,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.stage.*;
 import javafx.stage.FileChooser.ExtensionFilter;
 import org.slf4j.Logger;
@@ -64,10 +65,6 @@ public class MainWindowController implements Initializable {
                 }
 
                 if (date == null || !db.getDate().getMonth().equals(date.getMonth())) {
-                    if (tp != null) {
-                        tp.validate();
-                    }
-
                     date = db.getDate();
                     tp = new DailyBalancesTitledPane(date);
                     dailyBalancesPH.getChildren().add(tp);
@@ -75,6 +72,8 @@ public class MainWindowController implements Initializable {
 
                 tp.addDailyBalance(db);
             }
+
+            validate();
 
             Button btnNewMonth = new Button("+");
             btnNewMonth.setStyle("-fx-alignment: center;");
@@ -102,6 +101,15 @@ public class MainWindowController implements Initializable {
 
         }
         if (ConfigManager.getBooleanProperty("LogPerformance")) StopWatch.stop("prepareDailyBalances");
+    }
+
+    private void validate() {
+        for (Node node : dailyBalancesPH.getChildren()) {
+            if (node.getClass() == DailyBalancesTitledPane.class) {
+                DailyBalancesTitledPane month = (DailyBalancesTitledPane) node;
+                month.validate();
+            }
+        }
     }
 
     @FXML

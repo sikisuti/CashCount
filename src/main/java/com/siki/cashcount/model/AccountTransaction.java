@@ -12,6 +12,10 @@ import java.util.List;
 import java.util.Objects;
 
 import javafx.beans.property.*;
+import javafx.scene.Node;
+import javafx.scene.control.ComboBox;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 
 public final class AccountTransaction {
     
@@ -73,8 +77,8 @@ public final class AccountTransaction {
     public void setPaired(Boolean value) { this.paired.set(value); }
     public BooleanProperty pairedProperty() { return paired; }
 
-    public Boolean isPossibleDuplicate() { return possibleDuplicate.get(); }
-    public void setPossibleDuplicate(Boolean value) { this.possibleDuplicate.set(value); }
+    public boolean isPossibleDuplicate() { return possibleDuplicate.get(); }
+    public void setPossibleDuplicate(boolean value) { this.possibleDuplicate.set(value); }
     public BooleanProperty possibleDuplicateProperty() { return possibleDuplicate; }
     
     public void setDailyBalance(DailyBalance dailyBalance) {
@@ -245,5 +249,9 @@ public final class AccountTransaction {
     @Override
     public int hashCode() {
         return Objects.hash(id, transactionType, date, amount, balance, accountNumber, owner, comment, counter, category, paired, pairedCorrections);
+    }
+
+    public boolean isValid() {
+        return !isPossibleDuplicate() && getCategory() != null && !getCategory().isEmpty();
     }
 }

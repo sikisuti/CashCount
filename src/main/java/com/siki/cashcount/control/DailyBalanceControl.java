@@ -24,6 +24,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -35,14 +36,7 @@ import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
-import javafx.scene.layout.Border;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.BorderStroke;
-import javafx.scene.layout.BorderStrokeStyle;
-import javafx.scene.layout.BorderWidths;
-import javafx.scene.layout.CornerRadii;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -61,7 +55,7 @@ public final class DailyBalanceControl extends VBox {
     
     private Button btnAdd;
     
-    private VBox vbTransactions = new VBox();
+    VBox vbTransactions = new VBox();
     
     private final DailyBalance dailyBalance;
     
@@ -292,10 +286,7 @@ public final class DailyBalanceControl extends VBox {
     public void removeCorrection(Correction correction) {
         try {
             dailyBalance.removeCorrection(correction);
-            loadCorrections();         
-//            setDailySpend(NumberFormat.getCurrencyInstance().format(
-//                    dailyBalance.getTotalMoney() - dailyBalance.getPrevDailyBalance().getTotalMoney() - dailyBalance.getTotalCorrections()
-//            ));
+            loadCorrections();
             DataManager.getInstance().calculatePredictions();
         } catch (NotEnoughPastDataException | IOException ex) {
             Logger.getLogger(DailyBalanceControl.class.getName()).log(Level.SEVERE, null, ex);
@@ -311,15 +302,19 @@ public final class DailyBalanceControl extends VBox {
     private void mouseExited(MouseEvent event) {
         btnAdd.setVisible(false);
     }
+
+    void validate() {
+        this.isValid();
+        this.parent.validate();
+    }
     
-    public void validate() {
-        for (AccountTransaction t : dailyBalance.getTransactions()) {
-            if (t.getCategory() == null) {
-                this.setBorder(new Border(new BorderStroke(Color.RED, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
-                return;
-            }
+    void isValid() {
+        boolean isValid = dailyBalance.getTransactions().stream().allMatch(AccountTransaction::isValid);
+
+        if (!isValid) {
+            this.setBorder(new Border(new BorderStroke(Color.RED, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
+        } else {
+            this.setBorder(new Border(new BorderStroke(Color.TRANSPARENT, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
         }
-        this.setBorder(new Border(new BorderStroke(Color.TRANSPARENT, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
-        parent.validate();
     }
 }

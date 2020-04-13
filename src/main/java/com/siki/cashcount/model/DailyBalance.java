@@ -278,6 +278,8 @@ public final class DailyBalance {
         
         return true;
     }
-    
-    
+
+    public boolean isValid() {
+        return transactions.stream().allMatch(AccountTransaction::isValid);
+    }
 }

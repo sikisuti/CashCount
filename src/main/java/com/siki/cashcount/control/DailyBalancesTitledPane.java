@@ -13,6 +13,7 @@ import java.util.List;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.Node;
 import javafx.scene.control.TitledPane;
 import javafx.scene.layout.Border;
 import javafx.scene.layout.BorderStroke;
@@ -64,17 +65,16 @@ public class DailyBalancesTitledPane extends TitledPane {
         return date.isAfter(LocalDate.now().minusMonths(1).withDayOfMonth(LocalDate.now().minusMonths(1).lengthOfMonth())) &&
                 date.isBefore(LocalDate.now().plusMonths(1).withDayOfMonth(1));
     }
-    
+
     public void validate() {
-        for (DailyBalance dailyBalance : dailyBalances) {
-            for (AccountTransaction t : dailyBalance.getTransactions()) {
-                if (t.getCategory() == null) {
-                    this.setBorder(new Border(new BorderStroke(Color.RED, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
-                    return;
-                }
-            }
+        this.isValid();
+    }
+    
+    private void isValid() {
+        boolean isValid = dailyBalances.stream().allMatch(DailyBalance::isValid);
+
+        if (!isValid) {
+            this.setBorder(new Border(new BorderStroke(Color.RED, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
         }
-        this.setBorder(new Border(new BorderStroke(Color.TRANSPARENT, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
-        
     }
 }
