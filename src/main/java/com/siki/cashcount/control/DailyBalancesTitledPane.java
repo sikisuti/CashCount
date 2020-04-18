@@ -76,5 +76,13 @@ public class DailyBalancesTitledPane extends TitledPane {
         if (!isValid) {
             this.setBorder(new Border(new BorderStroke(Color.RED, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
         }
+
+        if (this.isExpanded()) {
+            for (Node child : vbDailyBalances.getChildren()) {
+                if (child.getClass() == DailyBalanceControl.class) {
+                    ((DailyBalanceControl) child).isValid();
+                }
+            }
+        }
     }
 }

@@ -182,7 +182,7 @@ public class MainWindowController implements Initializable {
                 alert.setHeaderText("Importálás kész");
                 alert.setContentText(importedRows + " új tranzakció importálva");
                 alert.showAndWait();
-                
+                validate();
             } catch (Exception e) {
                 LOGGER.error("", e);
                 ExceptionDialog.get(e).showAndWait();
