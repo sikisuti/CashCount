@@ -54,6 +54,7 @@ public final class DailyBalanceControl extends VBox {
     private HBox hbLine;
     
     private Button btnAdd;
+    ToggleButton btnExpand;
     
     VBox vbTransactions = new VBox();
     
@@ -208,7 +209,7 @@ public final class DailyBalanceControl extends VBox {
         
         HBox rightContext = new HBox();
         
-        ToggleButton btnExpand = new ToggleButton("...");
+        btnExpand = new ToggleButton("...");
         btnExpand.setOnAction(event -> {
             if (btnExpand.isSelected()) {
                 if (vbTransactions.getChildren().isEmpty() && !dailyBalance.getTransactions().isEmpty()) {
@@ -315,6 +316,14 @@ public final class DailyBalanceControl extends VBox {
             this.setBorder(new Border(new BorderStroke(Color.RED, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
         } else {
             this.setBorder(new Border(new BorderStroke(Color.TRANSPARENT, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
+        }
+
+        if (btnExpand.isSelected()) {
+            for (Node child : vbTransactions.getChildren()) {
+                if (child.getClass() == TransactionControl.class) {
+                    ((TransactionControl) child).isValid();
+                }
+            }
         }
     }
 }
