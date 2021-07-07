@@ -1,2 +1,5 @@
-{"from":"2017-08-18","to":"","amount":757861,"comment":"Befektetési Jegy"}
-{"from":"2018-12-15","to":"","amount":25830000,"comment":"Dózsa lakás értéke"}
+{"from":"2017-08-18","to":"2019-01-15","amount":757861,"comment":"Befektetési Jegy"}
+{"from":"2019-01-15","to":"2019-08-16","amount":27764363,"comment":"Befektetési Jegy"}
+{"from":"2019-08-16","to":"2019-10-07","amount":784385,"comment":"Befektetési Jegy"}
+{"from":"2019-08-16","to":"2019-10-07","amount":24340272,"comment":"Kötvény"}
+{"from":"2020-05-22","to":"2021-05-26","amount":5000000,"comment":"Magyar állampapír"}
